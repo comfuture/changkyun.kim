@@ -1,0 +1,8 @@
+[project]
+name = changkyun.kim
+
+[servers.public]
+name = Public
+enabled = yes
+default = yes
+target = ghpages://comfuture/changkyun.kim?cname=changkyun.kim
