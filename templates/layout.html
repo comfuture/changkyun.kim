@@ -1,29 +1,66 @@
 <!doctype html>
 <meta charset="utf-8">
+<link rel="stylesheet" href="{{ '/static/semantic/semantic.min.css'|url }}">
 <link rel="stylesheet" href="{{ '/static/style.css'|url }}">
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+<script src="{{ '/static/semantic/semantic.min.js'|url }}"></script>
 <title>{% block title %}Welcome{% endblock %} — changkyun.kim</title>
 <body>
-  <header>
-    <h1>changkyun.kim</h1>
-    <nav>
-      <ul class="nav navbar-nav">
-        <li{% if this._path == '/' %} class="active"{% endif
-          %}><a href="{{ '/'|url }}">Welcome</a></li>
-        {% for href, title in [
-          ['/blog', 'Blog'],
-          ['/projects', 'Projects'],
-          ['/about', 'About']
-        ] %}
-          <li{% if this.is_child_of(href) %} class="active"{% endif
-            %}><a href="{{ href|url }}">{{ title }}</a></li>
-        {% endfor %}
-      </ul>
-    </nav>
-  </header>
-  <div class="page">
-    {% block body %}{% endblock %}
-  </div>
-  <footer>
-    &copy; Copyright 2015 by 김창균.
-  </footer>
+	<div>
+
+	 	<header>
+			<section class="main heading">
+				<div class="ui container">
+					<h2>Hello, I'm changkyun.kim</h2>
+				</div>
+				<div class="top bar">
+					<ul class="ui inverted menu container">
+						<li class="{% if this._path == '/' %}active {% endif
+						%}header item"><a href="{{ '/'|url }}">changkyun.kim</a></li>
+						{% for href, title in [
+						['/blog', 'Blog'],
+						['/projects', 'Projects'],
+						['/about', 'About']
+						] %}
+						<li class="{% if this.is_child_of(href) %}active {% endif
+						%}item"><a href="{{ href|url }}">{{ title }}</a></li>
+						{% endfor %}
+					</ul>
+				</div>
+			</section>
+	  </header>
+	  <div class="ui page container">
+	    {% block body %}{% endblock %}
+	  </div>
+	  <footer class="page footer">
+		<div class="ui container">
+			&copy; Copyright 2016 by changkyun.kim
+		</div>
+	  </footer>
+	</div>
+<script>
+	$('body').visibility({
+		offset: -10,
+		observeChanges: false,
+		once: false,
+		continuous: false,
+		onTopPassed: function() {
+			requestAnimationFrame(function() {
+				$('.top.bar')
+					.addClass('scrolled')
+					.find('.menu:first')
+					.removeClass('inverted');
+			});
+		},
+		onTopPassedReverse: function() {
+			requestAnimationFrame(function() {
+				$('.top.bar')
+					.removeClass('scrolled')
+					.find('.menu')
+					.addClass('inverted');
+			});
+		}
+	});
+</script>
+
 </body>
