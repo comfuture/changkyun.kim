@@ -1,24 +1,7 @@
-title: Welcome to changkyun.kim!
+title: I'm changkyun.kim
 ---
 body:
 
-This is a basic demo website that shows how to use Lektor for a basic
-website with some pages and a blog.
+testing travis auto deploy
 
-hahaha
-laksdjflkajsf
-
-laskdflkajsdlfjasdlf
-```python
-def hello(name):
-    return "Hello, {}".format(name)
-```
-
-and javascript source code:
-```javascript
-function hello(name) {
-    return "Hello, " + name;
-}
-```
-
-<a class="ui button">button</a>
+[![Build Status](https://travis-ci.org/comfuture/changkyun.kim.svg?branch=master)](https://travis-ci.org/comfuture/changkyun.kim)
