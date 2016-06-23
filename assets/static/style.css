@@ -1,3 +1,11 @@
+@media screen and (min-width: 980px) {
+	@import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css);
+}
+
+body {
+	font-family: "AppleSDGothic", "Nanum Gothic", sans-serif;
+}
+
 .top.bar {
 	position: fixed;
 	top: 0;
@@ -39,27 +47,52 @@
 }
 
 .main.heading {
-	background-image: url("images/overlay.png"), -moz-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
-	background-image: url("images/overlay.png"), -webkit-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
-	background-image: url("images/overlay.png"), -ms-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
-	background-image: url("images/overlay.png"), linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
-	background-size: 100px 100px, cover;
-	color: rgba(255, 255, 255, 0.5);
+	/*background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), -moz-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), -webkit-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), -ms-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), linear-gradient(45deg, #4A4771 0%, #7C3875 100%);*/
+
+	/*background: #F1F2B5; /* fallback for old browsers */
+	/*background: -webkit-linear-gradient(-45deg, #F1F2B5 , #135058); /* Chrome 10-25, Safari 5.1-6 */
+	/*background: linear-gradient(-45deg, #F1F2B5 , #135058); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */*/*/*/
+
+
+	background: #53346D; /* fallback for old browsers */
+	background: -webkit-linear-gradient(to left, #000000 , #53346D); /* Chrome 10-25, Safari 5.1-6 */
+	background: linear-gradient(to left, #000000 , #53346D); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+
+	/*background-size: 100px 100px, cover;*/
+	color: #FFF;
 	padding: 14em 0 4em;
 	transition: padding 0.5s ease, background 0.5s ease;
 }
 
-@media screen and (max-width: 480px) {
+.main.heading h2 {
+	text-shadow: 1px 1px 2px rgba(150, 150, 150, 1);
+}
+
+@media screen and (max-width: 736px) {
 
 	.main.heading {
 		padding: 6em 2em 2em;
 	}
-
+}
+@media screen and (max-width: 480px) {
+	.main.heading h2 {
+		font-size: 1.5em;
+	}
 }
 
 .page.footer {
 	background: #eee;
 	padding: 2em 0;
+}
+
+.blog-post.segment .meta {
+	color: #888;
+	margin-top: -5em;
+	margin-bottom: 2em;
 }
 
 /* --- */

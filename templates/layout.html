@@ -12,16 +12,18 @@
 	 	<header>
 			<section class="main heading">
 				<div class="ui container">
+					{% block heading %}
 					<h2>Hello, I'm changkyun.kim</h2>
+					{% endblock %}
 				</div>
 				<div class="top bar">
 					<ul class="ui inverted menu container">
 						<li class="{% if this._path == '/' %}active {% endif
 						%}header item"><a href="{{ '/'|url }}">changkyun.kim</a></li>
+						<!-- ['/projects', 'Projects'],
+						['/about', 'About'] -->
 						{% for href, title in [
-						['/blog', 'Blog'],
-						['/projects', 'Projects'],
-						['/about', 'About']
+						['/blog', 'Blog']
 						] %}
 						<li class="{% if this.is_child_of(href) %}active {% endif
 						%}item"><a href="{{ href|url }}">{{ title }}</a></li>
@@ -62,6 +64,17 @@
 			});
 		}
 	});
+
+	(function() {
+		var angle = -45;
+		function spin() {
+			angle = (angle + 1) % 360;
+			$('.main.heading').css({
+				'background': 'linear-gradient(' + angle +'deg, #F1F2B5 , #135058)'
+			});
+		}
+		// setInterval(spin, 500);
+	})();
 </script>
 
 </body>

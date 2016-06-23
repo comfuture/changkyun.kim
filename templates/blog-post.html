@@ -1,6 +1,29 @@
 {% extends "layout.html" %}
 {% from "macros/blog.html" import render_blog_post %}
 {% block title %}{{ this.title }}{% endblock %}
-{% block body %}
-  {{ render_blog_post(this) }}
+{% block heading %}<h2>{{this.title}}</h2>{% endblock %}
+    {% block body %}
+    <article class="ui vertical blog-post segment">
+        <div class="meta">
+            {% if this.pub_date %}<span class="date"><i class="calendar icon"></i>{{this.pub_date|dateformat}}</span> {% endif %}
+            {% if this.author %}by <i class="user icon"></i><span class="author">{{this.author}}</span>{% endif %}
+        </div>
+        <div class="content">
+        {{this.body}}
+        </div>
+        <div id="disqus_thread"></div>
+        <script>
+            var disqus_config = function () {
+                // this.page.url = "{{this|url}}";
+                this.page.identifier = "{{this._id}}";
+            };
+
+            (function() {  // DON'T EDIT BELOW THIS LINE
+                var d = document, s = d.createElement('script');
+                s.src = '//changkyunkim.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    </article>
 {% endblock %}

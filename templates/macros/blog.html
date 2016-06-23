@@ -1,3 +1,33 @@
+{% macro render_card(entry) %}
+<div class="ui card">
+    {% if entry.image -%}
+    <div class="image">
+        <img src="{{image|url}}" alt="{{image.alt}}">
+    </div>
+    {%- endif %}
+    <div class="content">
+        <div class="header"><a href="{{entry|url}}">{{entry.title}}</a></div>
+        {% if entry.pub_date %}
+        <div class="meta">
+            <div class="date">{{entry.pub_date|dateformat}}</div>
+        </div>
+        {% endif %}
+        <div class="description">
+            {{entry.body}}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_cards(entries) %}
+<div class="ui doubling four cards">
+    {% for entry in entries %}
+    {{render_card(entry)}}
+    {% endfor %}
+</div>
+{% endmacro %}
+
+
 {% macro render_blog_post(post, from_index=false) %}
   <article>
   {% if from_index %}
