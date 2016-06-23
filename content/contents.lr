@@ -1,30 +1,7 @@
-title: I'm changkyun.kim
+title: Under construction
 ---
 body:
 
-testing travis auto deploy
+under construction
 
 [![Build Status](https://travis-ci.org/comfuture/changkyun.kim.svg?branch=master)](https://travis-ci.org/comfuture/changkyun.kim)
-
-일해라 travis
-
-```bash
-Installing deploy dependencies
-!!! Script support is experimental !!!
-dpl.2
-Preparing deploy
-Cleaning up git repository with `git stash --all`. If you need build artifacts for deployment, set `deploy.skip_cleanup: true`. See https://docs.travis-ci.com/user/deployment/#Uploading-Files.
-No local changes to save
-dpl.3
-Deploying application
-Deploying to Public
-  Build cache: /home/travis/.cache/lektor/builds/28fa5ce40848026ab14f55a885237354
-  Target: ghpages+https://comfuture/changkyun.kim?cname=changkyun.kim
-  Initialized empty Git repository in /home/travis/build/comfuture/changkyun.kim/temp/.deploytempcCH7XL/scratch/.git/
-  Fetching origin
-  fatal: repository 'https://github.com/comfuture/changkyun.kim/' not found
-  error: Could not fetch origin
-  fatal: repository 'https://github.com/comfuture/changkyun.kim/' not found
-Done!
-No stash found.
-```
