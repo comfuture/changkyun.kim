@@ -2,7 +2,20 @@
 {% from "macros/blog.html" import render_blog_post %}
 {% block title %}{{ this.title }}{% endblock %}
 {% block heading %}<h2>{{this.title}}</h2>{% endblock %}
-    {% block body %}
+{% block style %}
+{% if this.background %}
+{% set bg_image = this.attachments.get(this.background) %}
+<style>
+    .main.heading {
+        background-image: url({{bg_image|url}});
+        background-attachment: fixed;
+        background-position: top center;
+        background-size: 100% auto;
+    }
+</style>
+{% endif %}
+{% endblock %}
+{% block body %}
     <article class="ui vertical blog-post segment">
         <div class="meta">
             {% if this.pub_date %}<span class="date"><i class="calendar icon"></i>{{this.pub_date|dateformat}}</span> {% endif %}
