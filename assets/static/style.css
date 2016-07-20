@@ -47,25 +47,21 @@ body {
 }
 
 .main.heading {
-	/*background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), -moz-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
-	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), -webkit-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
-	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), -ms-linear-gradient(45deg, #4A4771 0%, #7C3875 100%);
-	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=), linear-gradient(45deg, #4A4771 0%, #7C3875 100%);*/
-
 	/*background: #F1F2B5; /* fallback for old browsers */
 	/*background: -webkit-linear-gradient(-45deg, #F1F2B5 , #135058); /* Chrome 10-25, Safari 5.1-6 */
 	/*background: linear-gradient(-45deg, #F1F2B5 , #135058); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */*/*/*/
-
 
 	background: #53346D; /* fallback for old browsers */
 	background: -webkit-linear-gradient(to left, #000000 , #53346D); /* Chrome 10-25, Safari 5.1-6 */
 	background: linear-gradient(to left, #000000 , #53346D); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 
-
 	/*background-size: 100px 100px, cover;*/
 	color: #FFF;
+	transition: padding 0.5s ease; /*, background 0.5s ease; */
+}
+
+.main.heading .title.container {
 	padding: 14em 0 4em;
-	transition: padding 0.5s ease, background 0.5s ease;
 }
 
 .main.heading h2 {

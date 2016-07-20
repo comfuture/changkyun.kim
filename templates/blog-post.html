@@ -9,11 +9,31 @@
     .main.heading {
         background-image: url({{bg_image|url}});
         background-attachment: fixed;
-        background-position: top center;
+        background-position: 0 0;
         background-size: 100% auto;
+    }
+
+    .main.heading .inner {
+      background-color: rgba(0, 0, 0, .2);
+      background-image: -webkit-repeating-radial-gradient(center center, rgba(0,0,0,.2), rgba(0,0,0,.2) 1px, transparent 1px, transparent 100%);
+      background-image: -moz-repeating-radial-gradient(center center, rgba(0,0,0,.2), rgba(0,0,0,.2) 1px, transparent 1px, transparent 100%);
+      background-image: -ms-repeating-radial-gradient(center center, rgba(0,0,0,.2), rgba(0,0,0,.2) 1px, transparent 1px, transparent 100%);
+      background-image: repeating-radial-gradient(center center, rgba(0,0,0,.2), rgba(0,0,0,.2) 1px, transparent 1px, transparent 100%);
+      -webkit-background-size: 3px 3px;
+      -moz-background-size: 3px 3px;
+      background-size: 3px 3px;
     }
 </style>
 {% endif %}
+{% endblock %}
+{% block script %}
+<script>
+    $(window).on('scroll', function() {
+        var heading = $('.main.heading');
+        var offset = -$(this).scrollTop() / 2;
+        heading.css({'background-position': '0 ' + offset + 'px'});
+    });
+</script>
 {% endblock %}
 {% block body %}
     <article class="ui vertical blog-post segment">

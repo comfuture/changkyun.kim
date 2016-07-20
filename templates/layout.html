@@ -6,12 +6,13 @@
 <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
 <script src="{{ '/static/semantic/semantic.min.js'|url }}"></script>
 <title>{% block title %}Welcome{% endblock %} — changkyun.kim</title>
+{% block style %}{% endblock %}
 <body>
 	<div>
 
-	 	<header>
+		<header>
 			<section class="main heading">
-				<div class="ui container">
+				<div class="ui title container">
 					{% block heading %}
 					<h2>Hello, I'm changkyun.kim</h2>
 					{% endblock %}
@@ -19,29 +20,25 @@
 				<div class="top bar">
 					<ul class="ui inverted menu container">
 						<li class="{% if this._path == '/' %}active {% endif
-						%}header item"><a href="{{ '/'|url }}">changkyun.kim</a></li>
-						<!-- ['/projects', 'Projects'],
-						['/about', 'About'] -->
-						{% for href, title in [
-						['/blog', 'Blog']
-						] %}
-						<li class="{% if this.is_child_of(href) %}active {% endif
-						%}item"><a href="{{ href|url }}">{{ title }}</a></li>
+							%}header item"><a href="{{ '/'|url }}">changkyun.kim</a></li>
+						{% for href, title in [['/blog', 'Blog']] %}
+							<li class="{% if this.is_child_of(href) %}active {% endif
+								%}item"><a href="{{ href|url }}">{{ title }}</a></li>
 						{% endfor %}
 					</ul>
 				</div>
 			</section>
-	  </header>
-	  <div class="ui page container">
-	    {% block body %}{% endblock %}
-	  </div>
-	  <footer class="page footer">
-		<div class="ui container">
-			&copy; Copyright 2016 by changkyun.kim
+		</header>
+		<div class="ui page container">
+			{% block body %}{% endblock %}
 		</div>
-	  </footer>
+		<footer class="page footer">
+			<div class="ui container">
+				&copy; Copyright 2016 by changkyun.kim
+			</div>
+		</footer>
 	</div>
-<script>
+	<script>
 	$('body').visibility({
 		offset: -10,
 		observeChanges: false,
@@ -50,31 +47,20 @@
 		onTopPassed: function() {
 			requestAnimationFrame(function() {
 				$('.top.bar')
-					.addClass('scrolled')
-					.find('.menu:first')
-					.removeClass('inverted');
+				.addClass('scrolled')
+				.find('.menu:first')
+				.removeClass('inverted');
 			});
 		},
 		onTopPassedReverse: function() {
 			requestAnimationFrame(function() {
 				$('.top.bar')
-					.removeClass('scrolled')
-					.find('.menu')
-					.addClass('inverted');
+				.removeClass('scrolled')
+				.find('.menu')
+				.addClass('inverted');
 			});
 		}
 	});
-
-	(function() {
-		var angle = -45;
-		function spin() {
-			angle = (angle + 1) % 360;
-			$('.main.heading').css({
-				'background': 'linear-gradient(' + angle +'deg, #F1F2B5 , #135058)'
-			});
-		}
-		// setInterval(spin, 500);
-	})();
-</script>
-
+	</script>
+	{% block script %}{% endblock %}
 </body>
