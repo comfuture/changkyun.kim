@@ -43,6 +43,7 @@ export default {
   ** Nuxt.js modules
   */
   modules: [
+    '@nuxtjs/moment',
     '@nuxtjs/pwa',
     '@nuxtjs/dotenv',
     '@nuxt/content'
