@@ -39,7 +39,6 @@ export default {
   name: 'default-layout',
   watch: {
     '$route'(val) {
-      console.log(val)
       this.hideMenu()
     }
   },
@@ -77,13 +76,6 @@ export default {
     &:hover {
       @apply text-gray-600;
     }
-  }
-}
-
-h1 {
-  @apply text-gray-700 font-semibold text-2xl mb-6;
-  @screen md {
-    @apply text-4xl;
   }
 }
 

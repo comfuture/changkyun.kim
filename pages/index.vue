@@ -2,10 +2,6 @@
   <div>
     <section class="">
       <div class="container mx-auto items-center flex flex-wrap my-16 md:mt-48">
-        <div class="hidden md:block absolute top-0 b-auto right-0 pt-16 sm:w-6/12 -mt-48 sm:mt-0 w-10/12 z-0 object-cover h-1/3"
-          style="background: url(https://demos.creative-tim.com/tailwindcss-starter-project/_next/static/images/ill_header_3-58248cf88527a12ccfc6cc70ec21d868.png)">
-        </div>
-        <!-- <img class="absolute top-0 b-auto right-0 pt-16 sm:w-6/12 -mt-48 sm:mt-0 w-10/12 z-0" src="https://demos.creative-tim.com/tailwindcss-starter-project/_next/static/images/ill_header_3-58248cf88527a12ccfc6cc70ec21d868.png" alt="..." style="max-height:860px"> -->
         <div class="w-full md:w-8/12 lg:w-6/12 xl:w-6/12 px-4">
           <nuxt-content :document="page" />
         </div>
