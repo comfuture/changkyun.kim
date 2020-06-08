@@ -60,8 +60,11 @@ draft게시물은 git의 branch를 이용하면 그만이다.
 
 프로젝트를 내려받아 노트북에서 기사를 편집해 다시 push해도 되지만 github 웹에 접속하여 웹브라우져만으로도 새 게시물 추가/편집이 가능하기 때문에 사실 별도의 에디터가 필요 없다.
 
-
 오픈소스와 오픈소스 호스팅 서비스만으로 저작도구 / 코드 저장소 / 문서 데이터베이스 / html 생성기 / 무료 웹호스팅 을 모두 충족할 수 있는, 나는 참 축복받은 시대를 살고 있는 것 같다.[^4]
+
+소개글에서 생략한 다른 훌륭한 오픈소스들([Tailwind](https://tailwindcss.com/), [Google Material Icons](http://google.github.io/material-design-icons/#icon-font-for-the-web))에 소개는 다음 기회로 미룬다.
+
+이 홈페이지의 전체 소스코드는 [Github](https://github.com/comfuture/changkyun.kim)에서 확인할 수 있다.
 
 [^1]: 거짓말이다. http, dom, vdom, server-renderer에 대한 깊은 이해가 없으면 곳통받게 된다.
 [^2]: 단순히 vue-server-renderer가 해주는 것 외에 메타 주입, hydrate, prefetch 등 수많은 잔 처리를 해준다.
