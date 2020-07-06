@@ -17,8 +17,6 @@
 </template>
 <script>
 import { createPopper } from '@popperjs/core'
-import preventOverflow from '@popperjs/core/lib/modifiers/preventOverflow.js'
-import flip from '@popperjs/core/lib/modifiers/flip.js'
 import TimeAgo from './time-ago'
 
 export default {
@@ -59,21 +57,17 @@ export default {
         let anchor = document.querySelector('a[href="#' + note.id + '"]')
         createPopper(anchor, note, {
           placement: 'bottom',
-          modifiers: [preventOverflow, flip, {name: 'offset', options: {offset: [0, 10]}}]
+          modifiers: [{name: 'offset', options: {offset: [0, 10]}}]
         });
 
         anchor.addEventListener('click', e => e.preventDefault());
 
         (['pointerenter', 'focus']).forEach(ev => {
-          anchor.addEventListener(ev, e => {
-            note.classList.remove('invisible')
-          })
+          anchor.addEventListener(ev, e => note.classList.remove('invisible'))
         });
 
         (['pointerleave', 'blur']).forEach(ev => {
-          anchor.addEventListener(ev, e => {
-            note.classList.add('invisible')
-          })
+          anchor.addEventListener(ev, e => note.classList.add('invisible'))
         })
       })
     }
@@ -178,14 +172,6 @@ article.article {
 
       @screen md {
         @apply w-1/2
-      }
-
-      @screen lg {
-        @apply w-1/3
-      }
-
-      @screen xl {
-        @apply w-1/4
       }
 
       a.footnote-backref {
