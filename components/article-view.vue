@@ -16,6 +16,9 @@
   </article>
 </template>
 <script>
+import { createPopper } from '@popperjs/core'
+import preventOverflow from '@popperjs/core/lib/modifiers/preventOverflow.js'
+import flip from '@popperjs/core/lib/modifiers/flip.js'
 import TimeAgo from './time-ago'
 
 export default {
@@ -36,6 +39,43 @@ export default {
           children: this.article.body.children.slice(0, 2)
         }
       }
+    }
+  },
+  data() {
+    return {
+      footnotes: []
+    }
+  },
+  mounted() {
+    this.makeFloatingFootnote()
+  },
+  methods: {
+    /** 각주를 마우스/터치 인터렉션에 따라 표시되는 팝오버로 바꾼다 */
+    makeFloatingFootnote() {
+      const notes = this.$el.querySelectorAll('.footnotes li[id]')
+
+      notes.forEach(note => {
+        note.classList.add('invisible')
+        let anchor = document.querySelector('a[href="#' + note.id + '"]')
+        createPopper(anchor, note, {
+          placement: 'bottom',
+          modifiers: [preventOverflow, flip, {name: 'offset', options: {offset: [0, 10]}}]
+        });
+
+        anchor.addEventListener('click', e => e.preventDefault());
+
+        (['pointerenter', 'focus']).forEach(ev => {
+          anchor.addEventListener(ev, e => {
+            note.classList.remove('invisible')
+          })
+        });
+
+        (['pointerleave', 'blur']).forEach(ev => {
+          anchor.addEventListener(ev, e => {
+            note.classList.add('invisible')
+          })
+        })
+      })
     }
   }
 }
@@ -88,8 +128,16 @@ article.article {
     }
   }
 
+  blockquote {
+    @apply border-l-8 border-gray-300 pl-6;
+  }
+
   p {
-    @apply text-gray-700 py-2;
+    @apply text-gray-700 py-2 leading-relaxed;
+
+    > code {
+      @apply border border-purple-200 rounded-sm bg-purple-100 px-2;
+    }
   }
 
   a {
@@ -108,9 +156,42 @@ article.article {
     @apply ml-4;
   }
 
+  a.footnote-ref {
+    text-decoration: none;
+    @apply text-gray-700 border border-gray-400 bg-blue-100 rounded-full px-2;
+  }
+
 
   .footnotes {
     @apply py-6;
+
+    hr {
+      @apply hidden;
+    }
+
+    li {
+      @apply absolute inline-block border border-gray-400 bg-gray-100 p-2 rounded-md shadow-md w-full;
+
+      .invisible {
+        @apply opacity-0;
+      }
+
+      @screen md {
+        @apply w-1/2
+      }
+
+      @screen lg {
+        @apply w-1/3
+      }
+
+      @screen xl {
+        @apply w-1/4
+      }
+
+      a.footnote-backref {
+        @apply hidden;
+      }
+    }
   }
 }
 
@@ -144,6 +225,6 @@ article.article {
 
   > pre {
     @apply rounded-md shadow-md;
-  }  
+  }
 }
 </style>
