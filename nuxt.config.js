@@ -56,11 +56,11 @@ export default {
     }
   },
   generate: {
-    async routes() {
-      const { $content } = require('@nuxt/content')
-      return $content({deep: true}).only(['path']).fetch()
-        .then(files => files.map(file => file.path === '/index' ? '/' : file.path))
-    }
+    // async routes() {
+    //   const { $content } = require('@nuxt/content')
+    //   return $content({deep: true}).only(['path']).fetch()
+    //     .then(files => files.map(file => file.path === '/index' ? '/' : file.path))
+    // }
   },
   /*
   ** Build configuration
