@@ -1,4 +1,7 @@
 const path = require('path')
+const moment = require('moment')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 
 export default {
   mode: 'universal',
@@ -52,6 +55,23 @@ export default {
     markdown: {
       prism: {
         theme: 'static/css/prism-synthwave84.css'
+      }
+    }
+  },
+  hooks: {
+    'content:file:beforeInsert': async document => {
+      if (document.extension === '.md') {
+        try {
+          const contentPath = `content${document.path}${document.extension}`
+          const { stdout } = await exec(`git log -1 --format=%cd --date=iso ${contentPath}`)
+          // 2020-06-30 00:33:07 +0900
+          const [date, time] = stdout.split(' ', 2)
+          const iso8601 = [date, time.replace(' ', '')].join('T')
+          document.updatedAt = moment(iso8601).toDate()
+          console.log('hook created date', contentPath, iso8601)
+        } catch (e) {
+          // noop
+        }
       }
     }
   },

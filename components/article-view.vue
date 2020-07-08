@@ -5,7 +5,7 @@
         {{ article.title }}
       </h1>
       <p class="meta">
-        <time-ago :date="article.createdAt"></time-ago>
+        <time-ago :date="article.updatedAt || article.createdAt"></time-ago>
       </p>
     </header>
     <nuxt-content :document="omittedArticle" v-if="omitted" />
