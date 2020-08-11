@@ -2,7 +2,7 @@ const path = require('path')
 const moment = require('moment')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
-const copydir = require('copy-dir')
+const copyfiles = require('copyfiles')
 
 export default {
   mode: 'universal',
@@ -60,8 +60,8 @@ export default {
         large: { macros: ['scaleAndCrop|800|600'] },
       },
       forceGenerateImages: {
-        small: 'image/**',
-        medium: 'image/**'
+        small: '**/*',
+        medium: '**/*'
       },
       responsiveStyles: {
         thumb: {
@@ -97,7 +97,7 @@ export default {
     hooks: {
       generate: {
         before(generator, generateOptions) {
-          copydir.sync('content/image', 'static/image')
+          copyfiles(['content/**/*.jpg', 'content/**/*.gif', 'content/**/*.png', 'static'])
         }
       }
     }
