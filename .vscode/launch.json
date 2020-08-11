@@ -5,17 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run dev",
+            "name": "run dev",
             "request": "launch",
-            "runtimeArgs": [
-                "run-script",
+            "type": "node",
+            "program": "${workspaceFolder}/node_modules/.bin/nuxt",
+            "args": [
                 "dev"
-            ],
-            "runtimeExecutable": "npm",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "pwa-node"
+            ]
+        },
+        {
+            "name": "launch chrome",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        },
+    ],
+    "compounds": [
+        {
+            "name": "debug",
+            "configurations": [
+                "run dev",
+                "launch chrome"
+            ]
         }
     ]
 }
