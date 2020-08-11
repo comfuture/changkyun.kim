@@ -2,6 +2,7 @@ const path = require('path')
 const moment = require('moment')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
+const copydir = require('copy-dir')
 
 export default {
   mode: 'universal',
@@ -49,7 +50,26 @@ export default {
     '@nuxtjs/moment',
     '@nuxtjs/pwa',
     '@nuxtjs/dotenv',
-    '@nuxt/content'
+    '@nuxt/content',
+    ['@reallifedigital/nuxt-image-loader-module', {
+      imagesBaseDir: 'content',
+      imageStyles: {
+        thumbnail: { actions: ['gravity|Center', 'resize|320|180^', 'extent|320|180|+0|+90'] },
+        small: { macros: ['scaleAndCrop|160|90'] },
+        medium: { macros: ['scaleAndCrop|320|180'] },
+        large: { macros: ['scaleAndCrop|800|600'] },
+      },
+      forceGenerateImages: {
+        small: 'image/**',
+        medium: 'image/**'
+      },
+      responsiveStyles: {
+        thumb: {
+          srcset: 'small 160w, medium 320w, large 800w',
+          sizes: '(min-width: 1280px) 100vw, 50vw',
+        },
+      },
+    }]
   ],
   content: {
     markdown: {
@@ -71,6 +91,13 @@ export default {
           console.log('hook created date', contentPath, iso8601)
         } catch (e) {
           // noop
+        }
+      }
+    },
+    hooks: {
+      generate: {
+        before(generator, generateOptions) {
+          copydir.sync('content/image', 'static/image')
         }
       }
     }
