@@ -27,9 +27,9 @@
       </nav>
     </header>
     <nuxt />
-    <footer class="bg-gray-200">
-      <div class="mx-auto container py-8">
-        footer
+    <footer class="footer">
+      <div class="container">
+        Changkyun Kim &copy; 2020-
       </div>
     </footer>
   </div>
@@ -81,5 +81,13 @@ export default {
 
 .leading {
   @apply mt-4 text-lg leading-relaxed text-gray-600;
+}
+
+footer.footer {
+  @apply bg-gray-200;
+
+  .container {
+    @apply mx-auto py-8 text-center;
+  }
 }
 </style>

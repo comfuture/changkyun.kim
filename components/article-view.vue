@@ -8,8 +8,10 @@
         <time-ago :date="article.updatedAt || article.createdAt"></time-ago>
       </p>
     </header>
-    <nuxt-content :document="omittedArticle" v-if="omitted" />
-    <nuxt-content :document="article" v-else />
+    <div class="content prose lg:prose-lg">
+      <nuxt-content :document="omittedArticle" v-if="omitted" />
+      <nuxt-content :document="article" v-else />
+    </div>
     <span v-if="omitted">
       <n-link :to="article.path">더 보기...</n-link>
     </span>
@@ -108,7 +110,7 @@ article.article {
 }
 
 .nuxt-content {
-  h1 {
+  /* h1 {
     @apply text-gray-700 font-semibold text-2xl my-6;
     @screen md {
       @apply text-4xl;
@@ -125,20 +127,16 @@ article.article {
   blockquote {
     @apply border-l-8 border-gray-300 pl-6;
   }
-
-  p {
-    @apply text-gray-700 py-2 leading-relaxed;
-
-    > code {
-      @apply border border-purple-200 rounded-sm bg-purple-100 px-2;
-    }
+  */
+  p > code {
+    @apply border border-purple-200 rounded-sm bg-purple-100 px-2;
   }
 
   a {
     @apply underline text-blue-600;
   }
 
-  ul {
+  /* ul {
     @apply ml-4;
     li {
       list-style-type: disc;
@@ -148,7 +146,7 @@ article.article {
   ol {
     list-style-type: decimal;
     @apply ml-4;
-  }
+  } */
 
   a.footnote-ref {
     text-decoration: none;
@@ -182,7 +180,9 @@ article.article {
 }
 
 .nuxt-content-highlight {
-  @apply text-xs;
+  * {
+    @apply text-xs !important;
+  }
   @screen md {
     @apply text-base;
   }
