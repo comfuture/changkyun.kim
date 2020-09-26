@@ -51,7 +51,7 @@ export default {
     '@nuxtjs/pwa',
     '@nuxtjs/dotenv',
     '@nuxt/content',
-    ['@reallifedigital/nuxt-image-loader-module', {
+    ['@pivale/nuxt-image-loader-module', {
       imagesBaseDir: 'content',
       imageStyles: {
         thumbnail: { actions: ['gravity|Center', 'resize|320|180^', 'extent|320|180|+0|+90'] },
@@ -60,8 +60,8 @@ export default {
         large: { macros: ['scaleAndCrop|800|600'] },
       },
       forceGenerateImages: {
-        small: '**/*',
-        medium: '**/*'
+        small: '**/*.{jpg,jpeg,gif,png}',
+        medium: '**/*.{jpg,jpeg,gif,png}'
       },
       responsiveStyles: {
         thumb: {
@@ -120,10 +120,10 @@ export default {
         }
       }
     },
-    generate: {
-      before(generator, generateOptions) {
-        copyfiles(['content/**/*.jpg', 'content/**/*.gif', 'content/**/*.png', 'static'])
-      }
+    'generate:before': (generator, generateOptions) => {
+      copyfiles(['content/**/*.jpg', 'content/**/*.gif', 'content/**/*.png', 'static'], {
+        error: false
+      }, () => {})
     }
   },
   /*
