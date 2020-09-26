@@ -69,6 +69,32 @@ export default {
           sizes: '(min-width: 1280px) 100vw, 50vw',
         },
       },
+    }],
+    ['@nuxtjs/firebase', {
+      config: {
+        apiKey: "AIzaSyDDa2rNNA_iN3anKTzt5i8bf83ACir5uno",
+        authDomain: "changkyun-kim.firebaseapp.com",
+        databaseURL: "https://changkyun-kim.firebaseio.com",
+        projectId: "changkyun-kim",
+        storageBucket: "changkyun-kim.appspot.com",
+        messagingSenderId: "871650378107",
+        appId: "1:871650378107:web:372f9548992e0b5ea87dde",
+        measurementId: "G-9MYK3SBZKL"
+      },
+      services: {
+        auth: {
+          static: true,
+          preload: true,
+          initialize: {
+            onAuthStateChangedMutation: 'setUser'
+          }
+        },
+        analytics: {
+          static: true,
+          preload: true
+        }
+      },
+      static: true
     }]
   ],
   content: {
@@ -94,20 +120,11 @@ export default {
         }
       }
     },
-    hooks: {
-      generate: {
-        before(generator, generateOptions) {
-          copyfiles(['content/**/*.jpg', 'content/**/*.gif', 'content/**/*.png', 'static'])
-        }
+    generate: {
+      before(generator, generateOptions) {
+        copyfiles(['content/**/*.jpg', 'content/**/*.gif', 'content/**/*.png', 'static'])
       }
     }
-  },
-  generate: {
-    // async routes() {
-    //   const { $content } = require('@nuxt/content')
-    //   return $content({deep: true}).only(['path']).fetch()
-    //     .then(files => files.map(file => file.path === '/index' ? '/' : file.path))
-    // }
   },
   /*
   ** Build configuration

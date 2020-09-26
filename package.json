@@ -13,11 +13,12 @@
   "dependencies": {
     "@nuxt/content": "^1.4.1",
     "@nuxtjs/dotenv": "^1.4.0",
+    "@nuxtjs/firebase": "^6.1.1",
     "@nuxtjs/pwa": "^3.0.0-0",
     "@popperjs/core": "^2.4.4",
     "@reallifedigital/nuxt-image-loader-module": "^1.4.2",
     "copyfiles": "^2.3.0",
-    "nuxt": "^2.14.1",
+    "nuxt": "^2.14.6",
     "postcss-nested": "^4.2.1"
   },
   "devDependencies": {
