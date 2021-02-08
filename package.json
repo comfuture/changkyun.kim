@@ -20,7 +20,7 @@
     "@tailwindcss/custom-forms": "^0.2.1",
     "@tailwindcss/typography": "^0.2.0",
     "copyfiles": "^2.3.0",
-    "firebase": "^7.21.1",
+    "firebase": "^7.24.0",
     "nuxt": "^2.14.6",
     "postcss-nested": "^4.2.1"
   },
