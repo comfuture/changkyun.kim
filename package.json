@@ -14,7 +14,7 @@
     "@nuxt/content": "^1.4.1",
     "@nuxtjs/dotenv": "^1.4.0",
     "@nuxtjs/firebase": "^6.1.1",
-    "@nuxtjs/pwa": "^3.0.0-0",
+    "@nuxtjs/pwa": "^3.3.5",
     "@pivale/nuxt-image-loader-module": "^1.4.4",
     "@popperjs/core": "^2.4.4",
     "@tailwindcss/custom-forms": "^0.2.1",
