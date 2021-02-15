@@ -130,6 +130,9 @@ article.article {
   */
   p > code {
     @apply border border-purple-200 rounded-sm bg-purple-100 px-2;
+    &:before, &:after {
+      content: ''
+    }
   }
 
   a {
