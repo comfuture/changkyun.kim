@@ -5,7 +5,7 @@ const exec = util.promisify(require('child_process').exec)
 const copyfiles = require('copyfiles')
 
 export default {
-  mode: 'universal',
+  target: 'static',
   /*
   ** Headers of the page
   */
