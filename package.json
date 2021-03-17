@@ -11,22 +11,22 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "@nuxt/content": "^1.13.1",
+    "@nuxt/content": "^1.14.0",
     "@nuxtjs/dotenv": "^1.4.0",
     "@nuxtjs/firebase": "^6.1.1",
     "@nuxtjs/pwa": "^3.3.5",
     "@pivale/nuxt-image-loader-module": "^1.4.4",
-    "@popperjs/core": "^2.8.6",
+    "@popperjs/core": "^2.9.1",
     "@tailwindcss/custom-forms": "^0.2.1",
     "@tailwindcss/typography": "^0.2.0",
     "copyfiles": "^2.4.1",
     "firebase": "^7.24.0",
-    "nuxt": "^2.15.2",
-    "postcss-nested": "^4.2.3"
+    "nuxt": "^2.15.3"
   },
   "devDependencies": {
     "@nuxtjs/moment": "^1.6.1",
-    "@nuxtjs/tailwindcss": "^3.4.2",
+    "@nuxtjs/tailwindcss": "^4.0.1",
+    "postcss": "^8.2.8",
     "tippy": "0.0.0"
   }
 }
