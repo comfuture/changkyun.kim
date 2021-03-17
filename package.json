@@ -18,7 +18,7 @@
     "@pivale/nuxt-image-loader-module": "^1.4.4",
     "@popperjs/core": "^2.9.1",
     "@tailwindcss/custom-forms": "^0.2.1",
-    "@tailwindcss/typography": "^0.2.0",
+    "@tailwindcss/typography": "^0.4.0",
     "copyfiles": "^2.4.1",
     "firebase": "^7.24.0",
     "nuxt": "^2.15.3"
