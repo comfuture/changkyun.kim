@@ -60,14 +60,16 @@ export default {
         large: { macros: ['scaleAndCrop|800|600'] },
       },
       forceGenerateImages: {
+        thumbnail: '**/*.{jpg,jpeg,gif,png}',
         small: '**/*.{jpg,jpeg,gif,png}',
-        medium: '**/*.{jpg,jpeg,gif,png}'
+        medium: '**/*.{jpg,jpeg,gif,png}',
+        large: '**/*.{jpg,jpeg,gif,png}'
       },
       responsiveStyles: {
         thumb: {
           srcset: 'small 160w, medium 320w, large 800w',
           sizes: '(min-width: 1280px) 100vw, 50vw',
-        },
+        }
       },
     }],
     ['@nuxtjs/firebase', {

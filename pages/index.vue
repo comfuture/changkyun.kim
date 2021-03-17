@@ -1,7 +1,7 @@
 <template>
   <div>
     <section class="cover md:pt-16 w-full h-64">
-      <img class="object-cover w-full h-64" src="image/cover2.jpg" />
+      <nuxt-img responsive-style="thumb" class="object-cover w-full h-64" src="/image/cover2.jpg" />
     </section>
     <section class="">
       <div class="container mx-auto items-center flex flex-wrap my-6 md:my-12">
