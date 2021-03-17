@@ -50,7 +50,7 @@ export default {
 
 main {
   section.cover {
-    @md {
+    @screen md {
       @apply pt-16;
     }
 
