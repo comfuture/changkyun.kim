@@ -97,6 +97,17 @@ export default {
       static: true
     }]
   ],
+  tailwindcss: {
+    // jit: true,
+    viewer: false,
+    config: {
+      purge: {
+        content: [
+          'content/**/*.md'
+        ]
+      }
+    }
+  },
   content: {
     markdown: {
       prism: {
@@ -134,15 +145,6 @@ export default {
     ** You can extend webpack config here
     */
     extend (config, ctx) {
-    },
-    postcss: {
-      plugins: {
-        // https://github.com/postcss/postcss/blob/master/docs/plugins.md
-        // 위 플러그인 목록에서 필요한 플러그인을 추가해서 사용할 수 있습니다.
-        // tailwindcss는 삭제하면 안됩니다.
-        tailwindcss: path.resolve(__dirname, './tailwind.config.js'),
-        'postcss-nested': {}
-      }
     }
   }
 }

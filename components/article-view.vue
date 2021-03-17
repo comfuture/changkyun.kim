@@ -84,8 +84,6 @@ article.article {
   }
 
   header {
-    @apply;
-
     h1 {
       @apply text-gray-700 font-semibold text-2xl mb-2;
       @screen md {
