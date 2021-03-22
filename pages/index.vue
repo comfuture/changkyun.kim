@@ -1,15 +1,7 @@
 <template>
   <div>
-    <section class="cover md:pt-16 w-full h-64">
+    <section class="cover md:pt-16 w-full">
       <nuxt-img responsive-style="thumb" class="object-cover w-full h-64" src="/image/cover2.jpg" />
-    </section>
-    <section class="">
-      <div class="container mx-auto items-center flex flex-wrap my-6 md:my-12">
-        <div class="w-full md:w-8/12 lg:w-6/12 xl:w-6/12 px-4">
-          <nuxt-content :document="page" />
-        </div>
-      </div>
-      <!-- <img class="absolute top-0 b-auto right-0 pt-16 sm:w-6/12 -mt-48 sm:mt-0 w-10/12 object-cover" src="https://images.unsplash.com/photo-1591308439494-984aedbc92ce?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=3334&q=80" alt="" style="max-height: 400px"> -->
     </section>
     <section class="bg-gray-200 py-2 lg:py-8">
       <div class="mx-auto container flex-wrap">

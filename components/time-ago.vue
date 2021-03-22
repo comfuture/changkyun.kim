@@ -28,3 +28,8 @@ export default {
   }
 }
 </script>
+<style lang="postcss" scoped>
+i.material-icons {
+  @apply align-middle mr-1;
+}
+</style>

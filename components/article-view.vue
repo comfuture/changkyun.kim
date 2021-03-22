@@ -76,7 +76,7 @@ export default {
   }
 }
 </script>
-<style lang="postcss">
+<style scoped lang="postcss">
 article.article {
   @apply mx-2 mb-6;
   @screen md {
@@ -108,26 +108,8 @@ article.article {
 }
 
 .nuxt-content {
-  /* h1 {
-    @apply text-gray-700 font-semibold text-2xl my-6;
-    @screen md {
-      @apply text-4xl;
-    }
-  }
-
-  h2 {
-    @apply text-gray-700 font-semibold text-xl my-4;
-    @screen md {
-      @apply text-2xl;
-    }
-  }
-
-  blockquote {
-    @apply border-l-8 border-gray-300 pl-6;
-  }
-  */
   p > code {
-    @apply border border-purple-200 rounded-sm bg-purple-100 px-2;
+    @apply border border-purple-200 rounded-sm bg-purple-100 px-1;
     &:before, &:after {
       content: ''
     }
