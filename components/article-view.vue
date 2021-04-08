@@ -8,7 +8,7 @@
         <time-ago :date="article.updatedAt || article.createdAt"></time-ago>
       </p>
     </header>
-    <div class="content prose lg:prose-lg">
+    <div class="content prose lg:prose-lg max-w-3xl">
       <nuxt-content :document="omittedArticle" v-if="omitted" />
       <nuxt-content :document="article" v-else />
     </div>
@@ -109,7 +109,7 @@ article.article {
 
 .nuxt-content {
   p > code {
-    @apply border border-purple-200 rounded-sm bg-purple-100 px-1;
+    @apply border border-indigo-200 rounded bg-indigo-100 px-2 font-normal;
     &:before, &:after {
       content: ''
     }
@@ -133,7 +133,7 @@ article.article {
 
   a.footnote-ref {
     text-decoration: none;
-    @apply text-gray-700 border border-gray-400 bg-blue-100 rounded-full px-2;
+    @apply text-gray-700 border bg-purple-200 rounded-full px-2;
   }
 
 
@@ -145,7 +145,11 @@ article.article {
     }
 
     li {
-      @apply absolute inline-block border border-gray-400 bg-gray-100 p-2 rounded-md shadow-md w-full;
+      &:before {
+        content: ''
+      }
+
+      @apply absolute inline-block border border-gray-400 bg-gray-100 p-2 rounded-md shadow-md w-full text-sm text-gray-700;
 
       .invisible {
         @apply opacity-0;
