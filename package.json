@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@nuxtjs/moment": "^1.6.1",
-    "@nuxtjs/tailwindcss": "^4.0.3",
+    "@nuxtjs/tailwindcss": "^4.1.0",
     "postcss": "^8.2.12",
     "tippy": "0.0.0"
   }
