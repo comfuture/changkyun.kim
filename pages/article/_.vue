@@ -1,7 +1,7 @@
 <template>
   <main>
     <section class="cover">
-      <nuxt-img v-if="article.cover_image" preset="large" class="object-cover w-full" :src="article.cover_image" />
+      <nuxt-img v-if="article.cover_image" preset="cover" class="object-cover w-full" :src="article.cover_image" />
       <nuxt-img v-else preset="cover" class="object-cover w-full" src="/image/article-cover.jpg" />
     </section>
     <section class="content">
