@@ -1,7 +1,7 @@
 <template>
   <main>
     <section class="cover">
-      <img src="/image/cover.jpg" />
+      <nuxt-img preset="large" class="object-cover w-full" src="/image/cover.jpg" />
     </section>
     <section class="content">
       <div class="container">

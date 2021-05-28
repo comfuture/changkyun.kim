@@ -1,7 +1,8 @@
 <template>
   <main>
     <section class="cover">
-      <img src="https://images.unsplash.com/photo-1476242906366-d8eb64c2f661?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=3216&q=80" />
+      <nuxt-img v-if="article.cover_image" preset="large" class="object-cover w-full" :src="article.cover_image" />
+      <nuxt-img v-else preset="large" class="object-cover w-full" src="/image/article-cover.jpg" />
     </section>
     <section class="content">
       <div class="container">

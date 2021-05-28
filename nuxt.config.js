@@ -4,8 +4,10 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const copyfiles = require('copyfiles')
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 export default {
-  target: 'static',
+  target: isDev ? 'server' : 'static',
   /*
   ** Headers of the page
   */
@@ -42,6 +44,7 @@ export default {
   buildModules: [
     // Doc: https://github.com/nuxt-community/nuxt-tailwindcss
     '@nuxtjs/tailwindcss',
+    '@nuxt/image'
   ],
   /*
   ** Nuxt.js modules
@@ -51,27 +54,6 @@ export default {
     '@nuxtjs/pwa',
     '@nuxtjs/dotenv',
     '@nuxt/content',
-    ['@pivale/nuxt-image-loader-module', {
-      imagesBaseDir: 'content',
-      imageStyles: {
-        thumbnail: { actions: ['gravity|Center', 'resize|320|180^', 'extent|320|180|+0|+90'] },
-        small: { macros: ['scaleAndCrop|160|90'] },
-        medium: { macros: ['scaleAndCrop|320|180'] },
-        large: { macros: ['scaleAndCrop|800|600'] },
-      },
-      forceGenerateImages: {
-        thumbnail: '**/*.{jpg,jpeg,gif,png}',
-        small: '**/*.{jpg,jpeg,gif,png}',
-        medium: '**/*.{jpg,jpeg,gif,png}',
-        large: '**/*.{jpg,jpeg,gif,png}'
-      },
-      responsiveStyles: {
-        thumb: {
-          srcset: 'small 160w, medium 320w, large 800w',
-          sizes: '(min-width: 1280px) 100vw, 50vw',
-        }
-      },
-    }],
     ['@nuxtjs/firebase', {
       config: {
         apiKey: "AIzaSyDDa2rNNA_iN3anKTzt5i8bf83ACir5uno",
@@ -114,6 +96,40 @@ export default {
     markdown: {
       prism: {
         theme: 'static/css/prism-synthwave84.css'
+      }
+    }
+  },
+  image: {
+    provider: 'static',
+    dir: 'content',
+    presets: {
+      thumbnail: {
+        modifiers: {
+          format: 'webp',
+          width: 90,
+          height: 90
+        }
+      },
+      small: {
+        modifiers: {
+          format: 'webp',
+          width: 160,
+          height: 90
+        }
+      },
+      medium: {
+        modifiers: {
+          format: 'webp',
+          width: 320,
+          height: 180
+        }
+      },
+      large: {
+        modifiers: {
+          format: 'webp',
+          width: 800,
+          height: 600
+        }
       }
     }
   },
