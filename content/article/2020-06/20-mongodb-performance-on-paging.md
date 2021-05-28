@@ -1,5 +1,6 @@
 ---
 title: 몽고디비 페이징과 룩업 성능
+cover_image: /article/2020-06/20-mongo.jpg
 description: >
   몽고디비 aggregation을 페이징 할 때 성능 문제 해결기
 ---
