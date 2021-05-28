@@ -130,6 +130,13 @@ export default {
           width: 800,
           height: 600
         }
+      },
+      cover: {
+        modifiers: {
+          format: 'webp',
+          width: 1280,
+          height: 400
+        }
       }
     }
   },
