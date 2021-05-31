@@ -145,7 +145,7 @@ export default {
       if (document.extension === '.md') {
         try {
           const contentPath = `content${document.path}${document.extension}`
-          const { stdout } = await exec(`git log -1 --format=%cd --date=iso ${contentPath}`)
+          const { stdout } = await exec(`GIT_PAGER='' git log -1 --format=%cd --date=iso ${contentPath}`)
           // 2020-06-30 00:33:07 +0900
           const [date, time] = stdout.split(' ', 2)
           const iso8601 = [date, time.replace(' ', '')].join('T')
