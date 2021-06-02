@@ -82,7 +82,7 @@ export default {
     }]
   ],
   tailwindcss: {
-    // jit: true,
+    jit: true,
     viewer: false,
     config: {
       purge: {

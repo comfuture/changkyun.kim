@@ -78,24 +78,15 @@ export default {
 </script>
 <style scoped lang="postcss">
 article.article {
-  @apply mx-2 mb-6;
-  @screen md {
-    @apply mx-0;
-  }
+  @apply mx-2 mb-6 md:mx-0;
 
   header {
     h1 {
-      @apply text-gray-700 font-semibold text-2xl mb-2;
-      @screen md {
-        @apply text-4xl;
-      }
+      @apply text-gray-700 font-semibold text-2xl mb-2 md:text-4xl;
     }
 
     h2 {
-      @apply text-gray-700 font-semibold text-xl mb-2;
-      @screen md {
-        @apply text-2xl;
-      }
+      @apply text-gray-700 font-semibold text-xl mb-2 md:text-2xl;
     }
 
     p.meta {
@@ -149,14 +140,10 @@ article.article {
         content: ''
       }
 
-      @apply absolute inline-block border border-gray-400 bg-gray-100 p-2 rounded-md shadow-md w-full text-sm text-gray-700;
+      @apply absolute inline-block border border-gray-400 bg-gray-100 p-2 rounded-md shadow-md w-full text-sm text-gray-700 md:w-1/2;
 
       .invisible {
         @apply opacity-0;
-      }
-
-      @screen md {
-        @apply w-1/2
       }
 
       a.footnote-backref {
@@ -170,10 +157,9 @@ article.article {
   * {
     @apply text-xs !important;
   }
-  @screen md {
-    @apply text-base;
-  }
+  @apply md:text-base;
   @apply my-6;
+
   > .filename {
     @apply text-gray-600;
 

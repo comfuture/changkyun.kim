@@ -84,16 +84,13 @@ export default {
 </script>
 <style scoped lang="postcss">
 section.cover {
-  @screen md {
-    @apply pt-16;
-  }
+  @apply md:pt-6;
 
   img {
-    @apply object-cover w-full h-48;
+    @apply object-cover w-full h-48 lg:h-64;
 
     @screen lg {
       height: 250px !important;
-      @apply h-64;
     }
 
     @screen xl {
@@ -103,49 +100,30 @@ section.cover {
 }
 
 section.content {
-  @screen md {
-    @apply bg-gray-200;
-  }
+  @apply md:bg-gray-200;
 
   .container {
-    @apply mx-auto items-center flex flex-wrap;
+    @apply mx-auto items-center flex flex-wrap md:-mt-24 md:pb-8;
     
-    @screen md {
-      @apply -mt-24 pb-8
-    }
-
     .wrap {
       @apply flex flex-col w-full;
-      
-      @screen md {
-        @apply w-10/12 mx-auto rounded-lg bg-white shadow-lg;
-      }
-
-      @screen xl {
-        @apply w-8/12;
-      }
+      @apply md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg;
+      @apply lg:w-8/12;
 
       .heading {
         @apply py-6 px-4 mb-2 border-b border-gray-300 flex flex-col justify-between;
+        @apply lg:px-8 lg:py-12 lg:flex-row;
 
         data.name {
           @apply block text-xl;
         }
 
         h2 {
-          @apply text-lg font-semibold;
-
-          @screen lg {
-            @apply text-xl;
-          }
+          @apply text-lg lg:text-xl font-semibold;
         }
 
         .meta {
           @apply text-gray-400
-        }
-
-        @screen lg {
-          @apply px-8 py-12 flex-row;
         }
       }
       .body {
@@ -157,11 +135,7 @@ section.content {
 </style>
 <style lang="postcss">
 .nuxt-content {
-  @apply p-2;
-
-  @screen md {
-    @apply p-4;
-  }
+  @apply p-2 md:p-4;
 
   p > code {
     word-break: break-all !important;
@@ -174,18 +148,6 @@ section.content {
   a {
     @apply underline text-blue-600;
   }
-
-  /* ul {
-    @apply ml-4;
-    li {
-      list-style-type: disc;
-    }
-  }
-
-  ol {
-    list-style-type: decimal;
-    @apply ml-4;
-  } */
 
   a.footnote-ref {
     text-decoration: none;
@@ -201,18 +163,18 @@ section.content {
     }
 
     li {
-      @apply absolute inline-block border border-gray-400 bg-gray-100 p-2 rounded-md shadow-md w-full;
+      @apply absolute inline-block border border-gray-400 bg-gray-100 p-2 rounded-md shadow-md w-full md:w-1/2;
 
       .invisible {
         @apply opacity-0;
       }
 
-      @screen md {
-        @apply w-1/2
-      }
-
       a.footnote-backref {
         @apply hidden;
+      }
+
+      &::before {
+        content: '';
       }
     }
   }
@@ -222,10 +184,10 @@ section.content {
   * {
     @apply text-xs !important;
   }
-  @screen md {
-    @apply text-base;
-  }
+
+  @apply md:text-base my-6;
   @apply my-6;
+
   > .filename {
     @apply text-gray-600;
 

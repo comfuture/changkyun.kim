@@ -50,9 +50,7 @@ export default {
 
 main {
   section.cover {
-    @screen md {
-      @apply pt-16;
-    }
+    @apply md:pt-16;
 
     img {
       @apply object-cover w-full h-64;
@@ -68,27 +66,16 @@ main {
   }
 
   section.content {
-    @screen md {
-      @apply bg-gray-200;
-    }
+    @apply md:bg-gray-200;
 
     .container {
       @apply mx-auto items-center flex flex-wrap;
-      
-      @screen md {
-        @apply -mt-16 pb-8
-      }
+      @apply md:-mt-16 md:pb-8;
 
       .card {
         @apply flex flex-col w-full;
-        
-        @screen md {
-          @apply w-10/12 mx-auto rounded-lg bg-white shadow-lg;
-        }
+        @apply md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg xl:w-8/12;
 
-        @screen xl {
-          @apply w-8/12;
-        }
 
         .bio {
           line-height: 3rem;
