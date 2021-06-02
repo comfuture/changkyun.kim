@@ -12,20 +12,20 @@
   },
   "dependencies": {
     "@nuxt/content": "^1.14.0",
-    "@nuxt/image": "^0.4.12",
+    "@nuxt/image": "^0.4.14",
     "@nuxtjs/dotenv": "^1.4.0",
     "@nuxtjs/firebase": "^6.1.1",
     "@nuxtjs/pwa": "^3.3.5",
     "@popperjs/core": "^2.9.2",
     "@tailwindcss/custom-forms": "^0.2.1",
-    "@tailwindcss/typography": "^0.4.0",
+    "@tailwindcss/typography": "^0.4.1",
     "copyfiles": "^2.4.1",
     "firebase": "^7.24.0",
     "nuxt": "^2.15.6"
   },
   "devDependencies": {
     "@nuxtjs/moment": "^1.6.1",
-    "@nuxtjs/tailwindcss": "^4.0.3",
+    "@nuxtjs/tailwindcss": "^4.1.2",
     "ipx": "^0.6.1",
     "postcss": "^8.2.15",
     "tippy": "0.0.0"
