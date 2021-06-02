@@ -10,7 +10,7 @@
             </button>
           </div>
           <div class="transition-all md:flex flex-grow items-center hidden" ref="topnav">
-            <ul class="flex flex-col md:flex-row list-none md:ml-auto">
+            <ul class="flex flex-col md:flex-row list-none md:ml-auto md:space-x-2">
               <li><n-link to="/about" class="menu-item"><i class="material-icons">face</i><span class="ml-2">About</span></n-link></li>
               <li><n-link to="/article" class="menu-item"><i class="material-icons">subject</i><span class="ml-2">Articles</span></n-link></li>
               <li><a href="https://github.com/comfuture/changkyun.kim" class="menu-item" target="_blank">
@@ -75,6 +75,9 @@ export default {
     @apply px-3 py-2 flex items-center text-xs uppercase font-bold text-gray-800;
     &:hover {
       @apply text-gray-600;
+    }
+    .material-icons {
+      @apply align-middle;
     }
   }
 }

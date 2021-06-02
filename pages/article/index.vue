@@ -5,7 +5,7 @@
       <article-view :article="article" omitted
         v-for="article in articles" :key="article.path" />
     </div>
-    <div class="flex-1 bg-gray-200 mt-16 w-full md:w-64 md:inset-y-0 md:right-0">
+    <div class="bg-gray-200 mt-16 w-64 md:w-64 md:inset-y-0 md:right-0">
       여기에 사이드바 뭘 채우지
     </div>
   </div>
