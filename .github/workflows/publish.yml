@@ -15,10 +15,21 @@ jobs:
     - uses: actions/setup-node@v2
       with:
         node-version: 12.x
+    - name: Cache node modules
+      id: node-cache
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+    - name: Install Dependencies
+      if: steps.node-cache.outputs.cache-hit != 'true'
+      run: npm ci
     - name: Generate pages
-      run: |
-        npm ci
-        npm run generate
+      run: npm run generate
     - name: Deploy to GitHub Pages
       uses: comfuture/actions/ghpages@master
       env:
