@@ -82,7 +82,6 @@ export default {
     }]
   ],
   tailwindcss: {
-    jit: true,
     viewer: false,
     config: {
       purge: {
