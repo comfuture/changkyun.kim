@@ -14,7 +14,6 @@
     "@nuxt/content": "^1.14.0",
     "@nuxt/image": "^0.4.14",
     "@nuxtjs/dotenv": "^1.4.0",
-    "@nuxtjs/firebase": "^6.1.1",
     "@nuxtjs/pwa": "^3.3.5",
     "@popperjs/core": "^2.9.2",
     "@tailwindcss/custom-forms": "^0.2.1",
@@ -24,6 +23,7 @@
     "nuxt": "^2.15.6"
   },
   "devDependencies": {
+    "@nuxtjs/firebase": "^7.5.0",
     "@nuxtjs/moment": "^1.6.1",
     "@nuxtjs/tailwindcss": "^4.1.2",
     "ipx": "^0.6.1",
