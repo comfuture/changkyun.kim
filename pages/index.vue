@@ -1,7 +1,7 @@
 <template>
   <div>
     <section class="cover md:pt-16 w-full">
-      <nuxt-img preset="cover" class="object-cover w-full h-64" src="image/cover2.jpg" />
+      <nuxt-img preset="cover" class="object-cover w-full h-64" src="image/cover2.jpg" alt="cover image" />
     </section>
     <section class="bg-gray-200 py-2 lg:py-8">
       <div class="mx-auto container flex-wrap">
