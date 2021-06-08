@@ -1,8 +1,8 @@
 <template>
   <div>
-    <section class="cover md:pt-16 w-full">
+    <header class="cover md:pt-16 w-full">
       <nuxt-img preset="cover" class="object-cover w-full h-64" src="image/cover2.jpg" alt="cover image" />
-    </section>
+    </header>
     <section class="bg-gray-200 py-2 lg:py-8">
       <div class="mx-auto container flex-wrap">
         <div class="p-2 md:p-4 w-full md:w-1/2" v-for="article in recent" :key="article.slug">
