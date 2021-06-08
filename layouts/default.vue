@@ -13,7 +13,7 @@
             <ul class="flex flex-col md:flex-row list-none md:ml-auto md:space-x-2">
               <li><n-link to="/about" class="menu-item"><i class="material-icons">face</i><span class="ml-2">About</span></n-link></li>
               <li><n-link to="/article" class="menu-item"><i class="material-icons">subject</i><span class="ml-2">Articles</span></n-link></li>
-              <li><a href="https://github.com/comfuture/changkyun.kim" class="menu-item" target="_blank">
+              <li><a href="https://github.com/comfuture/changkyun.kim" rel="noreferrer" class="menu-item" target="_blank">
                 <!-- <i class="material-icons">code</i> -->
                 <svg class="fill-current w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                   <title>GitHub</title>
