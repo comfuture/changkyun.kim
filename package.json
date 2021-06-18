@@ -19,7 +19,7 @@
     "@tailwindcss/custom-forms": "^0.2.1",
     "@tailwindcss/typography": "^0.4.1",
     "copyfiles": "^2.4.1",
-    "firebase": "^8.6.4",
+    "firebase": "^8.6.8",
     "nuxt": "^2.15.6"
   },
   "devDependencies": {
