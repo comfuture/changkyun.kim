@@ -20,7 +20,7 @@
     "@tailwindcss/typography": "^0.4.1",
     "copyfiles": "^2.4.1",
     "firebase": "^8.6.4",
-    "nuxt": "^2.15.6"
+    "nuxt": "^2.15.7"
   },
   "devDependencies": {
     "@nuxtjs/firebase": "^7.5.0",
