@@ -23,7 +23,7 @@
     "nuxt": "^2.15.6"
   },
   "devDependencies": {
-    "@nuxtjs/firebase": "^7.5.0",
+    "@nuxtjs/firebase": "^7.6.1",
     "@nuxtjs/moment": "^1.6.1",
     "@nuxtjs/tailwindcss": "^4.2.1",
     "ipx": "^0.6.1",
