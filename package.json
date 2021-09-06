@@ -26,7 +26,7 @@
     "@nuxtjs/firebase": "^7.6.1",
     "@nuxtjs/moment": "^1.6.1",
     "@nuxtjs/tailwindcss": "^4.2.1",
-    "ipx": "^0.6.1",
+    "ipx": "^0.8.0",
     "postcss": "^8.3.0",
     "tippy": "0.0.0"
   }
