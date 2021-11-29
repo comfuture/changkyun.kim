@@ -15,7 +15,7 @@
     "@nuxt/image": "^0.6.0",
     "@nuxtjs/dotenv": "^1.4.0",
     "@nuxtjs/pwa": "^3.3.5",
-    "@popperjs/core": "^2.10.2",
+    "@popperjs/core": "^2.11.0",
     "@tailwindcss/custom-forms": "^0.2.1",
     "@tailwindcss/typography": "^0.4.1",
     "copyfiles": "^2.4.1",
