@@ -12,24 +12,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2
+    - uses: actions/setup-node@v3
       with:
-        node-version: 12.x
-    - name: Cache node modules
-      id: node-cache
-      uses: actions/cache@v2
-      env:
-        cache-name: cache-node-modules
+        node-version: 14.x
+    - uses: actions/cache@v2
       with:
-        path: node_modules
-        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-modules-
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
     - name: Install Dependencies
-      if: steps.node-cache.outputs.cache-hit != 'true'
-      run: npm ci
+      run: yarn
     - name: Generate pages
-      run: npm run generate
+      run: yarn generate
     - name: Deploy to GitHub Pages
       uses: comfuture/actions/ghpages@master
       env:

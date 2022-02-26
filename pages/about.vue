@@ -8,7 +8,7 @@
         <div class="card">
           <div class="w-full flex justify-center">
             <div>
-              <img alt="..." src="/image/avatar.jpg" class="block shadow-xl rounded-full align-middle border-none absolute h-32 w-32 -m-16 md:h-48 md:w-48 md:-m-24">
+              <img alt="..." src="/image/avatar.jpg" class="avatar">
             </div>
           </div>
           <div class="bio">
@@ -56,6 +56,7 @@ main {
       @apply object-cover w-full h-64;
 
       @screen lg {
+        @apply !h[300px];
         height: 300px !important;
       }
 
@@ -76,6 +77,9 @@ main {
         @apply flex flex-col w-full;
         @apply md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg xl:w-8/12;
 
+        img.avatar {
+          @apply block shadow-xl rounded-full align-middle border-none absolute h-32 w-32 -m-16 md:h-48 md:w-48 md:-m-24;
+        }
 
         .bio {
           line-height: 3rem;
