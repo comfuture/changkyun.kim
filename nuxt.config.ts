@@ -43,7 +43,7 @@ export default {
   */
   buildModules: [
     // Doc: https://github.com/nuxt-community/nuxt-tailwindcss
-    '@nuxtjs/tailwindcss',
+    'nuxt-windicss',
     '@nuxt/image'
   ],
   /*
@@ -169,11 +169,6 @@ export default {
     ** You can extend webpack config here
     */
     extend (config, ctx) {
-    },
-    postcss: {
-      plugins: {
-        'postcss-nested': {}
-      }
     }
   }
 }
