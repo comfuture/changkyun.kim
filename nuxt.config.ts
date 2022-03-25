@@ -142,6 +142,7 @@ export default {
   pwa: {
     manifest: {
       'manifest_package': 'org.chromium.webapk.test',
+      'scope': '/',
       'scope_url': 'https://changkyun.kim',
       'intent_filters': {
         'scope_url_scheme': 'https',

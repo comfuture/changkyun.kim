@@ -42,6 +42,11 @@ export default {
       this.hideMenu()
     }
   },
+  mounted() {
+    if (navigator.userAgent.includes('KAKAOTALK')) {
+      location.href = new URL(`${document.URL}?standalone=true`)
+    }
+  },
   methods: {
     hideMenu() {
       this.$refs.topnav.classList.add('hidden')
