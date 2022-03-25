@@ -44,7 +44,7 @@ export default {
   },
   mounted() {
     if (navigator.userAgent.includes('KAKAOTALK')) {
-      location.href = new URL(`${document.URL}?standalone=true`)
+      location.href = 'intent://changkyun.kim#Intent;scheme=http;package=com.android.chrome;end'
     }
   },
   methods: {
