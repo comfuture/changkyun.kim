@@ -38,7 +38,7 @@
     </section>
   </main>
 </template>
-<script>
+<script lang="ts">
 export default {
   name: 'about'
 }
@@ -56,7 +56,7 @@ main {
       @apply object-cover w-full h-64;
 
       @screen lg {
-        @apply !h[300px];
+        @apply !h-300px;
         height: 300px !important;
       }
 
@@ -70,15 +70,13 @@ main {
     @apply md:bg-gray-200;
 
     .container {
-      @apply mx-auto items-center flex flex-wrap;
-      @apply md:-mt-16 md:pb-8;
+      @apply mx-auto items-center flex flex-wrap md:(-mt-16 pb-8);
 
       .card {
-        @apply flex flex-col w-full;
-        @apply md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg xl:w-8/12;
+        @apply flex flex-col w-full md:(w-10/12 mx-auto rounded-lg bg-white shadow-lg) xl:w-8/12;
 
         img.avatar {
-          @apply block shadow-xl rounded-full align-middle border-none absolute h-32 w-32 -m-16 md:h-48 md:w-48 md:-m-24;
+          @apply block shadow-xl rounded-full align-middle border-none absolute h-32 w-32 -m-16 md:(h-48 w-48 -m-24);
         }
 
         .bio {
