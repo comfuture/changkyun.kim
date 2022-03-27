@@ -81,16 +81,7 @@ export default {
       static: true
     }]
   ],
-  tailwindcss: {
-    viewer: false,
-    config: {
-      purge: {
-        content: [
-          'content/**/*.md'
-        ]
-      }
-    }
-  },
+  components: true,
   content: {
     markdown: {
       prism: {
