@@ -42,6 +42,11 @@ export default {
       this.hideMenu()
     }
   },
+  mounted() {
+    if (navigator.userAgent.includes('KAKAOTALK')) {
+      location.href = 'intent://changkyun.kim#Intent;scheme=http;package=com.android.chrome;end'
+    }
+  },
   methods: {
     hideMenu() {
       this.$refs.topnav.classList.add('hidden')
