@@ -15,7 +15,7 @@
     "@nuxt/image": "^0.6.0",
     "@nuxtjs/dotenv": "^1.4.0",
     "@nuxtjs/pwa": "^3.3.5",
-    "@popperjs/core": "^2.11.4",
+    "@popperjs/core": "^2.11.5",
     "copyfiles": "^2.4.1",
     "firebase": "^9.6.9",
     "ipx": "^0.9.1",
