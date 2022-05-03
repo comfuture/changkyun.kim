@@ -130,6 +130,18 @@ export default {
       }
     }
   },
+  pwa: {
+    manifest: {
+      'manifest_package': 'org.chromium.webapk.test',
+      'scope': '/',
+      'scope_url': 'https://changkyun.kim',
+      'intent_filters': {
+        'scope_url_scheme': 'https',
+        'scope_url_host': 'changkyun.kim',
+        'scope_url_path': '/'
+      }
+    }
+  },
   hooks: {
     'content:file:beforeInsert': async document => {
       if (document.extension === '.md') {

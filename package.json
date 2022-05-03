@@ -15,16 +15,16 @@
     "@nuxt/image": "^0.6.0",
     "@nuxtjs/dotenv": "^1.4.0",
     "@nuxtjs/pwa": "^3.3.5",
-    "@popperjs/core": "^2.11.2",
+    "@popperjs/core": "^2.11.5",
     "copyfiles": "^2.4.1",
-    "firebase": "^9.6.6",
+    "firebase": "^9.6.11",
     "ipx": "^0.9.1",
     "nuxt": "^2.15.8"
   },
   "devDependencies": {
     "@nuxtjs/firebase": "^8.2.2",
     "@nuxtjs/moment": "^1.6.1",
-    "nuxt-windicss": "^2.2.5",
+    "nuxt-windicss": "^2.3.1",
     "tippy": "0.0.0"
   }
 }
