@@ -6,19 +6,36 @@
     </section>
     <section class="content">
       <div class="container">
-        <div class="wrap">
+        <article>
           <div class="heading">
             <h2>
               {{ article.title }}  
             </h2>
             <p class="meta">
-              <time-ago :date="article.updatedAt || article.createdAt"></time-ago>
+              <span class="material-icons">update</span>
+              <ui-timeago :value="article.updatedAt || article.createdAt" />
             </p>
           </div>
           <div class="body prose lg:prose-lg">
             <nuxt-content :document="article" />
           </div>
-        </div>
+          <div class="p-2">
+            <script src="https://giscus.app/client.js"
+              data-repo="comfuture/changkyun.kim"
+              data-repo-id="MDEwOlJlcG9zaXRvcnk2MDA1ODkxNA=="
+              data-category="Comments"
+              data-category-id="DIC_kwDOA5RtIs4CO5IY"
+              data-mapping="pathname"
+              data-reactions-enabled="1"
+              data-emit-metadata="0"
+              data-input-position="top"
+              data-theme="light"
+              data-lang="ko"
+              crossorigin="anonymous"
+              async>
+            </script>
+          </div>
+        </article>
       </div>
     </section>
   </main>
@@ -26,12 +43,13 @@
 <script>
 import { createPopper } from '@popperjs/core'
 import ArticleView from '~/components/article-view'
-import TimeAgo from '~/components/time-ago'
+import UiTimeago from '~/components/ui-timeago.vue'
+// import TimeAgo from '~/components/time-ago'
 
 export default {
   name: 'article-path',
   components: {
-    ArticleView, TimeAgo
+    ArticleView, UiTimeago
   },
   head() {
     return {
@@ -105,9 +123,9 @@ section.content {
   .container {
     @apply mx-auto items-center flex flex-wrap md:-mt-24 md:pb-8;
     
-    .wrap {
+    article {
       @apply flex flex-col w-full;
-      @apply md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg;
+      @apply md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-xl;
       @apply lg:w-8/12;
 
       .heading {
@@ -123,7 +141,7 @@ section.content {
         }
 
         .meta {
-          @apply text-gray-400
+          @apply text-gray-400 flex gap-2 items-center;
         }
       }
       .body {
