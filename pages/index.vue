@@ -5,12 +5,6 @@
     </header>
     <section class="articles">
       <div class="container">
-        <ui-card>asdf</ui-card>
-        <ui-card>asdf</ui-card>
-      </div>
-    </section>
-    <section class="articles-">
-      <div class="container">
         <div class="p-2 md:p-4 w-full md:w-1/2" v-for="article in recent" :key="article.slug">
           <article class="max-w-4xl px-10 my-4 py-6 bg-white rounded-lg shadow-md">
             <div class="flex justify-between items-center">
