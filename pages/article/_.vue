@@ -43,8 +43,8 @@
 <script>
 import { createPopper } from '@popperjs/core'
 import ArticleView from '~/components/article-view'
-// import UiTimeago from '~/components/ui-timeago.vue'
-import UiTimeago from '~/components/time-ago'
+import UiTimeago from '~/components/ui-timeago.vue'
+// import UiTimeago from '~/components/time-ago'
 
 export default {
   name: 'article-path',
