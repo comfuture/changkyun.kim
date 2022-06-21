@@ -18,7 +18,7 @@
     "@popperjs/core": "^2.11.5",
     "copyfiles": "^2.4.1",
     "firebase": "^9.8.0",
-    "ipx": "^0.9.1",
+    "ipx": "^0.9.6",
     "nuxt": "^2.15.8"
   },
   "devDependencies": {
