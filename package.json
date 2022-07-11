@@ -24,7 +24,7 @@
   "devDependencies": {
     "@nuxtjs/firebase": "^8.2.2",
     "@nuxtjs/moment": "^1.6.1",
-    "nuxt-windicss": "^2.3.1",
+    "nuxt-windicss": "^2.4.3",
     "tippy": "0.0.0"
   }
 }
