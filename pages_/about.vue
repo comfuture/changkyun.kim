@@ -1,12 +1,7 @@
-<script setup lang="ts">
-useHead({
-  title: 'about me'
-})
-</script>
 <template>
   <main>
     <section class="cover">
-      <nuxt-img preset="cover" class="object-cover w-full" src="content/image/cover.jpg" />
+      <nuxt-img preset="cover" class="object-cover w-full" src="/image/cover.jpg" />
     </section>
     <section class="content">
       <div class="container">

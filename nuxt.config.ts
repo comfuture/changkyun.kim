@@ -1,18 +1,11 @@
-const path = require('path')
-const moment = require('moment')
-const util = require('util')
-const exec = util.promisify(require('child_process').exec)
-const copyfiles = require('copyfiles')
-
-const isDev = process.env.NODE_ENV !== 'production'
-
-export default {
-  target: isDev ? 'server' : 'static',
-  /*
-  ** Headers of the page
-  */
+import { defineNuxtConfig } from 'nuxt/config'
+// https://v3.nuxtjs.org/api/configuration/nuxt.config
+export default defineNuxtConfig({
+  typescript: {
+    shim: false
+  },
   head: {
-    title: process.env.npm_package_name || '',
+    title: 'Changkyun Kim',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -20,78 +13,23 @@ export default {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-      { hid: 'material-icon-css', rel: 'stylesheet', href: 'https://fonts.googleapis.com/icon?family=Material+Icons' },
-      { hid: 'prism-theme', rel: 'stylesheet', href: '/css/prism-synthwave84.css' }
+      { hid: 'material-icon-css', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0' }
     ]
   },
-  /*
-  ** Customize the progress-bar color
-  */
-  loading: { color: '#fff' },
-  /*
-  ** Global CSS
-  */
-  css: [
-  ],
-  /*
-  ** Plugins to load before mounting the App
-  */
-  plugins: [
-  ],
-  /*
-  ** Nuxt.js dev-modules
-  */
-  buildModules: [
-    // Doc: https://github.com/nuxt-community/nuxt-tailwindcss
-    'nuxt-windicss',
-    '@nuxt/image'
-  ],
-  /*
-  ** Nuxt.js modules
-  */
   modules: [
-    '@nuxtjs/moment',
-    '@nuxtjs/pwa',
-    '@nuxtjs/dotenv',
-    '@nuxt/content',
-    ['@nuxtjs/firebase', {
-      config: {
-        apiKey: "AIzaSyDDa2rNNA_iN3anKTzt5i8bf83ACir5uno",
-        authDomain: "changkyun-kim.firebaseapp.com",
-        databaseURL: "https://changkyun-kim.firebaseio.com",
-        projectId: "changkyun-kim",
-        storageBucket: "changkyun-kim.appspot.com",
-        messagingSenderId: "871650378107",
-        appId: "1:871650378107:web:372f9548992e0b5ea87dde",
-        measurementId: "G-9MYK3SBZKL"
-      },
-      services: {
-        auth: {
-          static: true,
-          preload: true,
-          initialize: {
-            onAuthStateChangedMutation: 'setUser'
-          }
-        },
-        analytics: {
-          static: true,
-          preload: true
-        }
-      },
-      static: true
-    }]
+    "@nuxt/content",
+    "@nuxt/image-edge",
+    "@nuxtjs/tailwindcss"
   ],
-  components: true,
   content: {
-    markdown: {
-      prism: {
-        theme: 'static/css/prism-synthwave84.css'
-      }
+    highlight: {
+      theme: 'github-dark-dimmed',
+      preload: ['python', 'vue', 'vue-html']
     }
   },
   image: {
-    provider: 'static',
-    dir: 'content',
+    provider: 'ipx',
+    // dir: 'content',
     presets: {
       thumbnail: {
         modifiers: {
@@ -130,48 +68,4 @@ export default {
       }
     }
   },
-  pwa: {
-    manifest: {
-      'manifest_package': 'org.chromium.webapk.test',
-      'scope': '/',
-      'scope_url': 'https://changkyun.kim',
-      'intent_filters': {
-        'scope_url_scheme': 'https',
-        'scope_url_host': 'changkyun.kim',
-        'scope_url_path': '/'
-      }
-    }
-  },
-  hooks: {
-    'content:file:beforeInsert': async document => {
-      if (document.extension === '.md') {
-        try {
-          const contentPath = `content${document.path}${document.extension}`
-          const { stdout } = await exec(`GIT_PAGER='' git log -1 --format=%cd --date=iso ${contentPath}`)
-          // 2020-06-30 00:33:07 +0900
-          const [date, time] = stdout.split(' ', 2)
-          const iso8601 = [date, time.replace(' ', '')].join('T')
-          document.updatedAt = moment(iso8601).toDate()
-          console.log('hook created date', contentPath, iso8601)
-        } catch (e) {
-          // noop
-        }
-      }
-    },
-    'generate:before': (generator, generateOptions) => {
-      copyfiles(['content/**/*.jpg', 'content/**/*.gif', 'content/**/*.png', 'static'], {
-        error: false
-      }, () => {})
-    }
-  },
-  /*
-  ** Build configuration
-  */
-  build: {
-    /*
-    ** You can extend webpack config here
-    */
-    extend (config, ctx) {
-    }
-  }
-}
+})

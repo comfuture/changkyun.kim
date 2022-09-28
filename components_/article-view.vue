@@ -2,10 +2,10 @@
   <article class="article">
     <header>
       <h1>
-        {{ article.title }}
+        {{ article.title }}!!
       </h1>
       <p class="meta">
-        <time-ago :date="article.updatedAt || article.createdAt"></time-ago>
+        <ui-timeago :value="article.updatedAt || article.createdAt" />
       </p>
     </header>
     <div class="content prose lg:prose-lg max-w-3xl">
@@ -19,12 +19,13 @@
 </template>
 <script>
 import { createPopper } from '@popperjs/core'
-import TimeAgo from './time-ago'
+// import TimeAgo from './time-ago'
+import UiTimeago from './ui-timeago'
 
 export default {
   name: 'article-view',
   components: {
-    TimeAgo
+    UiTimeago
   },
   props: {
     article: Object,
