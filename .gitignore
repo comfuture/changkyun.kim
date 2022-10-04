@@ -36,6 +36,7 @@ node_modules/
 
 # Nuxt generate
 dist
+.output
 
 # Serverless directories
 .serverless
