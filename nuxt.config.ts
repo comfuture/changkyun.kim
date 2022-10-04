@@ -16,6 +16,7 @@ export default defineNuxtConfig({
       { hid: 'material-icon-css', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0' }
     ]
   },
+  pageTransition: {page: true},
   modules: [
     "@nuxt/content",
     "@nuxt/image-edge",
@@ -29,7 +30,7 @@ export default defineNuxtConfig({
   },
   image: {
     provider: 'ipx',
-    // dir: 'content',
+    dir: 'content',
     presets: {
       thumbnail: {
         modifiers: {
