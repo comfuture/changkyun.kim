@@ -22,6 +22,8 @@ jobs:
         run: yarn
       - name: Generate pages
         run: yarn generate
+      - name: no jekyll
+        run: touch .output/public/.nojekyll
       - name: Deploy to GitHub Pages
         uses: comfuture/actions/ghpages@master
         env:

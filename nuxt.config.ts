@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
+  target: 'static',
   head: {
     title: 'Changkyun Kim',
     meta: [
@@ -30,6 +31,9 @@ export default defineNuxtConfig({
   },
   image: {
     provider: 'ipx',
+    ipx: {
+      dir: 'ipx',
+    },
     dir: 'content',
     presets: {
       thumbnail: {
