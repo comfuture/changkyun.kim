@@ -1,13 +1,29 @@
 {
-  "allowJs": true,
+  "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./*"],
-      "@/*": ["./*"],
-      "~~/*": ["./*"],
-      "@@/*": ["./*"]
-    }
-  },
-  "exclude": ["node_modules", ".nuxt", "dist"]
+    "jsx": "preserve"
+  }
+  // "compilerOptions": {
+  //   "jsx": "preserve",
+  //   "baseUrl": ".",
+  //   "paths": {
+  //     "~/*": [
+  //       "./*"
+  //     ],
+  //     "@/*": [
+  //       "./*"
+  //     ],
+  //     "~~/*": [
+  //       "./*"
+  //     ],
+  //     "@@/*": [
+  //       "./*"
+  //     ]
+  //   }
+  // },
+  // "exclude": [
+  //   "node_modules",
+  //   ".nuxt",
+  //   "dist"
+  // ]
 }

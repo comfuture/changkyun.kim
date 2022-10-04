@@ -1,44 +1,58 @@
-<template>
-  <div class="mx-auto container flex flex-col md:flex-row">
-    <div class="mt-16 py-4 pr-0 md:my-64 flex-auto">
-      <article-view :article="first" />
-      <article-view :article="article" omitted
-        v-for="article in articles" :key="article.path" />
-    </div>
-    <div class="bg-gray-200 mt-16 w-64 md:w-64 md:inset-y-0 md:right-0">
-      여기에 사이드바 뭘 채우지
-    </div>
-  </div>
-</template>
-<script>
-import ArticleView from '~/components/article-view'
+<script setup lang="ts">
+import { QueryBuilderParams } from '@nuxt/content/dist/runtime/types';
 
-export default {
+definePageMeta({
   name: 'article-index',
-  components: {
-    ArticleView
-  },
-  data() {
-    return {
-      first: {},
-      articles: []
+})
+// const { data: recent } = useAsyncData('recentArticles', () =>
+//   queryContent('/article')
+//     .sort({ createdAt: -1 })
+//     .limit(2)
+//     .find()
+// )
+</script>
+<template>
+  <main>
+    <section class="cover">
+      <nuxt-img preset="cover" src="/image/article-cover.jpg" alt="cover image" />
+    </section>
+    <section class="alternative text">
+      <div class="content">
+        <content-list v-slot="{ list }" path="/article">
+          <nuxt-link v-for="item in list" :key="item._path" :to="item._path">
+            <h2>{{ item.navTitle || item.title }}</h2>
+            <time datetime="item.createdAt">{{ item.createdAt }}</time>
+          </nuxt-link>
+        </content-list>
+      </div>
+    </section>
+  </main>
+</template>
+<style lang="postcss" scoped>
+main {
+  @apply flex flex-col;
+
+  section.cover {
+    img {
+      @apply object-cover w-full h-64;
+
+      @screen lg {
+        @apply h-[300px];
+        height: 300px !important;
+      }
+
+      @screen xl {
+        height: 400px !important;
+      }
     }
-  },
-  async fetch() {
-    const mostRecent = this.$content('article', {deep: true})
-      .only(['title', 'description', 'body', 'path', 'createdAt'])
-      .sortBy('createdAt', 'desc')
-      .limit(1)
-      .fetch()
-    const remain = this.$content('article', {deep: true})
-      .only(['title', 'description', 'body', 'path', 'createdAt'])
-      .sortBy('createdAt', 'desc')
-      .skip(1)
-      .limit(4)
-      .fetch()
-    const [[first], articles] = await Promise.all([mostRecent, remain])
-    this.first = first
-    this.articles = articles
+  }
+
+  section.text {
+    @apply py-10 px-2 md:px-0 md:py-16;
+  }
+
+  .content {
+    @apply container mx-auto px-2 md:px-0;
   }
 }
-</script>
+</style>
