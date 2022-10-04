@@ -6,7 +6,7 @@ useHead({
 <template>
   <main>
     <section class="cover">
-      <nuxt-img preset="cover" class="object-cover w-full" src="content/image/cover.jpg" />
+      <nuxt-img preset="cover" class="object-cover w-full" src="image/cover.jpg" />
     </section>
     <section class="content">
       <div class="container">
@@ -21,7 +21,7 @@ useHead({
             <i class="text-gray-500 material-icons">place</i> Seoul, KOREA <br/>
             <i class="text-gray-500 material-icons">announcement</i> 한국어, 日本語, English <br/>
           </div>
-          <div class="description prose md:prose-lg">
+          <div class="description">
             <h3>의로운 원칙주의자</h3>
             <p>원리와 원칙을 중요시 여기며 말과 행동이 악의 편에 서지 않게 하기 위해 노력합니다.</p>
             <h3>슬로우 러너</h3>
@@ -54,9 +54,8 @@ export default {
 }
 
 main {
+  @apply flex flex-col;
   section.cover {
-    @apply md:pt-16;
-
     img {
       @apply object-cover w-full h-64;
 
@@ -72,17 +71,18 @@ main {
   }
 
   section.content {
-    @apply md:bg-gray-200;
+    @apply md:bg-gray-200 md:dark:bg-gray-800 flex-grow;
 
     .container {
       @apply mx-auto items-center flex flex-wrap md:-mt-16 md:pb-8;
 
       .card {
         @apply flex flex-col w-full
-          md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg xl:w-8/12;
+          md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg xl:w-8/12
+          dark:bg-gray-700;
 
         img.avatar {
-          @apply block shadow-xl rounded-full align-middle border-none absolute h-32 w-32 -m-16
+          @apply block shadow-xl rounded-full align-middle border-none absolute z-0 h-32 w-32 -m-16
             md:h-48 md:w-48 md:-m-24;
         }
 
@@ -96,7 +96,7 @@ main {
         }
 
         .description {
-          @apply py-2 px-4;
+          @apply prose md:prose-lg dark:prose-invert py-2 px-4;
 
           h3 {
             @apply mt-3;

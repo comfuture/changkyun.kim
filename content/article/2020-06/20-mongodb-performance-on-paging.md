@@ -23,9 +23,9 @@ mongo> cursor.skip((page - 1) * itemPerPage).limit(itemPerPage)
 
 ## 페이징할 문서 전체의 갯수 가져오기
 
-4.x 부터는 `cursor.count()` 메소드 사용을 지양하고 `collection.countDocuments(query)` 또는 `collection.estimatedDocumentCount(query)` 를 대신 사용할 것을 권장할 뿐 아니라, 일부 드라이버에서는 이미 `cursor.count()` 메소드가 deprecate 되어있다. 여기에는 함정이 숨어있는데, 단순 `collection.find()`가 아닌 aggregation의 경우에는 해당되지 않는다는 점이다.
+4.x 부터는 `cursor.count()`{lang=js} 메소드 사용을 지양하고 `collection.countDocuments(query)`{lang=js} 또는 `collection.estimatedDocumentCount(query)`{lang=js} 를 대신 사용할 것을 권장할 뿐 아니라, 일부 드라이버에서는 이미 `cursor.count()`{lang=js} 메소드가 deprecate 되어있다. 여기에는 함정이 숨어있는데, 단순 `collection.find()`{lang=js}가 아닌 aggregation의 경우에는 해당되지 않는다는 점이다.
 
-aggregation을 페이징 하려면 `AggregationPipeline.count()` 를 조회하는 대신 pipeline의 일정 단계 이후 스테이지를 분기하여 각각 `도큐먼트 수` 및 `페이징된 커서` 를 얻는데 사용해야 한다.
+aggregation을 페이징 하려면 `AggregationPipeline.count()`{lang=js} 를 조회하는 대신 pipeline의 일정 단계 이후 스테이지를 분기하여 각각 `도큐먼트 수` 및 `페이징된 커서` 를 얻는데 사용해야 한다.
 스테이지를 여러개로 분리하는데는 `$facet` 스테이지를 활용하면 한번의 오퍼레이션으로 두가지 정보를 한꺼번에 가져올 수 있다.
 
 (여기서부터는 헬퍼 코드를 작성했기 때문에, mongo shell 대신 각종 언어 드라이버 기준으로...)
