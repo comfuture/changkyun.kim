@@ -20,12 +20,16 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install Dependencies
         run: yarn
-      - name: Generate pages
-        run: yarn generate
-      - name: no jekyll
-        run: touch .output/public/.nojekyll
-      - name: Deploy to GitHub Pages
-        uses: comfuture/actions/ghpages@master
-        env:
-          BUILD_DIR: .output/public
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build
+        run: yarn build
+      # - name: no jekyll
+      #   run: touch .output/public/.nojekyll
+      # - name: Deploy to GitHub Pages
+      #   uses: comfuture/actions/ghpages@master
+      #   env:
+      #     BUILD_DIR: .output/public
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
