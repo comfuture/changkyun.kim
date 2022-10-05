@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      - CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
     steps:
       - uses: actions/checkout@v3
@@ -22,10 +24,6 @@ jobs:
         run: yarn
       - name: Build
         run: yarn build
-      - name: prepare wrangler script
-        run: |
-          export ACCOUNT_ID=${{ secrets.ACCOUNT_ID }}
-          sed -i 's@$account_id@'"$ACCOUNT_ID"'@g' wrangler.toml
       # - name: no jekyll
       #   run: touch .output/public/.nojekyll
       # - name: Deploy to GitHub Pages
