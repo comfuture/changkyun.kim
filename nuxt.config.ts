@@ -5,9 +5,9 @@ export default defineNuxtConfig({
     shim: false
   },
   // target: 'static',
-  nitro: {
-    preset: 'cloudflare'
-  },
+  // nitro: {
+  //   preset: 'cloudflare'
+  // },
   head: {
     title: 'Changkyun Kim',
     meta: [
