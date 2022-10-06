@@ -4,6 +4,9 @@
   "description": "logs",
   "author": "comfuture",
   "private": true,
+  "engines": {
+    "node": ">=16 <17"
+  },
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
