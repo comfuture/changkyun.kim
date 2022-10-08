@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   },
   // target: 'static',
   nitro: {
-    preset: 'vercel-edge'
+    preset: 'vercel'
   },
   head: {
     title: 'Changkyun Kim',
