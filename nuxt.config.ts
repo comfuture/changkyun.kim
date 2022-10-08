@@ -5,9 +5,9 @@ export default defineNuxtConfig({
     shim: false
   },
   // target: 'static',
-  // nitro: {
-  //   preset: 'cloudflare'
-  // },
+  nitro: {
+    preset: 'vercel-edge'
+  },
   head: {
     title: 'Changkyun Kim',
     meta: [
@@ -17,7 +17,7 @@ export default defineNuxtConfig({
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-      { hid: 'material-icon-css', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0' }
+      { hid: 'material-icon-css', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200' }
     ]
   },
   pageTransition: {page: true},
@@ -33,10 +33,6 @@ export default defineNuxtConfig({
     }
   },
   image: {
-    provider: 'ipx',
-    ipx: {
-      dir: 'ipx',
-    },
     dir: 'content',
     presets: {
       thumbnail: {
@@ -46,25 +42,18 @@ export default defineNuxtConfig({
           height: 90
         }
       },
-      small: {
+      card: {
+        provider: 'ipx',
         modifiers: {
           format: 'webp',
-          width: 160,
-          height: 90
-        }
-      },
-      medium: {
-        modifiers: {
-          format: 'webp',
-          width: 320,
-          height: 180
+          width: 500,
+          height: 500
         }
       },
       large: {
         modifiers: {
           format: 'webp',
-          width: 800,
-          height: 600
+          width: 1024
         }
       },
       cover: {
