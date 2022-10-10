@@ -57,6 +57,15 @@ onMounted(() => {
   </div>
 </template>
 <style lang="postcss">
+.material-symbols-outlined {
+  @apply align-middle;
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 48
+}
+
 .page-enter-active, .page-leave-active {
   transition: opacity .35s;
 }
