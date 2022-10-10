@@ -11,10 +11,15 @@ const { fullPath } = useRoute()
         {{ doc.cover_image }}
         <nuxt-picture :src="doc.cover_image" v-if="doc.cover_image" />
         <h1>{{ doc.title }}</h1>
-        <time datetime="doc.createdAt">{{ doc.createdAt }}</time>
+        <ui-datetime :datetime="doc.createdAt" />
         <section class="body">
           <content-renderer :value="doc" />
         </section>
+        <ul class="tags">
+          <li v-for="tag in doc.tags" :key="tag">
+            <nuxt-link :to="{name: 'article-tag-tag', params: { tag }}">{{ tag }}</nuxt-link>
+          </li>
+        </ul>
       </article>
     </content-doc>
   </section>
@@ -54,6 +59,17 @@ article {
 
     section.footnotes {
       @apply mt-8;
+    }
+  }
+  .tags {
+    @apply flex gap-2;
+
+    li {
+      @apply px-2 rounded border border-blue-300 bg-blue-100;
+
+      &::before {
+        content: '#';
+      }
     }
   }
 }
