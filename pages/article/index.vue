@@ -21,7 +21,8 @@ definePageMeta({
         <content-list v-slot="{ list }" path="/article">
           <nuxt-link v-for="item in list" :key="item._path" :to="item._path">
             <h2>{{ item.navTitle || item.title }}</h2>
-            <time datetime="item.createdAt">{{ item.createdAt }}</time>
+            <!-- <time datetime="item.createdAt">{{ item.createdAt }}</time> -->
+            <ui-datetime :datetime="item.createdAt" />
           </nuxt-link>
         </content-list>
       </div>
