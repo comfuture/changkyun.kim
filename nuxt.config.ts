@@ -17,10 +17,17 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: process.env.npm_package_description || '' }
+        { name: 'description', content: process.env.npm_package_description || '' },
+        { name: 'theme-color', content: '#FFF' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:title', content: 'Changkyun Kim' },
+        { property: 'og:site_name', content: 'Changkyun Kim' },
+
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'shortcut icon', href: '/favicon.ico' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200' }
       ]
     },
