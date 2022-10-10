@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
-  // target: 'static',
+  target: 'static',
   nitro: {
     preset: 'vercel'
   },
