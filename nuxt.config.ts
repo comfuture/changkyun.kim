@@ -10,6 +10,9 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      htmlAttrs: {
+        lang: 'ko'
+      },
       title: 'Changkyun Kim',
       meta: [
         { charset: 'utf-8' },
