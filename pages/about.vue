@@ -18,8 +18,8 @@ useHead({
           </div>
           <div class="bio">
             <data class="name">김창균</data>
-            <i class="text-gray-500 material-icons">place</i> Seoul, KOREA <br/>
-            <i class="text-gray-500 material-icons">announcement</i> 한국어, 日本語, English <br/>
+            <i class="text-gray-500 material-symbols-outlined">place</i> Seoul, KOREA <br/>
+            <i class="text-gray-500 material-symbols-outlined">announcement</i> 한국어, 日本語, English <br/>
           </div>
           <div class="description">
             <h3>의로운 원칙주의자</h3>
