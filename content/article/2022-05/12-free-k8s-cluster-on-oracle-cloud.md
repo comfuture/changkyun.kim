@@ -1,6 +1,11 @@
 ---
 title: 오라클 프리티어 클라우드에 무료 k8s 클러스터 만들기
 createdAt: 2022-05-12
+tags:
+  - dev
+  - oracle cloud
+  - k8s
+  - microk8s
 ---
 
 클라우드에는 후발주자로 뛰어든 오라클이 혜자로운 용량의 무료 리소스를 평생 제공한다.
@@ -39,6 +44,7 @@ $ sudo firewall-cmd --list-all --zone=public
 컨설턴트께서 firewall-cmd 의 존재를 각인시켜주신 덕분에 문제 없이 해결할 수 있었다. 이자리를 빌어서 감사의 인사를 드립니다.
 
 ## 도커 설치
+
 이제 도커와 쿠버네티스 사용을 위한 설치를 하자.
 
 ```bash
@@ -66,6 +72,7 @@ $ sudo usermod -a -G docker [유저명]
 > usermod 명령이 배포판에 따라 옵션을 묶어쓰면 안되기도 하니 주의. 레드햇 기반에서는 `usermod -aG ...` 가 유효했는데 데비안 계열에선 띄어 써야 유효했다.
 
 ## 쿠버네티스 설치
+
 kubectl 설치 가이드 중에는 x86-64 아키텍쳐를 가정하고 설명되어 있는 것이 많았다. 붙여넣기 명령중에 `x86-64` 서픽스를 가진 패키지 이름이 있는지 주의하여 설치한다.
 
 싱글 노드에서 쿠버네티스를 사용하기 위한 작은 클러스터 배포판이 여러개 있어서 사용에 고민을 했다.
@@ -81,9 +88,11 @@ k3s 와 microk8s 는 arm 아키텍쳐와 매우 작은 사이즈의 컨트럴페
 ```bash
 $ sudo microk8s config > $HOME/.kube/config
 ```
+
 명령으로 컨피그를 만든 후에는 그냥 `kubectl` 명령을 쓸 수 있다.
 
 ## 쿠버네티스 API 외부에 노출하기
+
 이제 원격으로 내 데스크탑에서도 사용을 하기 위해 api 서비스를 외부에 개방해야 한다.
 위에 포트 개방 단계에서 tcp 16443 을 개방한 이유가 바로 이것인데, microk8s는 6443 대신 16443 포트에 api 서비스가 돌고 있다.
 
@@ -97,7 +106,7 @@ $ sudo microk8s config > $HOME/.kube/config
 
 [올바른 방법](https://microk8s.io/docs/services-and-ports)은 microk8s 의 cert 템플릿을 수정하여 내 도메인과 퍼블릭IP에 대한 cert를 부여받는 것이다.
 
-`/var/snap/microk8s/current/certs/csr.conf.template` 파일의 `[alt_names]` 섹션에 DNS.* = 항목을 하나 추가하여 내 도메인을 적는다.
+`/var/snap/microk8s/current/certs/csr.conf.template` 파일의 `[alt_names]` 섹션에 DNS.\* = 항목을 하나 추가하여 내 도메인을 적는다.
 
 ```
 [ alt_names ]
@@ -116,7 +125,6 @@ $ sudo microk8s refresh-certs -e ca.crt
 ```
 
 명령으로 인증서를 갱신하면 자동으로 microk8s 서비스가 재시작된다.
-
 
 이제 로컬 머신에서 `kubectl get all --all-namespaces` 명령으로 원격지의 쿠버네티스 클러스터가 잘 동작하는지 확인해보자.
 

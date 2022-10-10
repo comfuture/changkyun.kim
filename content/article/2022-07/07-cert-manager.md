@@ -1,6 +1,10 @@
 ---
 title: microk8s 에서 letsencrypt 인증서 사용하기
 createdAt: 2022-07-07
+tags:
+  - oracle cloud
+  - k8s
+  - microk8s
 ---
 
 [오라클 프리티어 클라우드에 무료 k8s 클러스터 만들기](https://changkyun.kim/article/2022-05/12-free-k8s-cluster-on-oracle-cloud) 에 이어,
@@ -35,17 +39,19 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-production
     solvers:
-    - selector: {}
-      http01:
-        ingress:
-          class: public
+      - selector: {}
+        http01:
+          ingress:
+            class: public
 ```
+
 인터넷에 많이 올라온 자료에는 ingress class 를 `ngnix` 로 하라고 되어있지만 microk8s 에서는 public 이 사용된다고 합니다.
 그런데 약간 시간이 지났는데도 ClusterIssuer 의 ready 상태가 `False` 인 채 바뀌지 않았습니다.
 
 로그를 살펴보니 클러스터 안쪽 컨테이너에서 `acme-v02.api.letsencrypt.org` 도메인을 리졸브하지 못해서 ACME 어카운트가 생성되지 않고 있는 탓이었습니다.
 
 coredns 는 처음부터 활성화해 두었지만 다시한번 살펴봅니다.
+
 ```
 $ microk8s enable dns
 ```
@@ -72,22 +78,27 @@ iptables -P OUTPUT ACCEPT
 ```
 
 이제 coredns가 재실행되도록 파드를 삭제합니다.
+
 ```bash
 $ kubectl delete pod coredns-xxxxx-yyyyy
 ```
+
 즉시 되살아나며 이제는 각 파드의 컨테이너 안에서 이름풀기가 문제없이 되는것을 확인합니다.
 
 이제 샘플 웹서비스를 하나 외부에 노출시켜 SSL을 적용해보겠습니다.
 
 microk8s 명령을 이용하여 필요한 서비스들을 설치합니다.
+
 ```bash
 $ microk8s enable ingress metallb
 ```
+
 microk8s 에서는 기본적으로 nginx-ingress 를 사용합니다.
-sudo 권한 없이 위 명령을 입력하는 것 만으로 호스트머신에 nginx가 설치되어 externalIPs 로 부터 받는 요청들을 k8s 클러스터 안쪽으로 전달해주는 것을 볼 수 있습니다. (와우 e 편한 세상 +_+)
+sudo 권한 없이 위 명령을 입력하는 것 만으로 호스트머신에 nginx가 설치되어 externalIPs 로 부터 받는 요청들을 k8s 클러스터 안쪽으로 전달해주는 것을 볼 수 있습니다. (와우 e 편한 세상 +\_+)
 다만, 로드벨런싱을 위해 matallb 를 설치하고 내부아이피의 일부를 할당했습니다
 
 직접 아래와 같이 범위할당을 할 수도 있습니다.
+
 ```bash
 microk8s enable metallb:10.64.140.43-10.64.140.49
 ```
@@ -129,20 +140,20 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-production"
 spec:
   tls:
-  - hosts:
-    - testweb.mydomain.com
-    secretName: "letsencrypt-testweb" # 적당한 이름을 작성하면 됨
+    - hosts:
+        - testweb.mydomain.com
+      secretName: "letsencrypt-testweb" # 적당한 이름을 작성하면 됨
   rules:
-  - host: testweb.mydomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: testweb
-            port:
-              number: 80
+    - host: testweb.mydomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: testweb
+                port:
+                  number: 80
 ```
 
 `$ kubectl apply -f k8s/ingress.yaml` 명령으로 적용하면 cert-manager가 cert-manager/certification 을 만들고 검증에 필요한 몇개의 pod와 ingress를 만들어 노출하는 것을 볼 수 있습니다.
@@ -152,7 +163,6 @@ spec:
 - `spec.tls.hosts` 에 사용하고싶은 도메인을 나열하고 `spec.tls.secretname` 에 적당한 이름을 지정해줍니다. 이 이름의 secret 에 개인키가 저장됩니다.
 - `cert-manager.io/cluster-issuer: "letsencrypt-production"` 여기에는 ClusterIssuer 를 만들 때 지정한 이름을 적어줍니다.
 - `acme.cert-manager.io/http01-edit-in-place: "true"` annotation은 별도의 ingress 를 만들지 않고 이 Ingress 설정에 rules 를 추가해서 재사용하겠다는 의미인데, 호스트머신의 네트워크등 문제가 없다면 생략해도 됩니다.
-- `ingress.kubernetes.io/ssl-redirect: "true"` annotation은  http 주소를 자동으로 https 로 리다이렉트 해달라는 의미입니다. (그럴일 없지만)http 를 병용한다면 제거해야 합니다.
-
+- `ingress.kubernetes.io/ssl-redirect: "true"` annotation은 http 주소를 자동으로 https 로 리다이렉트 해달라는 의미입니다. (그럴일 없지만)http 를 병용한다면 제거해야 합니다.
 
 > 사실 이번 과정에서는 제법 시행착오가 있었는데, 시간이 지난 후 기록을 남기는 과정에서 시행착오 부분의 에러 메시지들과 해결과정을 되살려 적을 수가 없어 모두 생략했습니다.

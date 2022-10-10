@@ -2,6 +2,7 @@
 title: 무서운 그로스해킹 이야기
 description: >
   온라인 마케팅에서 개인식별 정보가 얼마나 쉽게 공유되는지에 대한 경험담
+createdAt: 2021-04-08
 ---
 
 ## 디지털 광고
@@ -20,9 +21,9 @@ description: >
 
 과거 익명정보의 위험성이 잘 알려지지 않았던 시절에는 주로 [제3사 쿠키][thirdparty_cookies] 라는 방법을 통해 이를 구현했다. 하지만 최근엔 사람들이 인터넷을 사용하는 방법이 "웹사이트"에 국한되지 않고 여러 디바이스를 통틀어 앱과 웹 등 다양한 방법으로 컨텐츠를 소비한다. 따라서 요즘엔 쿠키 대신 IDFA(ADID)를 이용하여 고유 디바이스를 식별하고 이를 활용하기도 한다.
 
-배너 광고 또한 서비스별로 임의의 광고주를 유치하여 직접 게시하기보다는 여러 광고주를 모아 지면(매체)을 경매하고 계산된 가격에 최적의 매체를 통해 게시되는 [애드네트워크][Advertising_network]를 통해 집행된다.
+배너 광고 또한 서비스별로 임의의 광고주를 유치하여 직접 게시하기보다는 여러 광고주를 모아 지면(매체)을 경매하고 계산된 가격에 최적의 매체를 통해 게시되는 [애드네트워크][advertising_network]를 통해 집행된다.
 
-애드네트워크는 높은 클릭률을 보장하여 더 많은 광고비가 집행되기를 원할 것이고, 여기에 기술을 접목해 더 연관성 높은 광고를 정확한 대상에게 콕 찝어 노출시키는 [애드테크][AdTech] 를 동반하기도 한다.
+애드네트워크는 높은 클릭률을 보장하여 더 많은 광고비가 집행되기를 원할 것이고, 여기에 기술을 접목해 더 연관성 높은 광고를 정확한 대상에게 콕 찝어 노출시키는 [애드테크][adtech] 를 동반하기도 한다.
 과거엔 광고주 - 매체 - 대행사 - DSP(Demand Side Platform) - SSP(Supply Side Platform) - 애드 네트워크 - MMP 등 ~중간상인~ 미들 플랫폼이 훨씬 많았지만 최근엔 대행부터 게시까지 모두 하는 통합 플랫폼이 많아지는 추세다.
 
 ## 선 넘는 경험
@@ -64,8 +65,6 @@ description: >
 [^4]: 첫 다짐을 아직도 잘 지키고 있는지 여부는 논외
 
 [growh_hacking]: https://ko.wikipedia.org/wiki/%EA%B7%B8%EB%A1%9C%EC%8A%A4_%ED%95%B4%ED%82%B9
-
 [thirdparty_cookies]: http://wiki-camp.appspot.com/%5B%EB%B2%88%EC%97%AD%5D_HTTP_Cookie_%28Wikipedia%29?rev=2#h_9c0ac323875ff03e0750c410b3c34433
-
-[Advertising_network]: https://en.wikipedia.org/wiki/Advertising_network
-[AdTech]: https://namu.wiki/w/%EC%95%A0%EB%93%9C%ED%85%8C%ED%81%AC
+[advertising_network]: https://en.wikipedia.org/wiki/Advertising_network
+[adtech]: https://namu.wiki/w/%EC%95%A0%EB%93%9C%ED%85%8C%ED%81%AC

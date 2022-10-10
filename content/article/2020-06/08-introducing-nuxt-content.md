@@ -2,7 +2,15 @@
 title: Nuxt content 소개
 description: >
   Nuxt js 위에서 도는 파일시스템 기반 cms 모듈을 이용한 무료 블로그 운영하기
+createdAt: 2020-06-08
 ---
+
+::x-notice
+
+이 글에서는 오래된 이전 버전 nuxt-content 를 설명하고 있습니다.  
+최신 정보는 [Nuxt Content](https://content.nuxtjs.org/) 에서 확인하세요.
+
+::
 
 정적 사이트 생성기에 쓰기 좋은 도구 [Nuxt content](https://content.nuxtjs.org/) 를 소개한다.
 
@@ -12,9 +20,7 @@ Jekyll, hexo, lektor 등 markdown을 이용한 페이지 생성기에 만족하�
 
 [Nuxt](https://nuxtjs.org)는 vue.js 위에 만들어진 종합 웹개발 프레임웍이다.
 
-
 프로젝트 구조에서 pages/ 아래에 정해진 규칙에 따라 vue component를 배치하는 것 만으로 서버사이드 렌더링을 포함하는 동적 웹사이트가 뚝딱 만들어진다.[^1]
-
 
 주요한 특징으로는:
 
@@ -38,17 +44,16 @@ hexo, Jekyll.. 처럼 frontmatter를 포함하는 마크다운 파일들을 메�
 mongodb와 닮은 문법의 체이닝 메소드 집합을 제공한다.
 
 ```js
-const articles = await $content('articles')
-  .only(['title', 'path', 'createdAt'])
-  .sortBy('createdAt', 'desc')
+const articles = await $content("articles")
+  .only(["title", "path", "createdAt"])
+  .sortBy("createdAt", "desc")
   .limit(10)
-  .fetch()
+  .fetch();
 ```
 
 이런 식이다.
 
 나머지 부분은 nuxt의 데이터 라이프 사이클 `asyncData`, `fetch` 단계에서 필요한 데이터를 채우고 generate 하면 그만이다.
-
 
 ## Github Actions
 

@@ -3,6 +3,12 @@ title: 몽고디비 페이징과 룩업 성능
 cover_image: /article/2020-06/20-mongo.jpg
 description: >
   몽고디비 aggregation을 페이징 할 때 성능 문제 해결기
+createdAt: 2020-06-20
+tags:
+  - dev
+  - mongodb
+  - nodejs
+  - python
 ---
 
 몽고디비는 도큐먼트DB 특성상 기존 RDBMS와는 데이터를 다루는 철학에 차이가 조금 있다.
@@ -160,35 +166,43 @@ nodejs 에서는 mongoos 라이브러리의 구현을 조금 참조하여 `$face
  * @param {number} [options.pageSize = 10] 페이지당 문서 갯수
  * @returns {Promise<PagedCursor>}
  */
-export const paged = (collection, condition, {page = 1, pageSize = 10} = {}) => {
-  let pipeline = []
-  if (Array.isArray(condition)) { // aggregation pipeline인 경우
-    pipeline.push.apply(pipeline, condition)
-  } else {  // query only인 경우
-    pipeline.push({$match: condition})
+export const paged = (
+  collection,
+  condition,
+  { page = 1, pageSize = 10 } = {}
+) => {
+  let pipeline = [];
+  if (Array.isArray(condition)) {
+    // aggregation pipeline인 경우
+    pipeline.push.apply(pipeline, condition);
+  } else {
+    // query only인 경우
+    pipeline.push({ $match: condition });
   }
 
-  const countPipeline = [...pipeline].filter(elm => !elm['$sort'])
-  countPipeline.push({ $group: { _id: null, count: { $sum: 1 }}})
+  const countPipeline = [...pipeline].filter((elm) => !elm["$sort"]);
+  countPipeline.push({ $group: { _id: null, count: { $sum: 1 } } });
 
-  const pagedPipeline = [...pipeline]
-  pagedPipeline.push({$skip: (page - 1) * pageSize})
-  pagedPipeline.push({$limit: pageSize})
+  const pagedPipeline = [...pipeline];
+  pagedPipeline.push({ $skip: (page - 1) * pageSize });
+  pagedPipeline.push({ $limit: pageSize });
 
   return Promise.all([
-    collection.aggregate(pagedPipeline, {allowDiskUse: true}).toArray(),
-    collection.aggregate(countPipeline, {allowDiskUse: true}).toArray()
-  ])
-  .then(([items, countResult]) => {
-    const total = countResult.length > 0 ? countResult.shift().count : 0
-    const totalPages = Math.ceil(total / pageSize)
+    collection.aggregate(pagedPipeline, { allowDiskUse: true }).toArray(),
+    collection.aggregate(countPipeline, { allowDiskUse: true }).toArray(),
+  ]).then(([items, countResult]) => {
+    const total = countResult.length > 0 ? countResult.shift().count : 0;
+    const totalPages = Math.ceil(total / pageSize);
     return {
-      page, pageSize, total, totalPages, items
-    }
-  })
-}
+      page,
+      pageSize,
+      total,
+      totalPages,
+      items,
+    };
+  });
+};
 ```
-
 
 ## lazy loading 전략
 
@@ -243,21 +257,24 @@ export const lookupAll = (db, ...desires) => {
 이렇게 사용한다.
 
 ```js
-paged(db.collection('galaxy'), [{$match: {answer: 42}}], {page, pageSize})
-  .then(lookup(db, {
-    from: 'hitchiker',
-    localField: '_id',
-    foreignField: 'galaxy_id',
-    as: 'hitchhikers'
-  }))
+paged(db.collection("galaxy"), [{ $match: { answer: 42 } }], {
+  page,
+  pageSize,
+}).then(
+  lookup(db, {
+    from: "hitchiker",
+    localField: "_id",
+    foreignField: "galaxy_id",
+    as: "hitchhikers",
+  })
+);
 ```
 
-요즘은 대부분 그렇지 않지만 RDBMS의 `LIMIT n, m`  만으로 문서의 페이징을 하는 경우에도 100만건 정도의 문서에서는 꽤 성능이 나오지 않았던 과거를 떠올려본다.
+요즘은 대부분 그렇지 않지만 RDBMS의 `LIMIT n, m` 만으로 문서의 페이징을 하는 경우에도 100만건 정도의 문서에서는 꽤 성능이 나오지 않았던 과거를 떠올려본다.
 
 프로그램을 짜다 보면 데이터 설계 당시의 의도와는 다르게 복잡한 조회 조건이나 외래 키 없는 다른 데이터 컬렉션을 참조하고 싶다는 요구를 종종 받게 된다.
 이때마다 인덱스나 외래키를 추가할 수는 없는 일이다. 결국 상황에 맞는 정교한 pipeline을 매번 잘 짜거나, 언어레벨의 서포트로 극뽁하는 수 밖에..
 
 조금은 무책임한 `$lookup`과 `$facet`의 퍼포먼스 문제로 약간은 당황했지만, mongodb만의 문제는 아닌 것으로.. 계속해서 발전하는 몽고디비가 되기를
-
 
 [^1]: 실제로 일반적인 경우엔 나쁘지 않은 성능으로 페이징 하는데 문제가 없다
