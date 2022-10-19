@@ -20,7 +20,7 @@
     "sharp": "^0.31.1"
   },
   "devDependencies": {
-    "@nuxtjs/tailwindcss": "^5.3.5",
+    "@nuxtjs/tailwindcss": "^6.0.0",
     "@tailwindcss/typography": "^0.5.7",
     "nuxt": "3.0.0-rc.11"
   }
