@@ -8,8 +8,7 @@ const { fullPath } = useRoute()
         <Title>{{ doc.title }} - changkyun.kim</Title>
       </Head>
       <article class="container">
-        {{ doc.cover_image }}
-        <nuxt-picture :src="doc.cover_image" v-if="doc.cover_image" />
+        <nuxt-picture preset="cover" :src="doc.coverImage" v-if="doc.coverImage" />
         <h1>{{ doc.title }}</h1>
         <ui-datetime :datetime="doc.createdAt" />
         <section class="body">

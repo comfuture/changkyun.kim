@@ -10,7 +10,7 @@
 <template>
   <main>
     <header class="cover">
-      <nuxt-img preset="cover" src="/image/cover2.jpg" alt="cover image" />
+      <img src="/img/cover2.jpg" />
     </header>
     <section class="text">
       <div class="container">

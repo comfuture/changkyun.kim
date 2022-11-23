@@ -1,7 +1,7 @@
 <template>
   <main>
     <section class="cover">
-      <nuxt-img preset="cover" class="object-cover w-full" src="/image/cover3.jpg" />
+      <img class="object-cover w-full" src="/image/cover3.jpg" />
     </section>
     <section class="text content">
       <div class="container mx-auto mt-6 py-4">
@@ -36,6 +36,9 @@ export default {
 }
 </script>
 <style scoped lang="postcss">
+.cover img {
+  @apply max-h-96 md:max-h-[400px];
+}
 .content {
   /* @apply mt-6; */
   @apply px-2 md:px-0;

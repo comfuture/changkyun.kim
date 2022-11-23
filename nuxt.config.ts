@@ -1,3 +1,6 @@
+import path from 'node:path'
+import glob from 'glob'
+import sharp from 'sharp'
 import { defineNuxtConfig } from 'nuxt/config'
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
@@ -31,6 +34,21 @@ export default defineNuxtConfig({
     },
     pageTransition: true
   },
+  hooks: {
+    'build:done': () => {
+      glob('content/image/**.jpg', {nocase: true}, (err, files) => {
+        let n = 0
+        files.map(src => {
+          const toName = path.join(
+            'public/image', path.basename(src)
+          )
+          sharp(src)
+            .resize({width: 2048, height: 400})
+            .toFile(toName)
+        })
+      })
+    }
+  },
   modules: [
     "@nuxt/content",
     "@nuxt/image-edge",
@@ -52,13 +70,6 @@ export default defineNuxtConfig({
     }
   },
   image: {
-    // providers: {
-    //   customProvider: {
-    //     name: 'static',
-    //     provider: '~/providers/static',
-    //     options: {},
-    //   }
-    // },
     provider: 'ipx',
     dir: 'content',
     presets: {
