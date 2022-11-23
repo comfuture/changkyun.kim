@@ -10,7 +10,7 @@
 <template>
   <main>
     <header class="cover">
-      <img src="/img/cover2.jpg" />
+      <img src="/image/cover2.jpg" />
     </header>
     <section class="text">
       <div class="container">
