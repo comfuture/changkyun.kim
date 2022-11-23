@@ -4,10 +4,8 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
-  target: 'static',
-  nitro: {
-    preset: 'vercel'
-  },
+  // target: 'static',
+  ssr: false,
   app: {
     head: {
       htmlAttrs: {
@@ -17,7 +15,7 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: process.env.npm_package_description || '' },
+        { name: 'description', content: 'Changkyun Kim' },
         { name: 'theme-color', content: '#FFF' },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { property: 'og:type', content: 'website' },
@@ -31,20 +29,37 @@ export default defineNuxtConfig({
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200' }
       ]
     },
+    pageTransition: true
   },
-  pageTransition: {page: true},
   modules: [
     "@nuxt/content",
     "@nuxt/image-edge",
-    "@nuxtjs/tailwindcss"
+    "@nuxtjs/tailwindcss",
+    '@kevinmarrec/nuxt-pwa',
   ],
+  tailwindcss: {
+    viewer: false,
+  },
   content: {
     highlight: {
       theme: 'github-dark-dimmed',
       preload: ['python', 'vue', 'vue-html']
     }
   },
+  pwa: {
+    workbox: {
+      enabled: true,
+    }
+  },
   image: {
+    providers: {
+      customProvider: {
+        name: 'static',
+        provider: '~/providers/static',
+        options: {},
+      }
+    },
+    provider: 'static',
     dir: 'content',
     presets: {
       thumbnail: {
