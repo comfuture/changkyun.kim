@@ -52,14 +52,14 @@ export default defineNuxtConfig({
     }
   },
   image: {
-    providers: {
-      customProvider: {
-        name: 'static',
-        provider: '~/providers/static',
-        options: {},
-      }
-    },
-    provider: 'static',
+    // providers: {
+    //   customProvider: {
+    //     name: 'static',
+    //     provider: '~/providers/static',
+    //     options: {},
+    //   }
+    // },
+    provider: 'ipx',
     dir: 'content',
     presets: {
       thumbnail: {
