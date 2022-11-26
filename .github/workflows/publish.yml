@@ -27,5 +27,5 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: comfuture/actions/ghpages@master
         env:
-          BUILD_DIR: dist
+          BUILD_DIR: dist/
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
