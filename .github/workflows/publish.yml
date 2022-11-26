@@ -23,9 +23,9 @@ jobs:
       - name: Build
         run: yarn build
       - name: no jekyll
-        run: touch .output/public/.nojekyll
+        run: touch dist/.nojekyll
       - name: Deploy to GitHub Pages
         uses: comfuture/actions/ghpages@master
         env:
-          BUILD_DIR: .output/public
+          BUILD_DIR: dist
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
