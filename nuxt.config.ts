@@ -7,8 +7,7 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
-  // target: 'static',
-  ssr: false,
+  // ssr: false,
   app: {
     head: {
       htmlAttrs: {
@@ -24,7 +23,6 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
         { property: 'og:title', content: 'Changkyun Kim' },
         { property: 'og:site_name', content: 'Changkyun Kim' },
-
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
@@ -49,11 +47,14 @@ export default defineNuxtConfig({
       })
     }
   },
+  experimental: {
+    payloadExtraction: false,
+  },
   modules: [
+    '@kevinmarrec/nuxt-pwa',
     "@nuxt/content",
     "@nuxt/image-edge",
     "@nuxtjs/tailwindcss",
-    '@kevinmarrec/nuxt-pwa',
   ],
   tailwindcss: {
     viewer: false,
