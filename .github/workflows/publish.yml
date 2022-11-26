@@ -21,7 +21,7 @@ jobs:
       - name: Install Dependencies
         run: yarn
       - name: Build
-        run: yarn build
+        run: yarn generate
       - name: no jekyll
         run: touch dist/.nojekyll
       - name: Deploy to GitHub Pages
