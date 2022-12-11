@@ -72,7 +72,7 @@ export default defineNuxtConfig({
   },
   image: {
     provider: 'ipx',
-    staticFilename: '[publicPath]/images/[name]-[hash][ext]',
+    staticFilename: '[publicPath]/image/[name]-[hash][ext]',
     dir: 'content',
     presets: {
       thumbnail: {
