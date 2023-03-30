@@ -15,7 +15,11 @@ onMounted(() => {
     },
     { threshold: [1] }
   );
-  observer.observe(document.querySelector('.site > header'));
+
+  const head: HTMLHeadElement | null = document.querySelector('.site > header');
+  if (head) {
+    observer.observe(head);
+  }
 
   // dark theme
   // if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

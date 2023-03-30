@@ -6,7 +6,7 @@ useHead({
 <template>
   <main>
     <section class="cover">
-      <img class="object-cover w-full" src="/image/cover.jpg" />
+      <nuxt-img class="object-cover w-full" src="/image/cover.jpg" />
     </section>
     <section class="content">
       <div class="container">

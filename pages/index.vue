@@ -14,10 +14,9 @@
     </header>
     <section class="text">
       <div class="container">
-        <content-doc path="/" :head="false" />
+        <content-doc path="/" :head="false"/>
       </div>
     </section>
-    <!-- {{ recent }} -->
     <section class="alternative text">
       <div class="container">
         <h2>Recent articles</h2>
