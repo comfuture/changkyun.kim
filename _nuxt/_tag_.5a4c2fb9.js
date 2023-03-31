@@ -1,0 +1,1 @@
+import{e as s,T as o,o as r,b as l,h as a,t,u as n}from"./entry.cd83fb6f.js";const _=s({__name:"[tag]",setup(u){const{params:{tag:e}}=o();return(c,p)=>(r(),l("main",null,[a("h2",null,t(n(e))+"에 대한 글들",1),a("p",null,t(n(e))+" ... ",1)]))}});export{_ as default};

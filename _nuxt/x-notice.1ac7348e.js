@@ -1,0 +1,1 @@
+/* empty css                     */import{a as o,o as t,b as s,r as c}from"./entry.cd83fb6f.js";const r={},n={class:"x-notice"};function a(e,_){return t(),s("div",n,[c(e.$slots,"default")])}const d=o(r,[["render",a]]);export{d as default};
