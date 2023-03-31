@@ -14,9 +14,13 @@ ChatGPT의 자연스러운 언어 능력에 데이터를 가미하면 instructed
 다음은 타로점을 봐주는 마법의 프롬프트
 
 ```
-You are a gypsy tarot master. respond should be a gypsy tone. speak in Korean. Please explain to me by drawing three tarot cards for my ensuing question. cards can be upside down. explain each card’s name and meaning and summarize it. the final summary should be around 300 words. add some hopeful advice if the card interpretation is too bad. not limited to traditional card meanings, find original interpretations from the pictures and characteristics of the cards and add them.
+You are a gypsy tarot master. respond should be a gypsy tone. speak in Korean.
+Please explain to me by drawing three tarot cards for my ensuing question.
+cards can be upside down. explain each card’s name and meaning and summarize it.
+the final summary should be around 300 words. add some hopeful advice if the card interpretation is too bad.
+not limited to traditional card meanings, find original interpretations from the pictures and characteristics of the cards and add them.
 in addition, convert the result in json format like this:
-{“prediction”: [{“cardName”: …, “upsideDown”: false, “meaning”: …, “prediction”: …}, …], “finalResult”: … }
+{"prediction": [{"cardName": ..., "upsideDown": false, "meaning": ..., "prediction": ...}, ...], "finalResult": ...}
 
 question: ChatGPT로 타로카드 서비스를 만들면 흥할까?
 ```
@@ -66,7 +70,29 @@ question: ChatGPT로 타로카드 서비스를 만들면 흥할까?
 그래서, ChatGPT로 타로카드 서비스를 만든다면, 이것은 큰 성공을 거둘 것입니다. 그러나 당신은 결정하기 전에 잘 생각해야 합니다. 이것은 당신이 새로운 시작을 하기 전에 이전의 경험과 가능한 결과를 고려해야 한다는 것입니다. 마지막으로, 미래는 밝습니다. 당신은 희망적인 마음으로 앞으로 나아가야 합니다.
 
 ```json
-{ "prediction": [ { "cardName": "The Fool", "upsideDown": true, "meaning": "새로운 시작과 모험", "prediction": "더 생각하고 결정하세요." }, { "cardName": "The Tower", "upsideDown": false, "meaning": "갑작스러운 변화와 파괴", "prediction": "새로운 시작일 수도 있습니다." }, { "cardName": "The Star", "upsideDown": true, "meaning": "희망과 사랑, 꿈", "prediction": "미래에는 좋은 일이 기다리고 있습니다." } ], "finalResult": "ChatGPT로 타로카드 서비스를 만든다면 성공할 것입니다. 하지만 결정하기 전에 잘 생각하세요. 미래는 밝습니다." }
+{
+  "prediction": [
+    {
+      "cardName": "The Fool",
+      "upsideDown": true,
+      "meaning": "새로운 시작과 모험",
+      "prediction": "더 생각하고 결정하세요."
+    },
+    {
+      "cardName": "The Tower",
+      "upsideDown": false,
+      "meaning": "갑작스러운 변화와 파괴",
+      "prediction": "새로운 시작일 수도 있습니다."
+    },
+    {
+      "cardName": "The Star",
+      "upsideDown": true,
+      "meaning": "희망과 사랑, 꿈",
+      "prediction": "미래에는 좋은 일이 기다리고 있습니다."
+    }
+  ],
+  "finalResult": "ChatGPT로 타로카드 서비스를 만든다면 성공할 것입니다. 하지만 결정하기 전에 잘 생각하세요. 미래는 밝습니다."
+}
 ```
 
 적당한 카드 그림을 보여주도록 하고 음산하고 신비로운 백그라운드 이미지를 가진 웹페이지를 만들도록 Github Copilot 과 DALL-E를 이용하면 한두시간 안에 서비스로 만들 수도 있을 것 같다.
