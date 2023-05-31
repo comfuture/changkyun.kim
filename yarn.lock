@@ -693,12 +693,12 @@
   resolved "https://registry.yarnpkg.com/@nuxt/devalue/-/devalue-2.0.0.tgz#c7bd7e9a516514e612d5d2e511ffc399e0eac322"
   integrity sha512-YBI/6o2EBz02tdEJRBK8xkt3zvOFOWlLBf7WKYGBsSYSRtjjgrqPe2skp6VLLmKx5WbHHDNcW+6oACaurxGzeA==
 
-"@nuxt/image-edge@^1.0.0-28089316.69d3bcc":
-  version "1.0.0-28089316.69d3bcc"
-  resolved "https://registry.yarnpkg.com/@nuxt/image-edge/-/image-edge-1.0.0-28089316.69d3bcc.tgz#f7f709aaf851ea0ffa68eaf39060f0d1b33cb4c4"
-  integrity sha512-YknwAFXQYtAjx/jZAMJmYLHVpQACAGcC3harry1lRkayZQv1e5dp+jkA21LuaTDn+0MeK5j7LPKoHvHMKjZjtQ==
+"@nuxt/image-edge@^1.0.0-28092288.ed573bb":
+  version "1.0.0-28092288.ed573bb"
+  resolved "https://registry.yarnpkg.com/@nuxt/image-edge/-/image-edge-1.0.0-28092288.ed573bb.tgz#683da2b57d2fae0890de1efccfe255c03b8d3fb5"
+  integrity sha512-nmvoiELOi/RtBMfOLzu7F4E8E12xK8+V1LB2LNrsni51gCZOGYp9i1SbNiCiMMnHYKYHndjurCsqY8TlUa/2/A==
   dependencies:
-    "@nuxt/kit" "^3.5.1"
+    "@nuxt/kit" "^3.5.2"
     consola "^3.1.0"
     defu "^6.1.2"
     h3 "^1.6.6"
@@ -708,7 +708,7 @@
     pathe "^1.1.0"
     ufo "^1.1.2"
   optionalDependencies:
-    ipx "1.1.0"
+    ipx "^1.1.0"
 
 "@nuxt/kit@3.3.3":
   version "3.3.3"
@@ -758,7 +758,7 @@
     unimport "^3.0.6"
     untyped "^1.3.2"
 
-"@nuxt/kit@^3.2.0", "@nuxt/kit@^3.4.3", "@nuxt/kit@^3.5.1":
+"@nuxt/kit@^3.2.0", "@nuxt/kit@^3.4.3", "@nuxt/kit@^3.5.2":
   version "3.5.2"
   resolved "https://registry.yarnpkg.com/@nuxt/kit/-/kit-3.5.2.tgz#ebcb1ee9cd66934f9845b04460201a81c9340ea2"
   integrity sha512-DwmJFJbzbg5T/Qcf5ruiHBfWuLIasTakIeifKS+pqS+VhZDoUW0O7jHm6jESQ5reAbde+L+IH6bXN/y07ivkRA==
@@ -3240,7 +3240,7 @@ ip-regex@^5.0.0:
   resolved "https://registry.yarnpkg.com/ip-regex/-/ip-regex-5.0.0.tgz#cd313b2ae9c80c07bd3851e12bf4fa4dc5480632"
   integrity sha512-fOCG6lhoKKakwv+C6KdsOnGvgXnmgfmp0myi3bcNwj3qfwPAxRKWEuFhvEFF7ceYIz6+1jRZ+yguLFAmUNPEfw==
 
-ipx@1.1.0:
+ipx@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/ipx/-/ipx-1.1.0.tgz#ab2a4b091c6f9470807e040e2d6b8dd71b87439a"
   integrity sha512-cqoLMNemwHFTTn+jeupPSqUDQKVQ+FUgtmglCzVTkukhmExwh3gTSNVcBZqeHa2Vwst1cit60q+Kj/fQ0q6t6g==
