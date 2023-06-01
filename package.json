@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@nuxt/content": "^2.6.0",
-    "@nuxt/image-edge": "^1.0.0-28089316.69d3bcc",
+    "@nuxt/image-edge": "^1.0.0-28092818.5c21f4c",
     "@popperjs/core": "^2.11.6",
     "sharp": "^0.32.1"
   },
