@@ -16,7 +16,7 @@
   "dependencies": {
     "@nuxt/content": "^2.6.0",
     "@nuxt/image-edge": "^1.0.0-28101255.bece998",
-    "@popperjs/core": "^2.11.6",
+    "@popperjs/core": "^2.11.8",
     "sharp": "^0.32.1"
   },
   "devDependencies": {
