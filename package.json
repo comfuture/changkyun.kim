@@ -24,7 +24,7 @@
     "@nuxtjs/tailwindcss": "^6.7.0",
     "@tailwindcss/typography": "^0.5.9",
     "@types/glob": "^8.0.0",
-    "@types/sharp": "^0.31.1",
+    "@types/sharp": "^0.32.0",
     "glob": "^10.2.6",
     "nuxt": "^3.7.0"
   }
