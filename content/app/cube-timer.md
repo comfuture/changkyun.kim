@@ -1,4 +1,8 @@
-# Cube Timer
+---
+title: Cube Timer
+cover_image: https://images.unsplash.com/photo-1562975327-29a8cbfd5be6?q=80&w=3272&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+createdAt: 2023-03-30
+---
 
 A Simple Utiltity to measure your Rubix cube solve time.
 

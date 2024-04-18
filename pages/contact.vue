@@ -6,12 +6,11 @@
     <section class="text content">
       <div class="container mx-auto mt-6 py-4">
         <h2>Contact</h2>
-        여기에 연락처 넣을 예정
-        <dl>
-          <dt>e-mail</dt>
-          <dd>...</dd>
-          <dt>kakao</dt>
-          <dd>
+        <ul class="contacts">
+          <li>
+            me<span></span>@<span></span>changkyun.kim
+          </li>
+          <li>
             <a href="https://open.kakao.com/me/changkyunkim">
               <i>
                 <svg class="inline fill-current w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 191.94">
@@ -24,8 +23,8 @@
               </i>
               Kakao
             </a>
-          </dd>
-        </dl>
+          </li>
+        </ul>
       </div>
     </section>
   </main>
@@ -39,12 +38,17 @@ export default {
 .cover img {
   @apply max-h-96 md:max-h-[400px];
 }
+
 .content {
   /* @apply mt-6; */
   @apply px-2 md:px-0;
 
   h2 {
-    @apply text-xl;
+    @apply text-xl mb-4 md:mb-6;
+  }
+
+  .contacts {
+    @apply flex flex-col gap-2;
   }
 }
 </style>

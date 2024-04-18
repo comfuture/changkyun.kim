@@ -92,7 +92,7 @@ body {
     } */
 
     .container {
-      @apply mx-auto flex justify-between;
+      @apply mx-auto flex justify-between max-w-2xl;
 
       h1 {
         @apply font-semibold uppercase;
