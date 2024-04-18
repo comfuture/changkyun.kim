@@ -25,6 +25,6 @@ jobs:
       - name: no jekyll
         run: touch .output/public/.nojekyll
       - name: Deploy to GitHub Pages
-        uses: comfuture/actions/ghpages@v2.0.1
+        uses: comfuture/actions/ghpages@v2
         with:
           build_dir: .output/public
