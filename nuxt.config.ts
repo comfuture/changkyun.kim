@@ -35,8 +35,8 @@ export default defineNuxtConfig({
   modules: [
     '@kevinmarrec/nuxt-pwa',
     "@nuxt/content",
-    "@nuxt/image-edge",
     "@nuxtjs/tailwindcss",
+    "@nuxt/image"
   ],
   tailwindcss: {
     viewer: false,
