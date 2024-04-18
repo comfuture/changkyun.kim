@@ -35,4 +35,5 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: comfuture/actions/ghpages@v2
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           build_dir: .output/public
