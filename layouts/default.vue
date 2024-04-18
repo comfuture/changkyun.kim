@@ -46,6 +46,9 @@ onMounted(() => {
               <nuxt-link to="/article">Articles</nuxt-link>
             </li>
             <li>
+              <nuxt-link to="/app">App</nuxt-link>
+            </li>
+            <li>
               <nuxt-link to="/contact">Contact</nuxt-link>
             </li>
           </menu>
@@ -64,25 +67,29 @@ onMounted(() => {
 .material-symbols-outlined {
   @apply align-middle;
   font-variation-settings:
-  'FILL' 1,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 48
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 48
 }
 
-.page-enter-active, .page-leave-active {
+.page-enter-active,
+.page-leave-active {
   transition: opacity .35s;
 }
 
-.page-enter-from, .page-leave-to {
+.page-enter-from,
+.page-leave-to {
   opacity: 0;
 }
 
 body {
   @apply bg-white dark:bg-gray-800 dark:text-gray-200;
 }
+
 .site {
   @apply flex flex-col justify-items-stretch min-h-screen;
+
   >header {
     @apply sticky top-[-1px] p-4 z-50;
     @apply bg-white/40 dark:bg-gray-600/40 shadow-lg h-[56px] backdrop-blur;
