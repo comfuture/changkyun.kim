@@ -1,0 +1,1 @@
+import{f as s,u as o,o as r,c,a as e,t,g as n}from"./DXSsqGXG.js";const _=s({__name:"[tag]",setup(l){const{params:{tag:a}}=o();return(u,p)=>(r(),c("main",null,[e("h2",null,t(n(a))+"에 대한 글들",1),e("p",null,t(n(a))+" ... ",1)]))}});export{_ as default};
