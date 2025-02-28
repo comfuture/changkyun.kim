@@ -5,7 +5,7 @@
   "author": "comfuture",
   "private": true,
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "nuxt dev",
@@ -14,18 +14,19 @@
     "generate": "GENERATE=1 nuxi generate"
   },
   "dependencies": {
-    "@nuxt/content": "^2.6.0",
+    "@nuxt/content": "^3.2.2",
     "@popperjs/core": "^2.11.6",
     "sharp": "^0.33.3"
   },
   "devDependencies": {
     "@kevinmarrec/nuxt-pwa": "^0.17.0",
-    "@nuxt/image": "^1.5.0",
-    "@nuxtjs/tailwindcss": "^6.7.0",
-    "@tailwindcss/typography": "^0.5.9",
+    "@nuxt/image": "^1.9.0",
+    "@nuxtjs/tailwindcss": "^6.13.1",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/glob": "^8.0.0",
     "@types/sharp": "^0.31.1",
     "glob": "^10.2.6",
-    "nuxt": "^3.13.0"
-  }
+    "nuxt": "^3.15.4"
+  },
+  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }

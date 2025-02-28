@@ -4,11 +4,17 @@
       <img class="object-cover w-full" src="/image/cover3.jpg" />
     </section>
     <section class="text content">
-      <div class="container mx-auto mt-6 py-4">
+      <div class="container mx-auto py-4">
         <h2>Contact</h2>
         <ul class="contacts">
           <li>
             me<span></span>@<span></span>changkyun.kim
+          </li>
+          <li>
+            <a href="https://bsky.app/profile/changkyun.kim">@changkyun.kim</a>
+          </li>
+          <li>
+            <a href="#">@me@changkyun.kim</a>
           </li>
           <li>
             <a href="https://open.kakao.com/me/changkyunkim">

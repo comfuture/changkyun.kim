@@ -6,7 +6,8 @@ useHead({
 <template>
   <main>
     <section class="cover">
-      <nuxt-img class="object-cover w-full" src="/image/cover.jpg" />
+      <nuxt-img class="object-cover w-full" preset="cover" src="/image/cover.jpg" />
+      <!-- <img src="/image/cover.jpg" /> -->
     </section>
     <section class="content">
       <div class="container">
@@ -18,8 +19,8 @@ useHead({
           </div>
           <div class="bio">
             <data class="name">김창균</data>
-            <i class="text-gray-500 material-symbols-outlined">place</i> Seoul, KOREA <br/>
-            <i class="text-gray-500 material-symbols-outlined">announcement</i> 한국어, 日本語, English <br/>
+            <i class="text-gray-500 material-symbols-outlined">place</i> Seoul, KOREA <br />
+            <i class="text-gray-500 material-symbols-outlined">announcement</i> 한국어, 日本語, English, Español <br />
           </div>
           <div class="description">
             <h3>의로운 원칙주의자</h3>
@@ -55,6 +56,7 @@ export default {
 
 main {
   @apply flex flex-col;
+
   section.cover {
     img {
       @apply object-cover w-full h-64;
@@ -77,13 +79,10 @@ main {
       @apply mx-auto items-center flex flex-wrap md:-mt-16 md:pb-8;
 
       .card {
-        @apply flex flex-col w-full
-          md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg xl:w-8/12
-          dark:bg-gray-700;
+        @apply flex flex-col w-full md:w-10/12 md:mx-auto md:rounded-lg md:bg-white md:shadow-lg xl:w-8/12 dark:bg-gray-700;
 
         img.avatar {
-          @apply block shadow-xl rounded-full align-middle border-none absolute z-0 h-32 w-32 -m-16
-            md:h-48 md:w-48 md:-m-24;
+          @apply block shadow-xl rounded-full align-middle border-none absolute z-0 h-32 w-32 -m-16 md:h-48 md:w-48 md:-m-24;
         }
 
         .bio {

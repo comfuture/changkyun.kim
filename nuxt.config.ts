@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
+
   // ssr: false,
   app: {
     head: {
@@ -29,33 +30,44 @@ export default defineNuxtConfig({
     },
     pageTransition: true
   },
+
   experimental: {
     payloadExtraction: false,
   },
+
   modules: [
-    '@kevinmarrec/nuxt-pwa',
+    // '@kevinmarrec/nuxt-pwa',
     "@nuxt/content",
     "@nuxtjs/tailwindcss",
     "@nuxt/image"
   ],
-  tailwindcss: {
-    viewer: false,
-  },
+
   content: {
-    highlight: {
-      theme: 'github-dark-dimmed',
-      preload: ['python', 'vue', 'vue-html']
-    }
+    build: {
+      markdown: {
+        highlight: {
+          theme: 'github-dark-dimmed',
+          preload: ['python', 'typescript', 'vue', 'vue-html'],
+        }
+      },
+    },
   },
-  pwa: {
-    workbox: {
-      enabled: true,
-    }
-  },
+
+  // tailwindcss: {
+  //   viewer: false,
+  // },
+
+  // content: {
+  //   highlight: {
+  //     theme: 'github-dark-dimmed',
+  //     preload: ['python', 'vue', 'vue-html']
+  //   }
+  // },
+
   image: {
-    provider: 'ipx',
-    staticFilename: '[publicPath]/image/[name]-[hash][ext]',
-    dir: 'content',
+    // provider: 'ipx',
+    // staticFilename: '[publicPath]/image/[name]-[hash][ext]',
+    // dir: 'content',
     presets: {
       thumbnail: {
         modifiers: {
@@ -64,20 +76,20 @@ export default defineNuxtConfig({
           height: 90
         }
       },
-      card: {
-        provider: 'ipx',
-        modifiers: {
-          format: 'webp',
-          width: 500,
-          height: 500
-        }
-      },
-      large: {
-        modifiers: {
-          format: 'webp',
-          width: 1024
-        }
-      },
+      // card: {
+      //   provider: 'ipx',
+      //   modifiers: {
+      //     format: 'webp',
+      //     width: 500,
+      //     height: 500
+      //   }
+      // },
+      // large: {
+      //   modifiers: {
+      //     format: 'webp',
+      //     width: 1024
+      //   }
+      // },
       cover: {
         modifiers: {
           format: 'webp',
@@ -87,4 +99,6 @@ export default defineNuxtConfig({
       }
     }
   },
+
+  compatibilityDate: '2025-02-28',
 })

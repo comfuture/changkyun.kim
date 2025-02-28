@@ -9,8 +9,8 @@ if (typeof props.datetime === 'string') {
   dt = props.datetime
 }
 const formatter = Intl.DateTimeFormat('ko-KR', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
+  dateStyle: 'full',
+  // timeStyle: 'short',
   timeZone: 'Asia/Seoul',
 })
 const dateString = formatter.format(dt)

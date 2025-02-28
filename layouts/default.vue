@@ -43,11 +43,11 @@ onMounted(() => {
               <nuxt-link to="/about">About me</nuxt-link>
             </li>
             <li>
-              <nuxt-link to="/article">Articles</nuxt-link>
+              <nuxt-link to="/blog/">Articles</nuxt-link>
             </li>
-            <li>
+            <!-- <li>
               <nuxt-link to="/app">App</nuxt-link>
-            </li>
+            </li> -->
             <li>
               <nuxt-link to="/contact">Contact</nuxt-link>
             </li>
@@ -92,14 +92,15 @@ body {
 
   >header {
     @apply sticky top-[-1px] p-4 z-50;
-    @apply bg-white/40 dark:bg-gray-600/40 shadow-lg h-[56px] backdrop-blur;
+    @apply bg-white/60 dark:bg-gray-600/40 shadow-lg h-[56px] backdrop-blur;
 
     /* &.stuck {
       @apply bg-white/40 dark:bg-gray-600/40 shadow-lg h-[56px] backdrop-blur;
     } */
 
     .container {
-      @apply mx-auto flex justify-between max-w-2xl;
+      @apply mx-auto flex justify-between;
+      /* max-w-2xl; */
 
       h1 {
         @apply font-semibold uppercase;
@@ -110,13 +111,13 @@ body {
 
         menu {
           @apply absolute mt-6 border rounded shadow py-4 px-8;
-          @apply opacity-0 md:relative md:mt-0 md:border-0 md:shadow-none md:p-0;
+          @apply hidden md:relative md:mt-0 md:border-0 md:shadow-none md:p-0;
           @apply md:flex md:opacity-100 flex-col md:flex-row gap-2 md:gap-4;
           @apply uppercase text-sm text-gray-700 dark:text-gray-300 font-semibold;
         }
 
         button.active.hamburger+menu {
-          @apply flex opacity-100 bg-white transition transition-all;
+          @apply flex bg-white transition-all;
         }
       }
     }
