@@ -25,7 +25,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "@types/glob": "^8.0.0",
     "@types/sharp": "^0.31.1",
-    "glob": "^10.2.6",
+    "glob": "^11.0.1",
     "nuxt": "^3.15.4"
   },
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
