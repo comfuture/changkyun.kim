@@ -14,9 +14,9 @@
     "generate": "GENERATE=1 nuxi generate"
   },
   "dependencies": {
-    "@nuxt/content": "^3.4.0",
     "@fedify/fedify": "^1.4.7",
     "@fedify/h3": "^0.1.2",
+    "@nuxt/content": "^3.4.0",
     "@popperjs/core": "^2.11.6",
     "sharp": "^0.33.3"
   },
@@ -29,7 +29,7 @@
     "@types/glob": "^8.0.0",
     "@types/sharp": "^0.32.0",
     "glob": "^11.0.1",
-    "nuxt": "^3.16.0"
+    "nuxt": "^3.16.1"
   },
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }
