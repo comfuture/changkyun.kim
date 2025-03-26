@@ -53,3 +53,5 @@ sw.*
 
 # Vim swap files
 *.swp
+
+.data
