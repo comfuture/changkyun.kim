@@ -61,11 +61,9 @@ export default defineNuxtConfig({
       baseURL: 'https://changkyun.kim'
     },
     // staticFilename: '[publicPath]/image/[name]-[hash][ext]',
-    // dir: 'content',
     presets: {
       thumbnail: {
         modifiers: {
-          format: 'webp',
           width: 90,
           height: 90
         }
@@ -73,7 +71,6 @@ export default defineNuxtConfig({
 
       cover: {
         modifiers: {
-          format: 'webp',
           width: 1280,
           height: 400
         }
