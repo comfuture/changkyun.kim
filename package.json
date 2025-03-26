@@ -14,15 +14,9 @@
     "generate": "GENERATE=1 nuxi generate"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@nuxt/content": "^3.4.0",
     "@fedify/fedify": "^1.4.7",
     "@fedify/h3": "^0.1.2",
-=======
-    "@fedify/fedify": "^1.4.7",
-    "@fedify/h3": "^0.1.2",
-    "@nuxt/content": "^3.2.2",
->>>>>>> 29b4bb3fdc01f463f461a1728a92053c8882296d
     "@popperjs/core": "^2.11.6",
     "sharp": "^0.33.3"
   },
