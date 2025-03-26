@@ -5,6 +5,12 @@ export default defineNuxtConfig({
     shim: false
   },
 
+  nitro: {
+    experimental: {
+      openAPI: true
+    }
+  },
+
   // ssr: false,
   app: {
     head: {
@@ -35,12 +41,8 @@ export default defineNuxtConfig({
     payloadExtraction: false,
   },
 
-  modules: [
-    // '@kevinmarrec/nuxt-pwa',
-    "@nuxt/content",
-    "@nuxtjs/tailwindcss",
-    "@nuxt/image"
-  ],
+  modules: [// '@kevinmarrec/nuxt-pwa',
+    "@nuxt/content", "@nuxtjs/tailwindcss", "@nuxt/image", '@nuxthub/core'],
 
   content: {
     build: {
@@ -53,19 +55,11 @@ export default defineNuxtConfig({
     },
   },
 
-  // tailwindcss: {
-  //   viewer: false,
-  // },
-
-  // content: {
-  //   highlight: {
-  //     theme: 'github-dark-dimmed',
-  //     preload: ['python', 'vue', 'vue-html']
-  //   }
-  // },
-
   image: {
     // provider: 'ipx',
+    cloudflare: {
+      baseURL: 'https://changkyun.kim'
+    },
     // staticFilename: '[publicPath]/image/[name]-[hash][ext]',
     // dir: 'content',
     presets: {
@@ -76,20 +70,7 @@ export default defineNuxtConfig({
           height: 90
         }
       },
-      // card: {
-      //   provider: 'ipx',
-      //   modifiers: {
-      //     format: 'webp',
-      //     width: 500,
-      //     height: 500
-      //   }
-      // },
-      // large: {
-      //   modifiers: {
-      //     format: 'webp',
-      //     width: 1024
-      //   }
-      // },
+
       cover: {
         modifiers: {
           format: 'webp',
