@@ -7,7 +7,6 @@ useHead({
   <main>
     <section class="cover">
       <nuxt-img class="object-cover w-full" preset="cover" src="/image/cover.jpg" />
-      <!-- <img src="/image/cover.jpg" /> -->
     </section>
     <section class="content">
       <div class="container">
@@ -59,16 +58,7 @@ main {
 
   section.cover {
     img {
-      @apply object-cover w-full h-64;
-
-      @screen lg {
-        @apply h-[300px];
-        height: 300px !important;
-      }
-
-      @screen xl {
-        height: 400px !important;
-      }
+      @apply object-cover w-full h-40 md:h-64 lg:h-80 xl:h-96;
     }
   }
 
