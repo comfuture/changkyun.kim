@@ -41,8 +41,10 @@ export default defineNuxtConfig({
     payloadExtraction: false,
   },
 
-  modules: [// '@kevinmarrec/nuxt-pwa',
-    "@nuxt/content", "@nuxtjs/tailwindcss", "@nuxt/image", '@nuxthub/core'],
+  modules: [
+    "@nuxt/content", "@nuxtjs/tailwindcss", "@nuxt/image", "@justway/nuxt",
+    "@nuxthub/core"
+  ],
 
   content: {
     build: {
@@ -60,7 +62,6 @@ export default defineNuxtConfig({
     cloudflare: {
       baseURL: 'https://changkyun.kim'
     },
-    // staticFilename: '[publicPath]/image/[name]-[hash][ext]',
     presets: {
       thumbnail: {
         modifiers: {

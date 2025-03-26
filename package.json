@@ -16,6 +16,7 @@
   "dependencies": {
     "@fedify/fedify": "^1.4.7",
     "@fedify/h3": "^0.1.2",
+    "@justway/nuxt": "^0.0.3",
     "@nuxt/content": "^3.4.0",
     "@popperjs/core": "^2.11.6",
     "sharp": "^0.33.3"
