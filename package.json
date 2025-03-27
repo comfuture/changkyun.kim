@@ -31,7 +31,7 @@
     "@types/sharp": "^0.32.0",
     "glob": "^11.0.1",
     "nuxt": "^3.16.1",
-    "wrangler": "^4.4.0"
+    "wrangler": "^4.5.0"
   },
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }
