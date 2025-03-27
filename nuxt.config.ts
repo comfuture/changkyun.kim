@@ -72,7 +72,9 @@ export default defineNuxtConfig({
 
       cover: {
         modifiers: {
-          width: 1280
+          fit: 'crop',
+          width: 1280,
+          height: 400,
         }
       }
     }
