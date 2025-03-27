@@ -275,7 +275,7 @@
   resolved "https://registry.yarnpkg.com/@cloudflare/workerd-windows-64/-/workerd-windows-64-1.20250320.0.tgz#fd066c3e877e7691c094fb90600989e5050d1fcb"
   integrity sha512-Uj5z/PyGqO8xuVCkS19exmQ5yGcC1RbB3nUaf6j5rlft7lBTBkjC+l7NAhEiRxNKaZuT2Lfy+r4vAEPsiotegw==
 
-"@cloudflare/workers-types@^4.20250204.0":
+"@cloudflare/workers-types@^4.20250303.0":
   version "4.20250321.0"
   resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-4.20250321.0.tgz#cfb59dee59f721dfab8726bfe8eda37c01c50caf"
   integrity sha512-jPwtZJC7tVFOwFazuwq96be8haTnY9qik8hJ+oLFi50d9LTWPPrnrNHC4OxZmJTEcPIAy0y1WFZHe8C/b7xFXQ==
@@ -1068,10 +1068,19 @@
   resolved "https://registry.yarnpkg.com/@nuxt/devalue/-/devalue-2.0.2.tgz#5749f04df13bda4c863338d8dabaf370f45ef7c7"
   integrity sha512-GBzP8zOc7CGWyFQS6dv1lQz8VVpz5C2yRszbXufwG/9zhStTIH50EtD87NmWbTMwXDvZLNg8GIpb1UFdH93JCA==
 
-"@nuxt/devtools-kit@2.3.1", "@nuxt/devtools-kit@^2.0.0":
+"@nuxt/devtools-kit@2.3.1":
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/@nuxt/devtools-kit/-/devtools-kit-2.3.1.tgz#63ed72768d3a4eca485a0bc6fb4c9dc575449bd6"
   integrity sha512-sggap7UTV0823cZk1buCEdd3KG+dMo73DpBuN+zHFC8UG3PfSKDlbVmQGb0TegxWTXG6BwItNQo8gd+pZzf/MA==
+  dependencies:
+    "@nuxt/kit" "^3.16.1"
+    "@nuxt/schema" "^3.16.1"
+    execa "^8.0.1"
+
+"@nuxt/devtools-kit@^2.1.3":
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/@nuxt/devtools-kit/-/devtools-kit-2.3.2.tgz#81dc6d3a2a08f22a58068d9557ac333ba662ae27"
+  integrity sha512-K0citnz9bSecPCLl4jGfE5I5St+E9XtDmOvYqq3ranGZGZ2Mvs5RwgUkaOrn4rulvUmBGBl7Exwh5YX9PONrEQ==
   dependencies:
     "@nuxt/kit" "^3.16.1"
     "@nuxt/schema" "^3.16.1"
@@ -1242,29 +1251,29 @@
     vite-plugin-checker "^0.9.1"
     vue-bundle-renderer "^2.1.1"
 
-"@nuxthub/core@0.8.18":
-  version "0.8.18"
-  resolved "https://registry.yarnpkg.com/@nuxthub/core/-/core-0.8.18.tgz#14cb9cb432f236944df76bd1c53728dbe4cdb7e1"
-  integrity sha512-t7+jtyXVFuV60dhoWeYobVzij7c5ir0T10Uam2Gk9SUaMvp8Kd5op5mPnAo4v2SPW/JiJyK6gwTb7jUWDthPqg==
+"@nuxthub/core@0.8.21":
+  version "0.8.21"
+  resolved "https://registry.yarnpkg.com/@nuxthub/core/-/core-0.8.21.tgz#407c7583a6a90aeb1a3dd3206b719d2dc363cb77"
+  integrity sha512-DU0Aqxl35X2K5ZA2wwGpx9Q9amqAbTwnLN5rRL4G2jyB/ifLwfnObQUCyTvB+5ED9n7ZDpdW8e5gpUuS/3jGQw==
   dependencies:
-    "@cloudflare/workers-types" "^4.20250204.0"
-    "@nuxt/devtools-kit" "^2.0.0"
+    "@cloudflare/workers-types" "^4.20250303.0"
+    "@nuxt/devtools-kit" "^2.1.3"
     "@nuxt/kit" "^3.15.4"
     "@uploadthing/mime-types" "^0.3.4"
     citty "^0.1.6"
-    confbox "^0.1.8"
+    confbox "^0.2.1"
     defu "^6.1.4"
     destr "^2.0.3"
-    h3 "^1.15.0"
+    h3 "^1.15.1"
     mime "^4.0.6"
     nitro-cloudflare-dev "^0.2.1"
     ofetch "^1.4.1"
     pathe "^2.0.3"
-    pkg-types "^1.3.1"
-    std-env "^3.8.0"
+    pkg-types "^2.1.0"
+    std-env "^3.8.1"
     ufo "^1.5.4"
     uncrypto "^0.1.3"
-    unstorage "^1.14.4"
+    unstorage "^1.15.0"
     zod "^3.24.2"
 
 "@nuxtjs/mdc@^0.16.1":
@@ -7298,7 +7307,7 @@ statuses@2.0.1:
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-1.5.0.tgz#161c7dac177659fd9811f43771fa99381478628c"
   integrity sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==
 
-std-env@^3.3.2, std-env@^3.7.0, std-env@^3.8.0, std-env@^3.8.1:
+std-env@^3.3.2, std-env@^3.7.0, std-env@^3.8.1:
   version "3.8.1"
   resolved "https://registry.yarnpkg.com/std-env/-/std-env-3.8.1.tgz#2b81c631c62e3d0b964b87f099b8dcab6c9a5346"
   integrity sha512-vj5lIj3Mwf9D79hBkltk5qmkFI+biIKWS2IBxEyEU3AX1tUf7AoL8nSazCOiiqQsGKIq01SClsKEzweu34uwvA==
@@ -7934,7 +7943,7 @@ unplugin@^2.1.0, unplugin@^2.2.0, unplugin@^2.2.1:
     acorn "^8.14.1"
     webpack-virtual-modules "^0.6.2"
 
-unstorage@^1.10.1, unstorage@^1.14.4, unstorage@^1.15.0:
+unstorage@^1.10.1, unstorage@^1.15.0:
   version "1.15.0"
   resolved "https://registry.yarnpkg.com/unstorage/-/unstorage-1.15.0.tgz#d1f23cba0901c5317d15a751a299e50fbb637674"
   integrity sha512-m40eHdGY/gA6xAPqo8eaxqXgBuzQTlAKfmB1iF7oCKXE1HfwHwzDJBywK+qQGn52dta+bPlZluPF7++yR3p/bg==
