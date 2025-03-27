@@ -24,7 +24,7 @@
   "devDependencies": {
     "@kevinmarrec/nuxt-pwa": "^0.17.0",
     "@nuxt/image": "^1.9.0",
-    "@nuxthub/core": "0.8.18",
+    "@nuxthub/core": "0.8.21",
     "@nuxtjs/tailwindcss": "^6.13.1",
     "@tailwindcss/typography": "^0.5.16",
     "@types/glob": "^8.0.0",
