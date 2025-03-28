@@ -1,3 +1,7 @@
 {
-    "workbench.colorTheme": "Default Dark+"
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Use conventional commit message format in English. prefix: feat, fix, chore, content, style, refactor, test. Use prefix `content` for files in `content/` directory. Make sure to include a brief description of the changes made in the commit."
+    }
+  ]
 }
