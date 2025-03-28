@@ -14,15 +14,15 @@
     "generate": "GENERATE=1 nuxi generate"
   },
   "dependencies": {
-    "@fedify/fedify": "^1.4.7",
+    "@fedify/fedify": "^1.4.9",
     "@fedify/h3": "^0.1.2",
     "@justway/nuxt": "^0.0.3",
     "@nuxt/content": "^3.4.0",
     "@popperjs/core": "^2.11.6",
+    "better-sqlite3": "^11.9.1",
     "sharp": "^0.33.3"
   },
   "devDependencies": {
-    "@kevinmarrec/nuxt-pwa": "^0.17.0",
     "@nuxt/image": "^1.9.0",
     "@nuxthub/core": "0.8.21",
     "@nuxtjs/tailwindcss": "^6.13.1",
