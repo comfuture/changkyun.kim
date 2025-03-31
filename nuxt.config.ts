@@ -89,5 +89,17 @@ export default defineNuxtConfig({
     }
   },
 
+  alias: {
+    'rdf-canonize-native': 'rdf-canoinize',
+  },
+
+  vite: {
+    resolve: {
+      alias: {
+        'rdf-canonize-native': 'rdf-canonize',
+      }
+    }
+  },
+
   compatibilityDate: '2025-02-28',
 })
