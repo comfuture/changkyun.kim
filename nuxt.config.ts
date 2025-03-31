@@ -90,7 +90,7 @@ export default defineNuxtConfig({
   },
 
   alias: {
-    'rdf-canonize-native': 'rdf-canoinize',
+    'rdf-canonize-native': 'rdf-canonize',
   },
 
   vite: {
