@@ -1,4 +1,3 @@
-import { defineEventHandler, getQuery, createError } from 'h3'
 export default defineEventHandler(async (event) => {
   const { resource } = getQuery<{ resource: string }>(event)
 
@@ -28,5 +27,5 @@ export default defineEventHandler(async (event) => {
     ],
   }
 
-  return response
+  return send(event, response, 'application/activity+json')
 })
