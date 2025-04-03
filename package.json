@@ -14,23 +14,22 @@
     "generate": "GENERATE=1 nuxi generate"
   },
   "dependencies": {
-    "@fedify/fedify": "^1.5.0",
-    "@fedify/h3": "^0.1.2",
     "@justway/nuxt": "^0.0.3",
     "@nuxt/content": "^3.4.0",
+    "@nuxt/image": "^1.9.0",
+    "@nuxtjs/tailwindcss": "^6.13.1",
     "@popperjs/core": "^2.11.6",
+    "@tailwindcss/typography": "^0.5.16",
     "better-sqlite3": "^11.9.1",
-    "sharp": "^0.33.3"
+    "nuxt": "^3.16.2"
   },
   "devDependencies": {
-    "@nuxt/image": "^1.9.0",
+    "sharp": "^0.33.5",
     "@nuxthub/core": "0.8.23",
-    "@nuxtjs/tailwindcss": "^6.13.1",
-    "@tailwindcss/typography": "^0.5.16",
     "@types/glob": "^8.0.0",
     "@types/sharp": "^0.32.0",
     "glob": "^11.0.1",
-    "nuxt": "^3.16.2"
+    "wrangler": "^4.7.0"
   },
   "resolutions": {
     "rdf-canonize-native": "npm:rdf-canonize"

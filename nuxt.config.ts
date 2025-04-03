@@ -7,17 +7,17 @@ export default defineNuxtConfig({
 
   nitro: {
     experimental: {
-      // database: true,
+      database: true,
       openAPI: true
     },
-    // devDatabase: {
-    //   default: {
-    //     connector: 'better-sqlite3',
-    //     options: {
-    //       name: 'content/contents',
-    //     }
-    //   }
-    // }
+    devDatabase: {
+      default: {
+        connector: 'better-sqlite3',
+        options: {
+          name: 'content/contents',
+        }
+      }
+    }
   },
 
   // ssr: false,
@@ -67,7 +67,8 @@ export default defineNuxtConfig({
   },
 
   image: {
-    provider: process.env.DEV ? 'ipx' : 'cloudflare',
+    format: ['webp', 'jpg', 'png'],
+    provider: process.env.DEV === '1' ? 'ipx' : 'cloudflare',
     cloudflare: {
       baseURL: 'https://changkyun.kim'
     },
@@ -88,18 +89,5 @@ export default defineNuxtConfig({
       }
     }
   },
-
-  alias: {
-    'rdf-canonize-native': 'rdf-canonize',
-  },
-
-  vite: {
-    resolve: {
-      alias: {
-        'rdf-canonize-native': 'rdf-canonize',
-      }
-    }
-  },
-
   compatibilityDate: '2025-02-28',
 })
