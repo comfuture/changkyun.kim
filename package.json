@@ -24,13 +24,13 @@
   },
   "devDependencies": {
     "@nuxt/image": "^1.9.0",
-    "@nuxthub/core": "0.8.21",
+    "@nuxthub/core": "0.8.23",
     "@nuxtjs/tailwindcss": "^6.13.1",
     "@tailwindcss/typography": "^0.5.16",
     "@types/glob": "^8.0.0",
     "@types/sharp": "^0.32.0",
     "glob": "^11.0.1",
-    "nuxt": "^3.16.1"
+    "nuxt": "^3.16.2"
   },
   "resolutions": {
     "rdf-canonize-native": "npm:rdf-canonize"
