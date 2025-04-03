@@ -27,5 +27,5 @@ export default defineEventHandler(async (event) => {
     ],
   }
 
-  return send(event, response, 'application/activity+json')
+  return send(event, JSON.stringify(response), 'application/activity+json')
 })
