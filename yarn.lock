@@ -245,10 +245,10 @@
   dependencies:
     mime "^3.0.0"
 
-"@cloudflare/workers-types@^4.20250303.0":
-  version "4.20250327.0"
-  resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-4.20250327.0.tgz#3bbb830f3244c1a1ec9d9f809a9c003fa9206e7c"
-  integrity sha512-rkoGnSY/GgBLCuhjZMIC3mt0jjqqvL17uOK92OI4eivmE+pMFOAchowDxIWOzDyYe5vwNCakbCeIM/FrSmwGJA==
+"@cloudflare/workers-types@^4.20250327.0":
+  version "4.20250403.0"
+  resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-4.20250403.0.tgz#f996bdd5662b52bc621df086cdfbab9462319d5e"
+  integrity sha512-wLsXNfxBPsV+PPUInCCFeoXTZMHNEAFHvVe1E0/S0Cp9JrKTsSEeIMY4zUvR5ULxNAQkeDVqPjYRaKFkzpkX3w==
 
 "@csstools/selector-resolve-nested@^3.0.0":
   version "3.0.0"
@@ -889,7 +889,7 @@
   resolved "https://registry.yarnpkg.com/@nuxt/devalue/-/devalue-2.0.2.tgz#5749f04df13bda4c863338d8dabaf370f45ef7c7"
   integrity sha512-GBzP8zOc7CGWyFQS6dv1lQz8VVpz5C2yRszbXufwG/9zhStTIH50EtD87NmWbTMwXDvZLNg8GIpb1UFdH93JCA==
 
-"@nuxt/devtools-kit@2.3.2", "@nuxt/devtools-kit@^2.1.3":
+"@nuxt/devtools-kit@2.3.2", "@nuxt/devtools-kit@^2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@nuxt/devtools-kit/-/devtools-kit-2.3.2.tgz#81dc6d3a2a08f22a58068d9557ac333ba662ae27"
   integrity sha512-K0citnz9bSecPCLl4jGfE5I5St+E9XtDmOvYqq3ranGZGZ2Mvs5RwgUkaOrn4rulvUmBGBl7Exwh5YX9PONrEQ==
@@ -1063,14 +1063,14 @@
     vite-plugin-checker "^0.9.1"
     vue-bundle-renderer "^2.1.1"
 
-"@nuxthub/core@0.8.21":
-  version "0.8.21"
-  resolved "https://registry.yarnpkg.com/@nuxthub/core/-/core-0.8.21.tgz#407c7583a6a90aeb1a3dd3206b719d2dc363cb77"
-  integrity sha512-DU0Aqxl35X2K5ZA2wwGpx9Q9amqAbTwnLN5rRL4G2jyB/ifLwfnObQUCyTvB+5ED9n7ZDpdW8e5gpUuS/3jGQw==
+"@nuxthub/core@0.8.23":
+  version "0.8.23"
+  resolved "https://registry.yarnpkg.com/@nuxthub/core/-/core-0.8.23.tgz#c992b4be15148a6b0754e9917f24337f731e52a6"
+  integrity sha512-iVgydstTjtn7hk5MGb48+zAQmlEIBe4kP8P/gaVMWMPuhjmtbc+Dj01GOHAJCj7EdBBMXYAumdb2IxXxxFtUwQ==
   dependencies:
-    "@cloudflare/workers-types" "^4.20250303.0"
-    "@nuxt/devtools-kit" "^2.1.3"
-    "@nuxt/kit" "^3.15.4"
+    "@cloudflare/workers-types" "^4.20250327.0"
+    "@nuxt/devtools-kit" "^2.3.2"
+    "@nuxt/kit" "^3.16.1"
     "@uploadthing/mime-types" "^0.3.4"
     citty "^0.1.6"
     confbox "^0.2.1"
@@ -1078,7 +1078,7 @@
     destr "^2.0.3"
     h3 "^1.15.1"
     mime "^4.0.6"
-    nitro-cloudflare-dev "^0.2.1"
+    nitro-cloudflare-dev "^0.2.2"
     ofetch "^1.4.1"
     pathe "^2.0.3"
     pkg-types "^2.1.0"
@@ -5205,7 +5205,7 @@ negotiator@0.6.3:
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.3.tgz#58e323a72fedc0d6f9cd4d31fe49f51479590ccd"
   integrity sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==
 
-nitro-cloudflare-dev@^0.2.1:
+nitro-cloudflare-dev@^0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/nitro-cloudflare-dev/-/nitro-cloudflare-dev-0.2.2.tgz#d9e88977f3b54eaca273ba63c67bf9473f98075c"
   integrity sha512-aZfNTVdgXPQeAmXW0Tw8hm3usAHr4qVG4Bg3WhHBGeZYuXr9OyT04Ztb+STkMzhyaXvfMHViAaPUPg06iAYqag==
