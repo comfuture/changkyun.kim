@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const response = {
+  setResponseHeader(event, 'Content-Type', 'application/jrd+json')
+  return {
     subject: resource,
     aliases: ['https://changkyun.com/@me'],
     links: [
@@ -26,6 +27,4 @@ export default defineEventHandler(async (event) => {
       },
     ],
   }
-
-  return send(event, JSON.stringify(response), 'application/jrd+json')
 })
