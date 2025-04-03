@@ -17,12 +17,12 @@ export default defineEventHandler(async (event) => {
 
   const response = {
     subject: resource,
-    aliases: ['https://changkyun.com/ap/user/me'],
+    aliases: ['https://changkyun.com/api/user/me'],
     links: [
       {
         rel: 'self',
         type: 'application/activity+json',
-        href: event.node.req.url,
+        href: 'https://changkyun.com/api/user/me',
       },
     ],
   }
