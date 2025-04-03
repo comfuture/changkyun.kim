@@ -25,7 +25,7 @@ export default defineEventHandler((event) => {
   setResponseHeader(event, 'Content-Type', 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"')
   return { // sendJson returns the body
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: 'https://changkyun.kim/api/@me/outbox',
+    id: 'https://changkyun.kim/@me/outbox',
     type: 'OrderedCollection',
     totalItems: activities.length, // Should be total count in DB
     orderedItems: activities // Needs pagination in a real implementation
