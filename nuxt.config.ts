@@ -1,5 +1,3 @@
-import { defineNuxtConfig } from 'nuxt/config'
-// https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
   typescript: {
     shim: false
@@ -14,7 +12,7 @@ export default defineNuxtConfig({
       default: {
         connector: 'better-sqlite3',
         options: {
-          name: 'content/contents',
+          name: 'dev',
         }
       }
     }
@@ -30,11 +28,11 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Changkyun Kim' },
+        { name: 'description', content: 'Changkyun Kim, 김창균, 金昌均' },
         { name: 'theme-color', content: '#FFF' },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: 'Changkyun Kim' },
+        { property: 'og:title', content: 'Changkyun Kim, 김창균, 金昌均' },
         { property: 'og:site_name', content: 'Changkyun Kim' },
       ],
       link: [
