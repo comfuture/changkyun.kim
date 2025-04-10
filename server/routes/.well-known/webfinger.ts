@@ -18,17 +18,17 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Content-Type', 'application/jrd+json')
   return {
     subject: resource,
-    aliases: ['https://changkyun.com/@me'],
+    aliases: ['https://changkyun.kim/@me'],
     links: [
       {
         rel: 'self',
         type: 'application/activity+json',
-        href: 'https://changkyun.com/@me',
+        href: 'https://changkyun.kim/@me',
       },
       {
         rel: 'https://webfinger.net/rel/profile-page',
         type: 'text/html',
-        href: 'https://changkyun.com/about',
+        href: 'https://changkyun.kim/about',
       },
     ],
   }
