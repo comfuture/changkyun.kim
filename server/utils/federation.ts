@@ -1,6 +1,5 @@
 import { generateKeyPairSync } from 'node:crypto';
 import type { H3Event } from 'h3';
-
 /**
  * Generates a new RSA key pair for cryptographic operations.
  * 
@@ -58,12 +57,14 @@ export const setJsonLdHeader = (event: H3Event) => {
 export const me = {
   '@context': [
     'https://www.w3.org/ns/activitystreams',
-    'https://w3id.org/security/v1',
+    'https://w3id.org/security/v1'
   ],
   id: 'https://changkyun.kim/@me',
   type: 'Person',
   preferredUsername: 'me',
   names: ['Changkyun Kim', '김창균', '金昌均'],
+  icon: 'https://changkyun.kim/image/avatar.jpg',
+  image: 'https://changkyun.kim/cdn-cgi/image/fit=crop,w=1280,h=400/image/cover.jpg',
   summary: `Principled person who values integrity. A slow but persistent learner with deep understanding. Problem solver using data, experience, and intuition.`,
   inbox: 'https://changkyun.kim/@me/inbox',
   outbox: 'https://changkyun.kim/@me/outbox',
