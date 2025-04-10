@@ -63,8 +63,16 @@ export const me = {
   type: 'Person',
   preferredUsername: 'me',
   names: ['Changkyun Kim', '김창균', '金昌均'],
-  icon: 'https://changkyun.kim/image/avatar.jpg',
-  image: 'https://changkyun.kim/cdn-cgi/image/fit=crop,w=1280,h=400/image/cover.jpg',
+  icon: {
+    type: 'Image',
+    mediaType: 'image/jpeg',
+    url: 'https://changkyun.kim/image/avatar.jpg',
+  },
+  image: {
+    type: 'Image',
+    mediaType: 'image/jpeg',
+    url: 'https://changkyun.kim/cdn-cgi/image/fit=crop,w=1280,h=400/image/cover.jpg',
+  },
   summary: `Principled person who values integrity. A slow but persistent learner with deep understanding. Problem solver using data, experience, and intuition.`,
   inbox: 'https://changkyun.kim/@me/inbox',
   outbox: 'https://changkyun.kim/@me/outbox',
