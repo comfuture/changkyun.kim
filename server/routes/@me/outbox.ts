@@ -22,7 +22,7 @@ export default defineEventHandler((event) => {
     // }
   ];
 
-  setResponseHeader(event, 'Content-Type', 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"')
+  setJsonLdHeader(event); // Set the Content-Type header to application/ld+json with the ActivityStreams profile
   return { // sendJson returns the body
     '@context': 'https://www.w3.org/ns/activitystreams',
     id: 'https://changkyun.kim/@me/outbox',

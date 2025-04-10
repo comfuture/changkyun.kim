@@ -1,20 +1,20 @@
 export default defineEventHandler(async (event) => {
   // TODO: check accept header
+  const db = useDatabase()
+  const { rows } = await db.sql`SELECT * FROM actor WHERE actor_id = ${me.id}`
+  let publicKey: PublicKey | undefined = undefined;
+  if (rows?.length === 1) {
+    const { actor_id, public_key } = rows[0]
 
-  setResponseHeader(event, 'Content-Type', 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"')
+    publicKey = {
+      id: `${actor_id}#main-key`,
+      owner: `${actor_id}`,
+      publicKeyPem: `${public_key}`
+    }
+  }
+  setJsonLdHeader(event)
   return {
-    '@context': [
-      'https://www.w3.org/ns/activitystreams',
-      'https://w3id.org/security/v1',
-    ],
-    id: 'https://changkyun.kim/@me',
-    type: 'Person',
-    preferredUsername: 'me',
-    names: ['Changkyun Kim', '김창균', '金昌均'],
-    summary: `Principled person who values integrity. A slow but persistent learner with deep understanding. Problem solver using data, experience, and intuition.`,
-    inbox: 'https://changkyun.kim/@me/inbox',
-    outbox: 'https://changkyun.kim/@me/outbox',
-    followers: 'https://changkyun.kim/@me/followers',
-    following: 'https://changkyun.kim/@me/following',
+    ...me,
+    publicKey
   }
 })
