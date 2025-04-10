@@ -2,13 +2,6 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
-
-  hooks: {
-    'nitro:init': async (nitro) => {
-      // await runTask('db:seed')
-    }
-  },
-
   nitro: {
     experimental: {
       database: true,
