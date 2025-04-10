@@ -50,6 +50,7 @@ interface Actor {
 interface ObjectT {
   id: string
   type: ObjectType
+  name: string
   attributedTo?: string
   content?: string
   published?: DateLike
@@ -64,14 +65,21 @@ interface Activity {
   '@context': string | string[]
   id: string
   type: ActivityType
-  actor: string
-  published: DateLike
-  to: string | string[]
-  object?: ObjectT | ObjectT[]
+  actor: string | Actor
+  // published: DateLike
+  // to: string | string[]
+  // object?: ObjectT | ObjectT[]
+}
+
+interface AcceptActivity extends Activity {
+  type: 'Accept'
+  object: ObjectT | string
 }
 
 interface FollowActivity extends Activity {
-  object: Actor
+  type: 'Follow'
+  actor: string
+  object: string
 }
 
 interface ReplyActivity extends Activity {

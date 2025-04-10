@@ -198,9 +198,24 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
   if (!await verifySignature(event, actor)) {
     return
   }
-  const { success } = await db.sql`INSERT INTO activity (actor_id, type, object) VALUES (${activity.actor}, ${activity.type}, ${JSON.stringify(object)})`
+  const { success } = await db.sql`INSERT INTO activity (
+    actor_id, type, object
+  ) VALUES (
+    ${activity.actor}, ${activity.type}, ${object}
+  )`
+  if (!success) {
+    sendError(event, createError({ statusCode: 400, statusMessage: 'Failed accepting follow request' }))
+    return
+  }
+  setJsonLdHeader(event)
   setResponseStatus(event, 202)
-  send(event, 'Accepted')
+  send(event, {
+    '@context': 'https://www.w3.org/ns/activitystreams',
+    id: `${activity.id}#accept`,
+    type: 'Accept',
+    actor: me.id,
+    object: 'Accepted',
+  })
 }
 
 /**
@@ -220,7 +235,7 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
  */
 export async function acceptReplyRequest(event: H3Event, activity: ReplyActivity): Promise<void> {
   const { actor } = activity
-  if (!await verifySignature(event, actor)) {
+  if (!await verifySignature(event, actor as string)) {
     return
   }
   setResponseStatus(event, 202)
