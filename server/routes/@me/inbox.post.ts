@@ -1,11 +1,12 @@
 import { acceptFollowRequest } from "~/server/utils/federation";
 
-// routes/users/[username]/inbox.post.ts
+// routes/@[username]/inbox.post.ts
 export default defineEventHandler(async (event) => {
   let activity: Activity;
   try {
     // h3's readBody automatically parses JSON based on Content-Type
     activity = await readBody(event);
+    console.log('Activity:', activity);
     if (!activity || typeof activity !== 'object') {
       return sendError(event, createError({ statusCode: 400, statusMessage: `Invalid request body.` }));
     }
