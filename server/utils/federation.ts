@@ -201,7 +201,8 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
   const db = useDatabase()
   const { actor, object } = activity
   if (!await verifySignature(event, actor)) {
-    return
+    console.log(activity)
+    return sendError(event, createError({ statusCode: 401, statusMessage: 'Invalid signature' }))
   }
   const { success } = await db.sql`INSERT INTO activity (
     actor_id, type, object
