@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
   // TODO: Process the activity (store, handle Follow, Create, etc.)
   switch (activity.type) {
     case 'Follow':
-      return acceptFollowRequest(event, activity as FollowActivity);
+      console.log('Follow', activity);
+      return await acceptFollowRequest(event, activity as FollowActivity);
     default:
       setResponseStatus(event, 400); // 400 Bad Request
       send(event, `Unsupported activity type: ${activity.type}`);
