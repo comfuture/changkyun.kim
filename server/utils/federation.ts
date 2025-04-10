@@ -178,7 +178,12 @@ export async function verifySignature(event: H3Event, actorId: string): Promise<
     dataBuffer
   );
 
-  return isValid;
+  if (!isValid) {
+    sendError(event, createError({ statusCode: 401, statusMessage: 'Invalid signature' }));
+    return false;
+  }
+
+  return true;
 }
 
 /**
