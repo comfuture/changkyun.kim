@@ -5,7 +5,7 @@ export default defineNuxtConfig({
 
   hooks: {
     'nitro:init': async (nitro) => {
-      await runTask('db:seed')
+      // await runTask('db:seed')
     }
   },
 
