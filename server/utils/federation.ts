@@ -306,12 +306,19 @@ export async function createSignature(params: SignatureParams, key: CryptoKey): 
 }
 
 /**
- * 메시지의 SHA-256 다이제스트를 생성합니다.
+ * Creates a SHA-256 message digest from the provided string.
  * 
- * @param message - 다이제스트를 생성할 메시지
- * @returns base64로 인코딩된 SHA-256 다이제스트
+ * This function converts the input string to bytes using TextEncoder,
+ * computes a SHA-256 hash of the data, and returns the hash
+ * as a base64-encoded string.
+ *
+ * @param message - The string message to digest
+ * @returns A Promise that resolves to the base64-encoded SHA-256 digest
+ * @example
+ * const digest = await createMessageDigest("Hello world");
+ * // Returns the base64-encoded SHA-256 hash of "Hello world"
  */
-export async function createMessageDigest(message: string): Promise<string> {
+export async function createDigest(message: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(message);
   const hash = await crypto.subtle.digest('SHA-256', data);
@@ -330,16 +337,18 @@ export async function createSignedRequestHeaders(
   key: CryptoKey,
   keyId?: string,
 ): Promise<Record<string, string>> {
-  const { method, path, headers } = params;
+  const { headers } = params;
   const headerNames = Object.keys(headers).map(h => h.toLowerCase());
 
   // 서명 생성
   const signature = await createSignature(params, key);
   const resolvedKeyId = keyId || `${keyId}#main-key`;
 
+  // Digest 헤더 생성
+  const digest = await createDigest(JSON.stringify(headers));
   return {
-    ...headers,
-    'Signature': `keyId="${resolvedKeyId}",headers="${['(request-target)', ...headerNames].join(' ')}",signature="${signature}"`
+    Digest: `SHA-256=${digest}`,
+    Signature: `keyId="${resolvedKeyId}",headers="${['(request-target)', ...headerNames].join(' ')}",signature="${signature}"`
   };
 }
 
