@@ -1,7 +1,7 @@
 export default defineEventHandler(async (event) => {
   const db = useDatabase()
-  const { rows: followers } = await db.sql`SELECT * FROM activity WHERE actor_id = ${me.id} AND type = 'Follow'`
-  const items = followers?.map((follower) => follower.object as string) ?? []
+  const { rows: followers } = await db.sql`SELECT * FROM activity WHERE object = ${me.id} AND type = 'Follow'`
+  const items = followers?.map((follower) => follower.actor_id as string) ?? []
   const totalItems = items.length
   setJsonLdHeader(event)
   return {
