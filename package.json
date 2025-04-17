@@ -24,7 +24,7 @@
     "nuxt": "^3.16.2"
   },
   "devDependencies": {
-    "sharp": "^0.34.0",
+    "sharp": "^0.34.1",
     "@nuxthub/core": "0.8.24",
     "@types/glob": "^8.0.0",
     "@types/sharp": "^0.32.0",
