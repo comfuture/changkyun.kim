@@ -1144,10 +1144,10 @@
     vite-plugin-checker "^0.9.1"
     vue-bundle-renderer "^2.1.1"
 
-"@nuxthub/core@0.8.24":
-  version "0.8.24"
-  resolved "https://registry.yarnpkg.com/@nuxthub/core/-/core-0.8.24.tgz#e9605892529010542d42604f4c066ef78165f6d0"
-  integrity sha512-UkpLNLhsUIGOAt7MH7QR7WIrJS7wa/VHV/VVftd3pUPFN24+ZpKV0fm5KYLfqiDVauECRNr9Kh/MY+bC26rtZw==
+"@nuxthub/core@0.8.25":
+  version "0.8.25"
+  resolved "https://registry.yarnpkg.com/@nuxthub/core/-/core-0.8.25.tgz#7a8235130411ddb279021c9a7d417ef44a9e732a"
+  integrity sha512-cR46Y9/sevODxZhtDrfBqJ+Uyti0owDUDZWwFxqSExyLcjdQKyOXXc0+B3Y5kfi6VUrt5xVeJnHdBlMBZO1RIg==
   dependencies:
     "@cloudflare/workers-types" "^4.20250409.0"
     "@nuxt/devtools-kit" "^2.3.2"
