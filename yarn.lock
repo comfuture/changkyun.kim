@@ -1138,10 +1138,10 @@
     ufo "^1.6.1"
     youch "^4.1.0-beta.7"
 
-"@nuxt/content@^3.5.0":
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/@nuxt/content/-/content-3.5.0.tgz#74ffb1cc086264b7d9a56f023fca09facd693315"
-  integrity sha512-GfQ6GNKVx1zmsBn4c2Fa3fPRqMixu6AvWifjRk5xdT7Aufw3QN4O7II8MZuDLtdgcMhfIvGEOCl158aFC1npHg==
+"@nuxt/content@^3.5.1":
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/@nuxt/content/-/content-3.5.1.tgz#ad4c2de019beacf65c2094094ea8dcc5e4f425e8"
+  integrity sha512-WmWgxt5gWPSHBzLBSBZHiU9jaOmTWINMAppWxZ43ZHZCfa0GvdR5+0uTto2EGITPrPsf6iYhKKzSfmJa+Xmp2Q==
   dependencies:
     "@nuxt/kit" "^3.16.2"
     "@nuxtjs/mdc" "0.17.0"
