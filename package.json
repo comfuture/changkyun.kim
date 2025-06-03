@@ -17,7 +17,7 @@
     "@justway/nuxt": "^0.0.3",
     "@nuxt/content": "^3.5.0",
     "@nuxt/image": "^1.9.0",
-    "@nuxtjs/tailwindcss": "^6.13.1",
+    "@nuxtjs/tailwindcss": "^6.14.0",
     "@popperjs/core": "^2.11.6",
     "@tailwindcss/typography": "^0.5.16",
     "better-sqlite3": "^11.10.0",
