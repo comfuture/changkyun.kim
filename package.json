@@ -21,7 +21,7 @@
     "@popperjs/core": "^2.11.6",
     "@tailwindcss/typography": "^0.5.16",
     "better-sqlite3": "^11.10.0",
-    "nuxt": "^3.17.4"
+    "nuxt": "^3.17.5"
   },
   "devDependencies": {
     "sharp": "^0.34.2",
