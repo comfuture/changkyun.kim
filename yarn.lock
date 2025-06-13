@@ -355,10 +355,10 @@
   resolved "https://registry.yarnpkg.com/@cloudflare/workerd-windows-64/-/workerd-windows-64-1.20250525.0.tgz#2bf43e26a9b186bdf3c46400500a93c534d91b70"
   integrity sha512-mwTj+9f3uIa4NEXR1cOa82PjLa6dbrb3J+KCVJFYIaq7e63VxEzOchCXS4tublT2pmOhmFqkgBMXrxozxNkR2Q==
 
-"@cloudflare/workers-types@^4.20250409.0":
-  version "4.20250409.0"
-  resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-4.20250409.0.tgz#18aee3f8855d2c2003a61715c57191fa1f802f9c"
-  integrity sha512-yPxxwE5nr168huEfLNOB6904OsvIWcq0tWT23NMD6jT5SIp2ds3oOGANw7wz39r5y3jZYC2h1OnGwnZXJDDCOg==
+"@cloudflare/workers-types@^4.20250529.0":
+  version "4.20250610.0"
+  resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-4.20250610.0.tgz#7d51dadd64f67a50e2ecd8f63a4f5e4303b1cf8d"
+  integrity sha512-HxnUoey3QxCEfy07pUm7J42jBi9YPHq/hA3fw6JmOqYLHdviHI28OA8lup+2RUaHwDzh6q1DSfrBvvDqde645A==
 
 "@colors/colors@1.6.0", "@colors/colors@^1.6.0":
   version "1.6.0"
@@ -1327,13 +1327,13 @@
     "@nuxt/schema" "^3.17.3"
     execa "^8.0.1"
 
-"@nuxt/devtools-kit@^2.3.2":
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/@nuxt/devtools-kit/-/devtools-kit-2.3.2.tgz#81dc6d3a2a08f22a58068d9557ac333ba662ae27"
-  integrity sha512-K0citnz9bSecPCLl4jGfE5I5St+E9XtDmOvYqq3ranGZGZ2Mvs5RwgUkaOrn4rulvUmBGBl7Exwh5YX9PONrEQ==
+"@nuxt/devtools-kit@^2.4.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@nuxt/devtools-kit/-/devtools-kit-2.5.0.tgz#763729125e0b53cd3efaa64148ff09f1eca84cfb"
+  integrity sha512-0EJ984cSSxrXxeVVUK+2NW+u2fbor/waxq/J/MJBc/q2oF/4KW2MQ18luxfmZ4A5PKSzLimCoMIOLlZkXcW9aA==
   dependencies:
-    "@nuxt/kit" "^3.16.1"
-    "@nuxt/schema" "^3.16.1"
+    "@nuxt/kit" "^3.17.4"
+    "@nuxt/schema" "^3.17.4"
     execa "^8.0.1"
 
 "@nuxt/devtools-wizard@2.4.1":
@@ -1406,7 +1406,7 @@
   optionalDependencies:
     ipx "^2.1.0"
 
-"@nuxt/kit@3.17.5", "@nuxt/kit@^3.12.1", "@nuxt/kit@^3.13.1", "@nuxt/kit@^3.15.4", "@nuxt/kit@^3.16.0", "@nuxt/kit@^3.16.1", "@nuxt/kit@^3.16.2", "@nuxt/kit@^3.17.3":
+"@nuxt/kit@3.17.5", "@nuxt/kit@^3.12.1", "@nuxt/kit@^3.13.1", "@nuxt/kit@^3.15.4", "@nuxt/kit@^3.16.0", "@nuxt/kit@^3.16.2", "@nuxt/kit@^3.17.3", "@nuxt/kit@^3.17.4":
   version "3.17.5"
   resolved "https://registry.yarnpkg.com/@nuxt/kit/-/kit-3.17.5.tgz#88583f68db604a55c54cfd30924d1a98c339aa5b"
   integrity sha512-NdCepmA+S/SzgcaL3oYUeSlXGYO6BXGr9K/m1D0t0O9rApF8CSq/QQ+ja5KYaYMO1kZAEWH4s2XVcE3uPrrAVg==
@@ -1434,7 +1434,7 @@
     unimport "^5.0.1"
     untyped "^2.0.0"
 
-"@nuxt/schema@3.17.5", "@nuxt/schema@^3.16.1", "@nuxt/schema@^3.17.3":
+"@nuxt/schema@3.17.5", "@nuxt/schema@^3.17.3", "@nuxt/schema@^3.17.4":
   version "3.17.5"
   resolved "https://registry.yarnpkg.com/@nuxt/schema/-/schema-3.17.5.tgz#89658082dc08d31fe2ba328772cce02aef11340a"
   integrity sha512-A1DSQk2uXqRHXlgLWDeFCyZk/yPo9oMBMb9OsbVko9NLv9du2DO2cs9RQ68Amvdk8O2nG7/FxAMNnkMdQ8OexA==
@@ -1502,14 +1502,14 @@
     vite-plugin-checker "^0.9.3"
     vue-bundle-renderer "^2.1.1"
 
-"@nuxthub/core@0.8.25":
-  version "0.8.25"
-  resolved "https://registry.yarnpkg.com/@nuxthub/core/-/core-0.8.25.tgz#7a8235130411ddb279021c9a7d417ef44a9e732a"
-  integrity sha512-cR46Y9/sevODxZhtDrfBqJ+Uyti0owDUDZWwFxqSExyLcjdQKyOXXc0+B3Y5kfi6VUrt5xVeJnHdBlMBZO1RIg==
+"@nuxthub/core@0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@nuxthub/core/-/core-0.9.0.tgz#9998f6314a548c49cb510fd3530d4c86349e956f"
+  integrity sha512-K8GkVcJn1ZoHV9xBiDrRPtBHxlzfysVEXGhdAJ/cR37B43UuWucl9pWKlA59f3VAf6lC8iR/hn3+2qlurcK9Ug==
   dependencies:
-    "@cloudflare/workers-types" "^4.20250409.0"
-    "@nuxt/devtools-kit" "^2.3.2"
-    "@nuxt/kit" "^3.16.2"
+    "@cloudflare/workers-types" "^4.20250529.0"
+    "@nuxt/devtools-kit" "^2.4.0"
+    "@nuxt/kit" "^3.17.4"
     "@uploadthing/mime-types" "^0.3.4"
     citty "^0.1.6"
     confbox "^0.2.2"
@@ -1525,7 +1525,7 @@
     ufo "^1.6.1"
     uncrypto "^0.1.3"
     unstorage "^1.15.0"
-    zod "^3.24.2"
+    zod "^3.25.34"
 
 "@nuxtjs/mdc@0.17.0":
   version "0.17.0"
@@ -9902,15 +9902,10 @@ zod@3.22.3:
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.22.3.tgz#2fbc96118b174290d94e8896371c95629e87a060"
   integrity sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==
 
-zod@^3.23.8:
-  version "3.25.17"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.17.tgz#6089bd3f72de38e15a25e129fe1ef443d9440ad4"
-  integrity sha512-8hQzQ/kMOIFbwOgPrm9Sf9rtFHpFUMy4HvN0yEB0spw14aYi0uT5xG5CE2DB9cd51GWNsz+DNO7se1kztHMKnw==
-
-zod@^3.24.2, zod@^3.24.3:
-  version "3.24.3"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.24.3.tgz#1f40f750a05e477396da64438e0e1c0995dafd87"
-  integrity sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==
+zod@^3.23.8, zod@^3.24.3, zod@^3.25.34:
+  version "3.25.57"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.57.tgz#317c8a6eb8a8460bb4b58defb19e8b50c1200e51"
+  integrity sha512-6tgzLuwVST5oLUxXTmBqoinKMd3JeesgbgseXeFasKKj8Q1FCZrHnbqJOyiEvr4cVAlbug+CgIsmJ8cl/pU5FA==
 
 zwitch@^2.0.0, zwitch@^2.0.4:
   version "2.0.4"
