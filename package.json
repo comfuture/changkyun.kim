@@ -20,7 +20,7 @@
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@popperjs/core": "^2.11.6",
     "@tailwindcss/typography": "^0.5.16",
-    "better-sqlite3": "^11.10.0",
+    "better-sqlite3": "^12.1.1",
     "nuxt": "^3.17.5"
   },
   "devDependencies": {
