@@ -5,7 +5,7 @@
   "author": "comfuture",
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "DEV=1 nuxt dev",
@@ -21,7 +21,7 @@
     "@popperjs/core": "^2.11.6",
     "@tailwindcss/typography": "^0.5.16",
     "better-sqlite3": "^12.2.0",
-    "nuxt": "^3.17.6"
+    "nuxt": "^4.0.0"
   },
   "devDependencies": {
     "sharp": "^0.34.2",
