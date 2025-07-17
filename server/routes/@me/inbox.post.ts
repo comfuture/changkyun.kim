@@ -1,4 +1,4 @@
-import { acceptFollowRequest } from "~/server/utils/federation";
+import { acceptFollowRequest } from "../../utils/federation";
 
 // routes/@[username]/inbox.post.ts
 export default defineEventHandler(async (event) => {
