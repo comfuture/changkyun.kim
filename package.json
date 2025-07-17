@@ -5,7 +5,7 @@
   "author": "comfuture",
   "private": true,
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "scripts": {
     "dev": "DEV=1 nuxt dev",
