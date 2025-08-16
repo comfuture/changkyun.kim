@@ -11,5 +11,14 @@ export default defineContentConfig({
         createdAt: z.date(),
       }),
     }),
+    app: defineCollection({
+      type: 'page',
+      source: 'app/**/*.md',
+      schema: z.object({
+        coverImage: z.string().url(),
+        tags: z.array(z.string()),
+        createdAt: z.date(),
+      }),
+    }),
   },
 });

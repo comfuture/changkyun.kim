@@ -1,5 +1,3 @@
-import { createDigest, createSignedRequestHeaders } from "~/server/utils/federation"
-
 export default defineTask({
   meta: {
     name: 'ap:follow',

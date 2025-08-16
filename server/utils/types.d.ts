@@ -36,6 +36,10 @@ type ObjectType =
 
 type DateLike = string | Date
 
+interface DictLike {
+  get(key: string): string | null
+}
+
 interface PublicKey {
   id: string
   owner: string

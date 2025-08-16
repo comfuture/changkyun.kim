@@ -9,11 +9,13 @@ export default defineTask({
     // Create the database and tables
     await db.sql`CREATE TABLE IF NOT EXISTS activity (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      activity_id TEXT,
       actor_id TEXT,
       type TEXT,
       object TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`
+    await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_activity_activity_id ON activity(activity_id);`
     await db.sql`CREATE INDEX IF NOT EXISTS ix_activity_actor_id_type ON activity(actor_id, type);`
     console.info('Created activity table and index')
 
