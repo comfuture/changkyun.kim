@@ -280,6 +280,13 @@
   resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-4.20250403.0.tgz#f996bdd5662b52bc621df086cdfbab9462319d5e"
   integrity sha512-wLsXNfxBPsV+PPUInCCFeoXTZMHNEAFHvVe1E0/S0Cp9JrKTsSEeIMY4zUvR5ULxNAQkeDVqPjYRaKFkzpkX3w==
 
+"@csjewell-activitypub/types@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@csjewell-activitypub/types/-/types-0.1.0.tgz#4c6574bfc35afa04ef9cff2f2726ef59d807d832"
+  integrity sha512-3AifOoeF3dX49pRkwh8M8PGJnFWM1byVAusAtbcdjYGzsAMlsgtRwBH5rXD6dRKF3uL1phK2okXE/PkeBtovsw==
+  dependencies:
+    "@hyperjump/json" "^0.2.1"
+
 "@cspotcode/source-map-support@0.8.1":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"
@@ -614,6 +621,19 @@
     "@floating-ui/dom" "^1.0.0"
     "@floating-ui/utils" "^0.2.9"
     vue-demi ">=0.13.0"
+
+"@hyperjump/json-pointer@^1.0.1":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@hyperjump/json-pointer/-/json-pointer-1.1.0.tgz#57342cb50a87b4e5d561738cc1d1c9e088780dee"
+  integrity sha512-tFCKxMKDKK3VEdtUA3EBOS9GmSOS4mbrTjh9v3RnK10BphDMOb6+bxTh++/ae1AyfHyWb6R54O/iaoAtPMZPCg==
+
+"@hyperjump/json@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@hyperjump/json/-/json-0.2.1.tgz#0baac4476ab078cfb8e2d5c1378a9b06a965212f"
+  integrity sha512-q/8EG97EZbcq9kge7ihenxHIIKRhyJIoJIyGM9SZgVHiG4mTuNadTtJTjsN4bN/bTJyRqcqyRVrsvofNQnG6Vw==
+  dependencies:
+    "@hyperjump/json-pointer" "^1.0.1"
+    moo "^0.5.1"
 
 "@img/sharp-darwin-arm64@0.33.5":
   version "0.33.5"
@@ -5340,6 +5360,11 @@ mocked-exports@^0.1.0, mocked-exports@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/mocked-exports/-/mocked-exports-0.1.1.tgz#6916efea9a9dd0f4abd6a0a72526f56a76c966ea"
   integrity sha512-aF7yRQr/Q0O2/4pIXm6PZ5G+jAd7QS4Yu8m+WEeEHGnbo+7mE36CbLSDQiXYV8bVL3NfmdeqPJct0tUlnjVSnA==
+
+moo@^0.5.1:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/moo/-/moo-0.5.2.tgz#f9fe82473bc7c184b0d32e2215d3f6e67278733c"
+  integrity sha512-iSAJLHYKnX41mKcJKjqvnAN9sf0LMDTXDEvFv+ffuRR9a1MIuXLjMNL6EsnDHSkKLTWNqQQ5uo61P4EbU4NU+Q==
 
 mrmime@^2.0.0:
   version "2.0.1"
