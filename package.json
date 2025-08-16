@@ -16,21 +16,21 @@
   "dependencies": {
     "@csjewell-activitypub/types": "^0.1.0",
     "@justway/nuxt": "^0.0.3",
-    "@nuxt/content": "^3.4.0",
-    "@nuxt/image": "^1.9.0",
-    "@nuxtjs/tailwindcss": "^6.13.1",
+    "@nuxt/content": "^3.6.3",
+    "@nuxt/image": "^1.11.0",
+    "@nuxtjs/tailwindcss": "^6.14.0",
     "@popperjs/core": "^2.11.6",
     "@tailwindcss/typography": "^0.5.16",
-    "better-sqlite3": "^11.9.1",
-    "nuxt": "^3.16.2"
+    "better-sqlite3": "^12.2.0",
+    "nuxt": "^4.0.3"
   },
   "devDependencies": {
-    "@nuxthub/core": "0.8.23",
+    "sharp": "^0.34.3",
+    "@nuxthub/core": "0.9.0",
     "@types/glob": "^8.0.0",
     "@types/sharp": "^0.32.0",
     "glob": "^11.0.1",
-    "sharp": "^0.34.0",
-    "wrangler": "^4.7.1"
+    "wrangler": "^4.29.1"
   },
   "resolutions": {
     "rdf-canonize-native": "npm:rdf-canonize"
