@@ -1,4 +1,7 @@
+import { createHash, randomUUID } from 'node:crypto';
 import type { H3Event } from 'h3';
+
+import { verifySignature } from './auth';
 
 /**
  * Fetches an Actor from a given URL using ActivityPub protocol.
@@ -56,6 +59,9 @@ export const me = {
   outbox: 'https://changkyun.kim/@me/outbox',
   followers: 'https://changkyun.kim/@me/followers',
   following: 'https://changkyun.kim/@me/following',
+  endpoints: {
+    sharedInbox: 'https://changkyun.kim/inbox',
+  },
 }
 
 export const PUBLIC_AUDIENCE = 'https://www.w3.org/ns/activitystreams#Public'
@@ -112,9 +118,28 @@ export async function sendActivity(activity: Activity, target: string): Promise<
   })
 }
 
-async function ensureActivityIdColumn(db: ReturnType<typeof useDatabase>) {
+export async function ensureActivitySchema(db: ReturnType<typeof useDatabase>) {
+  await db.sql`CREATE TABLE IF NOT EXISTS activity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    activity_id TEXT,
+    actor_id TEXT,
+    type TEXT,
+    object TEXT,
+    payload TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`
+
   try {
     await db.sql`ALTER TABLE activity ADD COLUMN activity_id TEXT`
+  } catch (error) {
+    const message = (error as Error)?.message ?? ''
+    if (!/duplicate column name/i.test(message)) {
+      throw error
+    }
+  }
+
+  try {
+    await db.sql`ALTER TABLE activity ADD COLUMN payload TEXT`
   } catch (error) {
     const message = (error as Error)?.message ?? ''
     if (!/duplicate column name/i.test(message)) {
@@ -136,36 +161,104 @@ async function ensureActivityIdColumn(db: ReturnType<typeof useDatabase>) {
  * @returns A promise that resolves when the request has been processed
  * @throws May throw an error if signature verification fails internally
  */
-export async function acceptFollowRequest(event: H3Event, activity: FollowActivity): Promise<void> {
+export async function acceptFollowRequest(event: H3Event, activity: FollowActivity): Promise<AcceptActivity | void> {
   const db = useDatabase()
-  const { id: activity_id, actor, type, object: fallowee } = activity
-  const isValid = await verifySignature(event, actor)
+
+  const actorId = typeof activity.actor === 'string'
+    ? activity.actor
+    : typeof (activity.actor as Actor | undefined)?.id === 'string'
+      ? (activity.actor as Actor).id
+      : null
+
+  if (!actorId) {
+    return sendError(event, createError({ statusCode: 400, statusMessage: 'Follow request missing actor' }))
+  }
+
+  const objectValue = activity.object as unknown
+  const followTarget = typeof objectValue === 'string'
+    ? objectValue
+    : typeof (objectValue as { id?: string })?.id === 'string'
+      ? (objectValue as { id: string }).id
+      : null
+
+  if (!followTarget) {
+    return sendError(event, createError({ statusCode: 400, statusMessage: 'Follow request missing object' }))
+  }
+
+  if (followTarget !== me.id && followTarget !== me.followers) {
+    return sendError(event, createError({ statusCode: 404, statusMessage: 'Unknown follow target' }))
+  }
+
+  const isValid = await verifySignature(event, actorId)
   if (!isValid) {
     return
   }
+
+  const followActivityId = typeof activity.id === 'string' && activity.id
+    ? activity.id
+    : randomUUID()
+
+  const followActivity: FollowActivity = {
+    '@context': activity['@context'] ?? 'https://www.w3.org/ns/activitystreams',
+    id: followActivityId,
+    type: 'Follow',
+    actor: actorId,
+    object: me.id,
+  }
+
+  const payload = JSON.stringify(followActivity)
+
   const insertActivity = () => db.sql`INSERT INTO activity (
-    activity_id, actor_id, type, object
+    activity_id, actor_id, type, object, payload
   ) VALUES (
-    ${activity_id}, ${actor}, ${type}, ${fallowee}
+    ${followActivity.id}, ${followActivity.actor}, ${followActivity.type}, ${followActivity.object}, ${payload}
   )`
 
-  let insertResult
+  const updateStoredFollow = () => db.sql`UPDATE activity
+    SET actor_id = ${followActivity.actor}, object = ${followActivity.object}, payload = ${payload}
+    WHERE activity_id = ${followActivity.id}`
+
+  const ensureSchemaAndRetry = async () => {
+    try {
+      await ensureActivitySchema(db)
+    } catch (migrationError) {
+      console.error('Failed migrating activity table', migrationError)
+      return false
+    }
+
+    try {
+      await insertActivity()
+      return true
+    } catch (retryError) {
+      const retryMessage = (retryError as Error)?.message ?? ''
+      if (/unique constraint failed|duplicate/i.test(retryMessage)) {
+        try {
+          await updateStoredFollow()
+        } catch (updateError) {
+          console.error('Failed updating stored follow activity', updateError)
+          return false
+        }
+        return true
+      }
+      console.error('Failed inserting follow activity', retryError)
+      return false
+    }
+  }
+
   try {
-    insertResult = await insertActivity()
+    await insertActivity()
   } catch (error) {
     const message = (error as Error)?.message ?? ''
-    if (/no column named activity_id/i.test(message)) {
-      try {
-        await ensureActivityIdColumn(db)
-      } catch (migrationError) {
-        console.error('Failed migrating activity table', migrationError)
+    if (/no such table: activity/i.test(message) || /no column named (activity_id|payload)/i.test(message)) {
+      const migrated = await ensureSchemaAndRetry()
+      if (!migrated) {
         return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
       }
-
+    } else if (/unique constraint failed|duplicate/i.test(message)) {
       try {
-        insertResult = await insertActivity()
-      } catch (retryError) {
-        console.error('Failed inserting follow activity', retryError)
+        await updateStoredFollow()
+      } catch (updateError) {
+        console.error('Failed updating stored follow activity', updateError)
         return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
       }
     } else {
@@ -174,25 +267,29 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
     }
   }
 
-  const { success, lastInsertRowid } = insertResult
-  if (!success) {
-    return sendError(event, createError({ statusCode: 400, statusMessage: 'Failed accepting follow request' }))
-  }
+  const acceptHash = createHash('sha256')
+    .update(`${actorId}|${followActivity.id}`)
+    .digest('hex')
+
   const acceptActivity: AcceptActivity = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `${me.id}#accept-${lastInsertRowid}`,
+    id: `${me.id}#accept-${acceptHash}`,
     type: 'Accept',
     actor: me.id,
-    object: activity,
-    to: [actor],
+    object: followActivity,
+    to: [actorId],
   }
 
-  await runTask('ap:sendActivity', {
-    payload: {
-      activity: acceptActivity,
-      target: actor,
-    },
-  })
+  try {
+    await runTask('ap:sendActivity', {
+      payload: {
+        activity: acceptActivity,
+        target: actorId,
+      },
+    })
+  } catch (error) {
+    console.error('Failed scheduling Accept activity delivery', error)
+  }
 
   setJsonLdHeader(event)
   setResponseStatus(event, 202)

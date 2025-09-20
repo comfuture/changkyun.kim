@@ -1,3 +1,5 @@
+import { generateRsaKeyPair } from "../../utils/auth"
+
 export default defineTask({
   meta: {
     name: 'db:seed',
@@ -13,6 +15,7 @@ export default defineTask({
       actor_id TEXT,
       type TEXT,
       object TEXT,
+      payload TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`
     await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_activity_activity_id ON activity(activity_id);`
