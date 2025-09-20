@@ -58,8 +58,71 @@ export const me = {
   following: 'https://changkyun.kim/@me/following',
 }
 
+export const PUBLIC_AUDIENCE = 'https://www.w3.org/ns/activitystreams#Public'
+
 export async function sendActivity(activity: Activity, target: string): Promise<void> {
+  const recipient = typeof target === 'string' ? target : target?.id
+  if (!recipient) {
+    throw new Error('Cannot deliver activity without a valid target actor identifier.')
+  }
+
+  const targetActor = await fetchActor(recipient)
+  if (!targetActor) {
+    throw new Error(`Unable to load ActivityPub actor for ${recipient}`)
+  }
+
+  const inboxUrl = targetActor.inbox || targetActor.endpoints?.sharedInbox
+  if (!inboxUrl) {
+    throw new Error(`Target actor ${recipient} does not expose an inbox endpoint`)
+  }
+
   const db = useDatabase()
+  const { rows } = await db.sql`SELECT private_key FROM actor WHERE actor_id = ${me.id} LIMIT 1`
+  if (!rows?.length) {
+    throw new Error(`Missing local signing key for actor ${me.id}`)
+  }
+
+  const [{ private_key: privateKeyPem }] = rows as Array<{ private_key: string }>
+  const { importPemKey, createDigest, createSignedRequestHeaders } = await import('./auth')
+  const signingKey = await importPemKey(privateKeyPem, ['sign'])
+
+  const body = JSON.stringify(activity)
+  const digest = await createDigest(body)
+  const inbox = new URL(inboxUrl)
+  const date = new Date().toUTCString()
+
+  const signedHeaders = await createSignedRequestHeaders({
+    method: 'POST',
+    path: `${inbox.pathname}${inbox.search}`,
+    headers: {
+      host: inbox.host,
+      date,
+      digest: `SHA-256=${digest}`,
+    },
+  }, signingKey, `${me.id}#main-key`)
+
+  await $fetch(inbox.toString(), {
+    method: 'POST',
+    body,
+    headers: {
+      'Content-Type': 'application/activity+json',
+      Date: date,
+      ...signedHeaders,
+    },
+  })
+}
+
+async function ensureActivityIdColumn(db: ReturnType<typeof useDatabase>) {
+  try {
+    await db.sql`ALTER TABLE activity ADD COLUMN activity_id TEXT`
+  } catch (error) {
+    const message = (error as Error)?.message ?? ''
+    if (!/duplicate column name/i.test(message)) {
+      throw error
+    }
+  }
+
+  await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_activity_activity_id ON activity(activity_id)`
 }
 
 /**
@@ -76,36 +139,64 @@ export async function sendActivity(activity: Activity, target: string): Promise<
 export async function acceptFollowRequest(event: H3Event, activity: FollowActivity): Promise<void> {
   const db = useDatabase()
   const { id: activity_id, actor, type, object: fallowee } = activity
-  await verifySignature(event, actor)
-  const { success, lastInsertRowid } = await db.sql`INSERT INTO activity (
+  const isValid = await verifySignature(event, actor)
+  if (!isValid) {
+    return
+  }
+  const insertActivity = () => db.sql`INSERT INTO activity (
     activity_id, actor_id, type, object
   ) VALUES (
     ${activity_id}, ${actor}, ${type}, ${fallowee}
   )`
+
+  let insertResult
+  try {
+    insertResult = await insertActivity()
+  } catch (error) {
+    const message = (error as Error)?.message ?? ''
+    if (/no column named activity_id/i.test(message)) {
+      try {
+        await ensureActivityIdColumn(db)
+      } catch (migrationError) {
+        console.error('Failed migrating activity table', migrationError)
+        return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
+      }
+
+      try {
+        insertResult = await insertActivity()
+      } catch (retryError) {
+        console.error('Failed inserting follow activity', retryError)
+        return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
+      }
+    } else {
+      console.error('Failed inserting follow activity', error)
+      return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
+    }
+  }
+
+  const { success, lastInsertRowid } = insertResult
   if (!success) {
     return sendError(event, createError({ statusCode: 400, statusMessage: 'Failed accepting follow request' }))
   }
-  setResponseStatus(event, 202)
-  send(event, 'Accepted')
-  runTask('ap:sendActivity', {
-    payload: {
-      activity: {
-        '@context': 'https://www.w3.org/ns/activitystreams',
-        id: `${me.id}#accept-${lastInsertRowid}`,
-        type: 'Accept',
-        actor: me.id,
-        object: activity_id,
-      },
-      target: actor,
-    },
-  })
-  send(event, {
+  const acceptActivity: AcceptActivity = {
     '@context': 'https://www.w3.org/ns/activitystreams',
     id: `${me.id}#accept-${lastInsertRowid}`,
     type: 'Accept',
     actor: me.id,
-    object: 'Accept',
+    object: activity,
+    to: [actor],
+  }
+
+  await runTask('ap:sendActivity', {
+    payload: {
+      activity: acceptActivity,
+      target: actor,
+    },
   })
+
+  setJsonLdHeader(event)
+  setResponseStatus(event, 202)
+  return acceptActivity
 }
 
 /**
