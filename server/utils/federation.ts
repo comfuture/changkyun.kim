@@ -56,6 +56,9 @@ export const me = {
   outbox: 'https://changkyun.kim/@me/outbox',
   followers: 'https://changkyun.kim/@me/followers',
   following: 'https://changkyun.kim/@me/following',
+  endpoints: {
+    sharedInbox: 'https://changkyun.kim/inbox',
+  },
 }
 
 export const PUBLIC_AUDIENCE = 'https://www.w3.org/ns/activitystreams#Public'
@@ -112,9 +115,28 @@ export async function sendActivity(activity: Activity, target: string): Promise<
   })
 }
 
-async function ensureActivityIdColumn(db: ReturnType<typeof useDatabase>) {
+export async function ensureActivitySchema(db: ReturnType<typeof useDatabase>) {
+  await db.sql`CREATE TABLE IF NOT EXISTS activity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    activity_id TEXT,
+    actor_id TEXT,
+    type TEXT,
+    object TEXT,
+    payload TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`
+
   try {
     await db.sql`ALTER TABLE activity ADD COLUMN activity_id TEXT`
+  } catch (error) {
+    const message = (error as Error)?.message ?? ''
+    if (!/duplicate column name/i.test(message)) {
+      throw error
+    }
+  }
+
+  try {
+    await db.sql`ALTER TABLE activity ADD COLUMN payload TEXT`
   } catch (error) {
     const message = (error as Error)?.message ?? ''
     if (!/duplicate column name/i.test(message)) {
@@ -143,10 +165,11 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
   if (!isValid) {
     return
   }
+  const payload = JSON.stringify(activity)
   const insertActivity = () => db.sql`INSERT INTO activity (
-    activity_id, actor_id, type, object
+    activity_id, actor_id, type, object, payload
   ) VALUES (
-    ${activity_id}, ${actor}, ${type}, ${fallowee}
+    ${activity_id}, ${actor}, ${type}, ${fallowee}, ${payload}
   )`
 
   let insertResult
@@ -154,9 +177,9 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
     insertResult = await insertActivity()
   } catch (error) {
     const message = (error as Error)?.message ?? ''
-    if (/no column named activity_id/i.test(message)) {
+    if (/no column named (activity_id|payload)/i.test(message)) {
       try {
-        await ensureActivityIdColumn(db)
+        await ensureActivitySchema(db)
       } catch (migrationError) {
         console.error('Failed migrating activity table', migrationError)
         return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
