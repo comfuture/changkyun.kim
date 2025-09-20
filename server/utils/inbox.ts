@@ -1,10 +1,13 @@
+import { randomUUID } from 'node:crypto'
 import type { H3Event } from 'h3'
 
 import { acceptFollowRequest, ensureActivitySchema, setJsonLdHeader } from './federation'
 
 async function recordActivity(activity: Activity): Promise<void> {
   const db = useDatabase()
-  const activityId = activity.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  const activityId = typeof activity.id === 'string' && activity.id
+    ? activity.id
+    : randomUUID()
   const actorId = typeof activity.actor === 'string' ? activity.actor : activity.actor?.id
   const object = Array.isArray(activity.object)
     ? JSON.stringify(activity.object)

@@ -24,6 +24,7 @@ async function broadcastDocument(document: ContentEntry) {
     }
   } catch (error) {
     console.error('Failed checking existing ActivityPub activity', error)
+    return
   }
 
   try {
@@ -36,17 +37,13 @@ async function broadcastDocument(document: ContentEntry) {
 }
 
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook('content:file:afterInsert', async (document) => {
+  const handleContentUpdate = async (document: ContentEntry) => {
     if (!isFederatedDocument(document)) {
       return
     }
     await broadcastDocument(document)
-  })
+  }
 
-  nitroApp.hooks.hook('content:file:afterUpdate', async (document) => {
-    if (!isFederatedDocument(document)) {
-      return
-    }
-    await broadcastDocument(document)
-  })
+  nitroApp.hooks.hook('content:file:afterInsert', handleContentUpdate)
+  nitroApp.hooks.hook('content:file:afterUpdate', handleContentUpdate)
 })
