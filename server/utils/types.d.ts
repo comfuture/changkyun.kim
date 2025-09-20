@@ -87,9 +87,9 @@ interface Activity {
   object?: ObjectT | ObjectT[] | string
 }
 
-interface AcceptActivity extends Activity {
+type AcceptActivity = Omit<Activity, 'type' | 'object'> & {
   type: 'Accept'
-  object: ObjectT | string
+  object: Activity | ObjectT | string
 }
 
 interface FollowActivity extends Activity {
