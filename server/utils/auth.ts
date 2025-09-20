@@ -214,22 +214,13 @@ interface SignatureParams {
  */
 export async function createSignature(params: SignatureParams, key: CryptoKey): Promise<string> {
   const { method, path, headers } = params;
-
-  // 서명할 헤더들의 목록
-  const headerNames = Object.keys(headers).map(h => h.toLowerCase());
-
-  // HTTP 서명 스펙에 따라 (request-target) 항상 포함
-  if (!headerNames.includes('(request-target)')) {
-    headerNames.unshift('(request-target)');
+  const { normalized, order } = normalizeHeaderParams(headers);
+  const headerNames = Array.from(new Set(order));
+  const signatureLines = [`(request-target): ${method.toLowerCase()} ${path}`];
+  for (const headerName of headerNames) {
+    signatureLines.push(`${headerName}: ${normalized[headerName]}`);
   }
-
-  // 서명 데이터 문자열 생성
-  const signatureData = headerNames.map(headerName => {
-    if (headerName === '(request-target)') {
-      return `(request-target): ${method.toLowerCase()} ${path}`;
-    }
-    return `${headerName.toLowerCase()}: ${headers[headerName]}`;
-  }).join('\n');
+  const signatureData = signatureLines.join('\n');
 
   // 서명 생성
   const signatureBuffer = Buffer.from(signatureData, 'utf-8');
@@ -273,25 +264,37 @@ export async function createDigest(message: string): Promise<string> {
  * 
  * @param params - Parameters required for creating the signature
  * @param key - CryptoKey used for signing the request
- * @param [keyId] - Optional identifier for the key. If not provided, will be formatted as "{keyId}#main-key"
- * @returns Promise resolving to an object containing Digest and Signature headers
+ * @param keyId - Identifier for the key used to create the HTTP signature (e.g. `${actorId}#main-key`)
+ * @returns Promise resolving to an object containing the HTTP Signature header and optional Digest header
  */
 export async function createSignedRequestHeaders(
   params: SignatureParams,
   key: CryptoKey,
-  keyId?: string,
+  keyId: string,
 ): Promise<Record<string, string>> {
-  const { headers } = params;
-  const headerNames = Object.keys(headers).map(h => h.toLowerCase());
-
-  // 서명 생성
-  const signature = await createSignature(params, key);
-  const resolvedKeyId = keyId || `${keyId}#main-key`;
-
-  // Digest 헤더 생성
-  const digest = await createDigest(JSON.stringify(headers));
-  return {
-    Digest: `SHA-256=${digest}`,
-    Signature: `keyId="${resolvedKeyId}",headers="${['(request-target)', ...headerNames].join(' ')}",signature="${signature}"`
+  if (!keyId) {
+    throw new Error('A keyId is required to sign ActivityPub requests.');
+  }
+  const { normalized, order } = normalizeHeaderParams(params.headers);
+  const signature = await createSignature({ ...params, headers: normalized }, key);
+  const headerNames = Array.from(new Set(order));
+  const result: Record<string, string> = {
+    Signature: `keyId="${keyId}",headers="${['(request-target)', ...headerNames].join(' ')}",signature="${signature}"`
   };
+  const digestHeader = normalized.digest;
+  if (digestHeader) {
+    result.Digest = digestHeader.startsWith('SHA-256=') ? digestHeader : `SHA-256=${digestHeader}`;
+  }
+  return result;
+}
+
+function normalizeHeaderParams(headers: Record<string, string>): { normalized: Record<string, string>; order: string[] } {
+  const normalized: Record<string, string> = {};
+  const order: string[] = [];
+  for (const [name, value] of Object.entries(headers || {})) {
+    const headerName = name.toLowerCase().trim();
+    order.push(headerName);
+    normalized[headerName] = value;
+  }
+  return { normalized, order };
 }

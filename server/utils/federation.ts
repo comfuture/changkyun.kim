@@ -58,8 +58,58 @@ export const me = {
   following: 'https://changkyun.kim/@me/following',
 }
 
+export const PUBLIC_AUDIENCE = 'https://www.w3.org/ns/activitystreams#Public'
+
 export async function sendActivity(activity: Activity, target: string): Promise<void> {
+  const recipient = typeof target === 'string' ? target : target?.id
+  if (!recipient) {
+    throw new Error('Cannot deliver activity without a valid target actor identifier.')
+  }
+
+  const targetActor = await fetchActor(recipient)
+  if (!targetActor) {
+    throw new Error(`Unable to load ActivityPub actor for ${recipient}`)
+  }
+
+  const inboxUrl = targetActor.inbox || targetActor.endpoints?.sharedInbox
+  if (!inboxUrl) {
+    throw new Error(`Target actor ${recipient} does not expose an inbox endpoint`)
+  }
+
   const db = useDatabase()
+  const { rows } = await db.sql`SELECT private_key FROM actor WHERE actor_id = ${me.id} LIMIT 1`
+  if (!rows?.length) {
+    throw new Error(`Missing local signing key for actor ${me.id}`)
+  }
+
+  const [{ private_key: privateKeyPem }] = rows as Array<{ private_key: string }>
+  const { importPemKey, createDigest, createSignedRequestHeaders } = await import('./auth')
+  const signingKey = await importPemKey(privateKeyPem, ['sign'])
+
+  const body = JSON.stringify(activity)
+  const digest = await createDigest(body)
+  const inbox = new URL(inboxUrl)
+  const date = new Date().toUTCString()
+
+  const signedHeaders = await createSignedRequestHeaders({
+    method: 'POST',
+    path: `${inbox.pathname}${inbox.search}`,
+    headers: {
+      host: inbox.host,
+      date,
+      digest: `SHA-256=${digest}`,
+    },
+  }, signingKey, `${me.id}#main-key`)
+
+  await $fetch(inbox.toString(), {
+    method: 'POST',
+    body,
+    headers: {
+      'Content-Type': 'application/activity+json',
+      Date: date,
+      ...signedHeaders,
+    },
+  })
 }
 
 /**
@@ -76,7 +126,10 @@ export async function sendActivity(activity: Activity, target: string): Promise<
 export async function acceptFollowRequest(event: H3Event, activity: FollowActivity): Promise<void> {
   const db = useDatabase()
   const { id: activity_id, actor, type, object: fallowee } = activity
-  await verifySignature(event, actor)
+  const isValid = await verifySignature(event, actor)
+  if (!isValid) {
+    return
+  }
   const { success, lastInsertRowid } = await db.sql`INSERT INTO activity (
     activity_id, actor_id, type, object
   ) VALUES (
@@ -85,27 +138,25 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
   if (!success) {
     return sendError(event, createError({ statusCode: 400, statusMessage: 'Failed accepting follow request' }))
   }
-  setResponseStatus(event, 202)
-  send(event, 'Accepted')
-  runTask('ap:sendActivity', {
-    payload: {
-      activity: {
-        '@context': 'https://www.w3.org/ns/activitystreams',
-        id: `${me.id}#accept-${lastInsertRowid}`,
-        type: 'Accept',
-        actor: me.id,
-        object: activity_id,
-      },
-      target: actor,
-    },
-  })
-  send(event, {
+  const acceptActivity: AcceptActivity = {
     '@context': 'https://www.w3.org/ns/activitystreams',
     id: `${me.id}#accept-${lastInsertRowid}`,
     type: 'Accept',
     actor: me.id,
-    object: 'Accept',
+    object: activity,
+    to: [actor],
+  }
+
+  await runTask('ap:sendActivity', {
+    payload: {
+      activity: acceptActivity,
+      target: actor,
+    },
   })
+
+  setJsonLdHeader(event)
+  setResponseStatus(event, 202)
+  return acceptActivity
 }
 
 /**

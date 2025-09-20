@@ -13,6 +13,7 @@ export default defineTask({
     }
     const myActor = myActorRows[0]
     const key = await importPemKey(myActor.private_key as string)
+    const keyId = `${myActor.actor_id as string}#main-key`
 
     const targetActor = 'https://changkyun.kim/@me'
 
@@ -27,21 +28,22 @@ export default defineTask({
     const activityBody = JSON.stringify(activity)
 
     // 메시지 다이제스트 생성 (SHA-256)
-    const digest = await createDigest(activityBody)
+    const digestValue = await createDigest(activityBody)
+    const digestHeader = `SHA-256=${digestValue}`
 
     // 대상 서버 정보 (실제 targetActor의 도메인에서 추출해야 함)
-    const host = 'changkyun.kim'
+    const { host } = new URL(targetActor)
     const date = new Date().toUTCString()
 
     const signatureHeaders = await createSignedRequestHeaders({
       headers: {
         host,
         date,
-        digest,
+        digest: digestHeader,
       },
       method: 'POST',
       path: '/@me/inbox',
-    }, key)
+    }, key, keyId)
 
     // 실제 요청
     await $fetch(`https://changkyun.kim/@me/inbox`, {
@@ -49,7 +51,7 @@ export default defineTask({
       body: activityBody,
       headers: {
         'Content-Type': 'application/activity+json',
-        host,
+        Date: date,
         ...signatureHeaders,
       },
     })

@@ -48,6 +48,10 @@ interface PublicKey {
 
 interface Actor {
   id: string
+  inbox?: string
+  endpoints?: {
+    sharedInbox?: string
+  }
   publicKey?: PublicKey
 }
 
@@ -57,8 +61,15 @@ interface ObjectT {
   name: string
   attributedTo?: string
   content?: string
+  mediaType?: string
   published?: DateLike
   to?: string[]
+  summary?: string
+  url?: string
+  source?: {
+    content: string
+    mediaType: string
+  }
 }
 
 interface Note extends ObjectT {
@@ -70,9 +81,10 @@ interface Activity {
   id: string
   type: ActivityType
   actor: string | Actor
-  // published: DateLike
-  // to: string | string[]
-  // object?: ObjectT | ObjectT[]
+  published?: DateLike
+  to?: string | string[]
+  cc?: string | string[]
+  object?: ObjectT | ObjectT[] | string
 }
 
 interface AcceptActivity extends Activity {
@@ -84,6 +96,11 @@ interface FollowActivity extends Activity {
   type: 'Follow'
   actor: string
   object: string
+}
+
+interface CreateActivity extends Activity {
+  type: 'Create'
+  object: ObjectT | string
 }
 
 interface ReplyActivity extends Activity {
