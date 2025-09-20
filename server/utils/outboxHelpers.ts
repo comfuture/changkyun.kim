@@ -21,6 +21,8 @@ const CONTENT_CONTEXT = 'https://www.w3.org/ns/activitystreams'
 
 const CONTENT_ROOT = resolve(process.cwd(), 'content')
 const FRONT_MATTER_PATTERN = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/
+const MARKDOWN_FILE_PATTERN = /\.(?:md|mdc|markdown)$/i
+const UTF8_BOM = /^\uFEFF/
 
 export type ContentEntry = {
   id?: string | null
@@ -71,19 +73,61 @@ async function stringifyEntryBody(entry: ContentEntry): Promise<string | null> {
   return null
 }
 
-function resolveContentFile(entry: ContentEntry): string | null {
-  const filePath = entry?._file
+function normalizeContentPath(filePath?: string | null): string | null {
   if (!filePath) {
     return null
   }
 
-  const absolute = resolve(CONTENT_ROOT, filePath)
-  const diff = relative(CONTENT_ROOT, absolute)
-  if (!diff || diff.startsWith('..') || isAbsolute(diff)) {
+  const trimmed = filePath.trim()
+  if (!trimmed) {
     return null
   }
 
-  if (!/\.(md|mdc|markdown)$/i.test(absolute)) {
+  if (/^[A-Za-z]:[\\/]/.test(trimmed)) {
+    return null
+  }
+
+  let normalized = trimmed
+  if (normalized.startsWith('./')) {
+    normalized = normalized.slice(2)
+  } else if (normalized.startsWith('.\\')) {
+    normalized = normalized.slice(2)
+  }
+
+  normalized = normalized.replace(/^[/\\]+/, '')
+
+  while (normalized.toLowerCase().startsWith('content/')) {
+    normalized = normalized.slice('content/'.length)
+  }
+  while (normalized.toLowerCase().startsWith('content\\')) {
+    normalized = normalized.slice('content\\'.length)
+  }
+
+  if (!normalized) {
+    return null
+  }
+
+  const segments = normalized.split(/[\\/]+/)
+  if (segments.some((segment) => segment === '..')) {
+    return null
+  }
+
+  return normalized
+}
+
+function resolveContentFile(entry: ContentEntry): string | null {
+  const normalizedPath = normalizeContentPath(entry?._file)
+  if (!normalizedPath) {
+    return null
+  }
+
+  const absolute = resolve(CONTENT_ROOT, normalizedPath)
+  const diff = relative(CONTENT_ROOT, absolute)
+  if (diff.startsWith('..') || isAbsolute(diff)) {
+    return null
+  }
+
+  if (!MARKDOWN_FILE_PATTERN.test(absolute)) {
     return null
   }
 
@@ -95,12 +139,13 @@ function stripFrontMatter(markdown: string): string {
     return ''
   }
 
-  const matched = markdown.match(FRONT_MATTER_PATTERN)
+  const withoutBom = markdown.replace(UTF8_BOM, '')
+  const matched = withoutBom.match(FRONT_MATTER_PATTERN)
   if (!matched) {
-    return markdown
+    return withoutBom
   }
 
-  const remainder = markdown.slice(matched[0].length)
+  const remainder = withoutBom.slice(matched[0].length)
   return remainder.replace(/^\s*\r?\n/, '')
 }
 
@@ -113,7 +158,8 @@ async function readEntryMarkdownFromFile(entry: ContentEntry): Promise<string | 
   try {
     const raw = await fs.readFile(absolutePath, 'utf8')
     const withoutFrontMatter = stripFrontMatter(raw)
-    return withoutFrontMatter.trim().length > 0 ? withoutFrontMatter : null
+    const trimmed = withoutFrontMatter.trim()
+    return trimmed.length > 0 ? withoutFrontMatter : null
   } catch (error) {
     const identifier = entry?._path || entry?._id || entry?.id || '[unknown entry]'
     if (error instanceof Error) {
