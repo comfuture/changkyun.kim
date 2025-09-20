@@ -112,6 +112,19 @@ export async function sendActivity(activity: Activity, target: string): Promise<
   })
 }
 
+async function ensureActivityIdColumn(db: ReturnType<typeof useDatabase>) {
+  try {
+    await db.sql`ALTER TABLE activity ADD COLUMN activity_id TEXT`
+  } catch (error) {
+    const message = (error as Error)?.message ?? ''
+    if (!/duplicate column name/i.test(message)) {
+      throw error
+    }
+  }
+
+  await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_activity_activity_id ON activity(activity_id)`
+}
+
 /**
  * Accepts a follow request from a federated actor.
  * This function verifies the signature of the request, and if valid,
@@ -130,11 +143,38 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
   if (!isValid) {
     return
   }
-  const { success, lastInsertRowid } = await db.sql`INSERT INTO activity (
+  const insertActivity = () => db.sql`INSERT INTO activity (
     activity_id, actor_id, type, object
   ) VALUES (
     ${activity_id}, ${actor}, ${type}, ${fallowee}
   )`
+
+  let insertResult
+  try {
+    insertResult = await insertActivity()
+  } catch (error) {
+    const message = (error as Error)?.message ?? ''
+    if (/no column named activity_id/i.test(message)) {
+      try {
+        await ensureActivityIdColumn(db)
+      } catch (migrationError) {
+        console.error('Failed migrating activity table', migrationError)
+        return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
+      }
+
+      try {
+        insertResult = await insertActivity()
+      } catch (retryError) {
+        console.error('Failed inserting follow activity', retryError)
+        return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
+      }
+    } else {
+      console.error('Failed inserting follow activity', error)
+      return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
+    }
+  }
+
+  const { success, lastInsertRowid } = insertResult
   if (!success) {
     return sendError(event, createError({ statusCode: 400, statusMessage: 'Failed accepting follow request' }))
   }
