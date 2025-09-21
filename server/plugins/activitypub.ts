@@ -32,7 +32,7 @@ async function broadcastDocument(document: ContentEntry) {
     : Array.isArray(activity.object)
       ? null
       : (activity.object as { id?: string | null })?.id ?? null
-  const legacyActivityIds = objectId ? resolveLegacyActivityIds(objectId) : []
+  const legacyActivityIds = objectId ? resolveLegacyActivityIds(objectId, document) : []
 
   try {
     const { rows } = await db.sql`SELECT 1 FROM activity WHERE activity_id = ${activity.id} LIMIT 1`

@@ -7,6 +7,33 @@ import { unified } from 'unified'
 
 import { me, PUBLIC_AUDIENCE } from './federation'
 
+export const BLOG_COLLECTION_PREFIX = '/blog'
+export const BLOG_CANONICAL_HOSTNAMES = ['changkyun.blog', 'www.changkyun.blog'] as const
+export const BLOG_CANONICAL_ORIGIN = 'https://changkyun.blog'
+
+function ensureLeadingSlash(value: string): string {
+  if (!value) {
+    return '/'
+  }
+  return value.startsWith('/') ? value : `/${value}`
+}
+
+function stripTrailingSlash(value: string): string {
+  if (value.length > 1 && value.endsWith('/')) {
+    return value.replace(/\/+$/, '') || '/'
+  }
+  return value
+}
+
+function normalizeArticlePath(path: string): string {
+  return stripTrailingSlash(ensureLeadingSlash(path))
+}
+
+function normalizeRelativePath(path: string): string {
+  const normalized = stripTrailingSlash(ensureLeadingSlash(path))
+  return normalized === '/' ? '/' : normalized
+}
+
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
@@ -42,7 +69,7 @@ function resolveEntryPath(entry: ContentEntry): string | null {
   if (!path) {
     return null
   }
-  return path.startsWith('/') ? path : `/${path}`
+  return normalizeArticlePath(path)
 }
 
 function resolveArticleUrl(entry: ContentEntry): string | null {
@@ -50,7 +77,36 @@ function resolveArticleUrl(entry: ContentEntry): string | null {
   if (!path) {
     return null
   }
+  if (path === BLOG_COLLECTION_PREFIX || path.startsWith(`${BLOG_COLLECTION_PREFIX}/`)) {
+    const relative = normalizeRelativePath(path.slice(BLOG_COLLECTION_PREFIX.length) || '/')
+    if (relative === '/') {
+      return `${BLOG_CANONICAL_ORIGIN}/`
+    }
+    return `${BLOG_CANONICAL_ORIGIN}${relative}`
+  }
   return `${siteOrigin}${path}`
+}
+
+function resolveLegacyArticleUrls(entry: ContentEntry, canonicalUrl: string): string[] {
+  const legacy = new Set<string>()
+  const path = resolveEntryPath(entry)
+  if (!path) {
+    return []
+  }
+
+  const defaultUrl = `${siteOrigin}${path}`
+  if (defaultUrl !== canonicalUrl) {
+    legacy.add(defaultUrl)
+  }
+
+  if (path === BLOG_COLLECTION_PREFIX || path.startsWith(`${BLOG_COLLECTION_PREFIX}/`)) {
+    const prefixed = `${BLOG_CANONICAL_ORIGIN}${path}`
+    if (prefixed !== canonicalUrl) {
+      legacy.add(prefixed)
+    }
+  }
+
+  return Array.from(legacy)
 }
 
 function normalizeDate(value?: string | Date | null): string {
@@ -71,11 +127,26 @@ export function resolveActivityId(articleUrl: string): string {
   return `${normalized}/activity`
 }
 
-export function resolveLegacyActivityIds(articleUrl: string): string[] {
-  return [
-    `${articleUrl}#create`,
-    `${articleUrl}#activity`,
-  ]
+function appendLegacyActivityIds(collection: Set<string>, baseUrl: string) {
+  const normalized = stripTrailingSlash(baseUrl)
+  collection.add(`${normalized}#create`)
+  collection.add(`${normalized}#activity`)
+  collection.add(`${normalized}/activity`)
+}
+
+export function resolveLegacyActivityIds(articleUrl: string, entry?: ContentEntry | null): string[] {
+  const candidates = new Set<string>()
+  appendLegacyActivityIds(candidates, articleUrl)
+
+  if (entry) {
+    const canonicalUrl = resolveArticleUrl(entry)
+    const legacyUrls = resolveLegacyArticleUrls(entry, canonicalUrl ?? articleUrl)
+    for (const legacyUrl of legacyUrls) {
+      appendLegacyActivityIds(candidates, legacyUrl)
+    }
+  }
+
+  return Array.from(candidates)
 }
 
 export async function buildArticleObjectFromEntry(entry: ContentEntry): Promise<ObjectT | null> {

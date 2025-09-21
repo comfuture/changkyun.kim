@@ -2,6 +2,8 @@ import { getHeader, getRequestURL } from 'h3'
 
 import { setJsonLdHeader } from '../utils/federation'
 import {
+  BLOG_CANONICAL_HOSTNAMES,
+  BLOG_COLLECTION_PREFIX,
   buildArticleObjectFromEntry,
   buildCreateActivityFromEntry,
   CONTENT_CONTEXT,
@@ -10,9 +12,11 @@ import {
 const ACTIVITY_SUFFIX = '/activity'
 
 const FEDERATED_PATHS: Array<{ prefix: string; collection: string }> = [
-  { prefix: '/blog', collection: 'blog' },
+  { prefix: BLOG_COLLECTION_PREFIX, collection: 'blog' },
   { prefix: '/app', collection: 'app' },
 ]
+
+const BLOG_HOSTS = new Set(Array.from(BLOG_CANONICAL_HOSTNAMES, (host) => host.toLowerCase()))
 
 function acceptsActivityPub(acceptHeader?: string | null): boolean {
   if (!acceptHeader) {
@@ -78,6 +82,20 @@ export default defineEventHandler(async (event) => {
   if (pathname !== '/' && pathname.endsWith(ACTIVITY_SUFFIX)) {
     wantsActivityResource = true
     pathname = normalizePathname(pathname.slice(0, -ACTIVITY_SUFFIX.length))
+  }
+
+  const hostname = url.hostname?.toLowerCase() ?? null
+  if (hostname && BLOG_HOSTS.has(hostname)) {
+    if (pathname === '/') {
+      return
+    }
+
+    if (
+      pathname !== BLOG_COLLECTION_PREFIX &&
+      !pathname.startsWith(`${BLOG_COLLECTION_PREFIX}/`)
+    ) {
+      pathname = normalizePathname(`${BLOG_COLLECTION_PREFIX}${pathname}`)
+    }
   }
 
   let attempted = false
