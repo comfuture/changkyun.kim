@@ -14,7 +14,7 @@ const processor = unified()
 
 const siteOrigin = new URL(me.id).origin
 
-const CONTENT_CONTEXT = 'https://www.w3.org/ns/activitystreams'
+export const CONTENT_CONTEXT = 'https://www.w3.org/ns/activitystreams'
 
 export type ContentEntry = {
   id?: string | null
@@ -64,7 +64,21 @@ function normalizeDate(value?: string | Date | null): string {
   return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()
 }
 
-export async function buildCreateActivityFromEntry(entry: ContentEntry): Promise<CreateActivity | null> {
+export function resolveActivityId(articleUrl: string): string {
+  const normalized = articleUrl.endsWith('/') && articleUrl.length > 1
+    ? articleUrl.slice(0, -1)
+    : articleUrl
+  return `${normalized}/activity`
+}
+
+export function resolveLegacyActivityIds(articleUrl: string): string[] {
+  return [
+    `${articleUrl}#create`,
+    `${articleUrl}#activity`,
+  ]
+}
+
+export async function buildArticleObjectFromEntry(entry: ContentEntry): Promise<ObjectT | null> {
   const articleUrl = resolveArticleUrl(entry)
   if (!articleUrl) {
     return null
@@ -95,9 +109,25 @@ export async function buildCreateActivityFromEntry(entry: ContentEntry): Promise
       : undefined,
   }
 
+  return article
+}
+
+export async function buildCreateActivityFromEntry(entry: ContentEntry): Promise<CreateActivity | null> {
+  const article = await buildArticleObjectFromEntry(entry)
+  if (!article) {
+    return null
+  }
+
+  const articleUrl = article.id
+  const publishedAt = normalizeDate(article.published || entry?.createdAt || null)
+  article.published = publishedAt
+  if (!Array.isArray(article.to) || !article.to.length) {
+    article.to = [PUBLIC_AUDIENCE]
+  }
+
   const activity: CreateActivity = {
     '@context': CONTENT_CONTEXT,
-    id: `${articleUrl}#create`,
+    id: resolveActivityId(articleUrl),
     type: 'Create',
     actor: me.id,
     object: article,
