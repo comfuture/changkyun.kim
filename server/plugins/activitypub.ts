@@ -48,10 +48,11 @@ async function broadcastDocument(document: ContentEntry) {
           await db.sql`UPDATE activity
             SET activity_id = ${activity.id}, actor_id = ${actorId}, object = ${objectId}, payload = ${payload}
             WHERE activity_id = ${legacyId}`
+          return
         } catch (updateError) {
           console.error('Failed to update legacy ActivityPub identifier', updateError)
+          break
         }
-        return
       }
     }
   } catch (error) {
