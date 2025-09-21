@@ -7,6 +7,33 @@ import { unified } from 'unified'
 
 import { me, PUBLIC_AUDIENCE } from './federation'
 
+export const BLOG_COLLECTION_PREFIX = '/blog'
+export const BLOG_CANONICAL_HOSTNAMES = ['changkyun.blog', 'www.changkyun.blog'] as const
+export const BLOG_CANONICAL_ORIGIN = 'https://changkyun.blog'
+
+function ensureLeadingSlash(value: string): string {
+  if (!value) {
+    return '/'
+  }
+  return value.startsWith('/') ? value : `/${value}`
+}
+
+function stripTrailingSlash(value: string): string {
+  if (value.length > 1 && value.endsWith('/')) {
+    return value.replace(/\/+$/, '') || '/'
+  }
+  return value
+}
+
+function normalizeArticlePath(path: string): string {
+  return stripTrailingSlash(ensureLeadingSlash(path))
+}
+
+function normalizeRelativePath(path: string): string {
+  const normalized = stripTrailingSlash(ensureLeadingSlash(path))
+  return normalized === '/' ? '/' : normalized
+}
+
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
@@ -14,7 +41,7 @@ const processor = unified()
 
 const siteOrigin = new URL(me.id).origin
 
-const CONTENT_CONTEXT = 'https://www.w3.org/ns/activitystreams'
+export const CONTENT_CONTEXT = 'https://www.w3.org/ns/activitystreams'
 
 export type ContentEntry = {
   id?: string | null
@@ -42,7 +69,7 @@ function resolveEntryPath(entry: ContentEntry): string | null {
   if (!path) {
     return null
   }
-  return path.startsWith('/') ? path : `/${path}`
+  return normalizeArticlePath(path)
 }
 
 function resolveArticleUrl(entry: ContentEntry): string | null {
@@ -50,7 +77,36 @@ function resolveArticleUrl(entry: ContentEntry): string | null {
   if (!path) {
     return null
   }
+  if (path === BLOG_COLLECTION_PREFIX || path.startsWith(`${BLOG_COLLECTION_PREFIX}/`)) {
+    const relative = normalizeRelativePath(path.slice(BLOG_COLLECTION_PREFIX.length) || '/')
+    if (relative === '/') {
+      return `${BLOG_CANONICAL_ORIGIN}/`
+    }
+    return `${BLOG_CANONICAL_ORIGIN}${relative}`
+  }
   return `${siteOrigin}${path}`
+}
+
+function resolveLegacyArticleUrls(entry: ContentEntry, canonicalUrl: string): string[] {
+  const legacy = new Set<string>()
+  const path = resolveEntryPath(entry)
+  if (!path) {
+    return []
+  }
+
+  const defaultUrl = `${siteOrigin}${path}`
+  if (defaultUrl !== canonicalUrl) {
+    legacy.add(defaultUrl)
+  }
+
+  if (path === BLOG_COLLECTION_PREFIX || path.startsWith(`${BLOG_COLLECTION_PREFIX}/`)) {
+    const prefixed = `${BLOG_CANONICAL_ORIGIN}${path}`
+    if (prefixed !== canonicalUrl) {
+      legacy.add(prefixed)
+    }
+  }
+
+  return Array.from(legacy)
 }
 
 function normalizeDate(value?: string | Date | null): string {
@@ -64,7 +120,36 @@ function normalizeDate(value?: string | Date | null): string {
   return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()
 }
 
-export async function buildCreateActivityFromEntry(entry: ContentEntry): Promise<CreateActivity | null> {
+export function resolveActivityId(articleUrl: string): string {
+  const normalized = articleUrl.endsWith('/') && articleUrl.length > 1
+    ? articleUrl.slice(0, -1)
+    : articleUrl
+  return `${normalized}/activity`
+}
+
+function appendLegacyActivityIds(collection: Set<string>, baseUrl: string) {
+  const normalized = stripTrailingSlash(baseUrl)
+  collection.add(`${normalized}#create`)
+  collection.add(`${normalized}#activity`)
+  collection.add(`${normalized}/activity`)
+}
+
+export function resolveLegacyActivityIds(articleUrl: string, entry?: ContentEntry | null): string[] {
+  const candidates = new Set<string>()
+  appendLegacyActivityIds(candidates, articleUrl)
+
+  if (entry) {
+    const canonicalUrl = resolveArticleUrl(entry)
+    const legacyUrls = resolveLegacyArticleUrls(entry, canonicalUrl ?? articleUrl)
+    for (const legacyUrl of legacyUrls) {
+      appendLegacyActivityIds(candidates, legacyUrl)
+    }
+  }
+
+  return Array.from(candidates)
+}
+
+export async function buildArticleObjectFromEntry(entry: ContentEntry): Promise<ObjectT | null> {
   const articleUrl = resolveArticleUrl(entry)
   if (!articleUrl) {
     return null
@@ -95,9 +180,25 @@ export async function buildCreateActivityFromEntry(entry: ContentEntry): Promise
       : undefined,
   }
 
+  return article
+}
+
+export async function buildCreateActivityFromEntry(entry: ContentEntry): Promise<CreateActivity | null> {
+  const article = await buildArticleObjectFromEntry(entry)
+  if (!article) {
+    return null
+  }
+
+  const articleUrl = article.id
+  const publishedAt = normalizeDate(article.published || entry?.createdAt || null)
+  article.published = publishedAt
+  if (!Array.isArray(article.to) || !article.to.length) {
+    article.to = [PUBLIC_AUDIENCE]
+  }
+
   const activity: CreateActivity = {
     '@context': CONTENT_CONTEXT,
-    id: `${articleUrl}#create`,
+    id: resolveActivityId(articleUrl),
     type: 'Create',
     actor: me.id,
     object: article,

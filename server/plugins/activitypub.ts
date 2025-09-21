@@ -1,5 +1,9 @@
 import { ensureActivitySchema } from "../utils/federation"
-import { buildCreateActivityFromEntry, type ContentEntry } from "../utils/outboxHelpers"
+import {
+  buildCreateActivityFromEntry,
+  resolveLegacyActivityIds,
+  type ContentEntry,
+} from "../utils/outboxHelpers"
 
 const FEDERATED_COLLECTIONS = new Set(['/blog/', '/app/'])
 
@@ -19,10 +23,37 @@ async function broadcastDocument(document: ContentEntry) {
 
   const db = useDatabase()
 
+  const actorId = typeof activity.actor === 'string'
+    ? activity.actor
+    : (activity.actor as { id?: string | null })?.id ?? null
+
+  const objectId = typeof activity.object === 'string'
+    ? activity.object
+    : Array.isArray(activity.object)
+      ? null
+      : (activity.object as { id?: string | null })?.id ?? null
+  const legacyActivityIds = objectId ? resolveLegacyActivityIds(objectId, document) : []
+
   try {
     const { rows } = await db.sql`SELECT 1 FROM activity WHERE activity_id = ${activity.id} LIMIT 1`
     if (rows && rows.length) {
       return
+    }
+
+    for (const legacyId of legacyActivityIds) {
+      const { rows: legacyRows } = await db.sql`SELECT 1 FROM activity WHERE activity_id = ${legacyId} LIMIT 1`
+      if (legacyRows && legacyRows.length) {
+        const payload = JSON.stringify(activity)
+        try {
+          await db.sql`UPDATE activity
+            SET activity_id = ${activity.id}, actor_id = ${actorId}, object = ${objectId}, payload = ${payload}
+            WHERE activity_id = ${legacyId}`
+          return
+        } catch (updateError) {
+          console.error('Failed to update legacy ActivityPub identifier', updateError)
+          break
+        }
+      }
     }
   } catch (error) {
     const message = (error as Error)?.message ?? ""
