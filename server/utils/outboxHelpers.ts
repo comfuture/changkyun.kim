@@ -1,4 +1,5 @@
 import { stringifyMarkdown } from '@nuxtjs/mdc/runtime'
+import { stringify as stringifyMinimark } from 'minimark/stringify'
 import { toHtml } from 'hast-util-to-html'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
@@ -155,7 +156,15 @@ export async function buildArticleObjectFromEntry(entry: ContentEntry): Promise<
     return null
   }
 
-  const markdown = entry?.body ? (await stringifyMarkdown(entry.body, {})) ?? '' : ''
+  let markdown = ''
+  const body = entry?.body
+  if (typeof body === 'string') {
+    markdown = body
+  } else if (body?.type === 'minimark') {
+    markdown = stringifyMinimark(body) || ''
+  } else if (body) {
+    markdown = (await stringifyMarkdown(body, {})) ?? ''
+  }
   const contentHtml = await renderMarkdown(markdown)
   const isHtml = Boolean(contentHtml)
   const publishedAt = normalizeDate(entry?.createdAt)
