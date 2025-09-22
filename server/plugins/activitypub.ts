@@ -180,6 +180,7 @@ async function updateDeliveryState(db: DatabaseClient, state: DeliveryState): Pr
     `
   } catch (error) {
     console.error('Failed to update content delivery state', error)
+    throw error
   }
 }
 
