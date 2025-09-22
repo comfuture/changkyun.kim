@@ -304,20 +304,6 @@ async function processCollection(collection: string) {
       continue
     }
 
-    if (initialLastPublishedTime !== null) {
-      if (publishedTime < initialLastPublishedTime) {
-        continue
-      }
-      if (
-        publishedTime === initialLastPublishedTime &&
-        initialLastDocumentPath &&
-        documentPath &&
-        documentPath.localeCompare(initialLastDocumentPath) <= 0
-      ) {
-        continue
-      }
-    }
-
     if (lastDeliveredTime !== null) {
       if (publishedTime < lastDeliveredTime) {
         continue
