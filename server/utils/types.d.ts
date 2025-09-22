@@ -92,6 +92,11 @@ type AcceptActivity = Omit<Activity, 'type' | 'object'> & {
   object: Activity | ObjectT | string
 }
 
+interface UndoActivity extends Activity {
+  type: 'Undo'
+  object: Activity | ObjectT | string
+}
+
 interface FollowActivity extends Activity {
   type: 'Follow'
   actor: string

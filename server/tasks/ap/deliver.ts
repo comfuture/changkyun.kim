@@ -1,4 +1,17 @@
-import { sendActivity } from "../../utils/federation"
+import { me, sendActivity } from "../../utils/federation"
+
+function resolveActorId(actor: unknown): string | null {
+  if (!actor) {
+    return null
+  }
+  if (typeof actor === 'string') {
+    return actor
+  }
+  if (typeof actor === 'object' && typeof (actor as Actor | null)?.id === 'string') {
+    return (actor as Actor).id
+  }
+  return null
+}
 
 type DeliverPayload = {
   activity: Activity
@@ -25,9 +38,9 @@ export default defineTask({
       recipients.add(target)
     }
 
-    const actorId = typeof activity.actor === 'string' ? activity.actor : activity.actor?.id
-    if (!recipients.size && actorId) {
-      const { rows } = await db.sql`SELECT actor_id FROM activity WHERE object = ${actorId} AND type = 'Follow'`
+    const actorId = resolveActorId(activity?.actor)
+    if (!recipients.size && actorId === me.id) {
+      const { rows } = await db.sql`SELECT actor_id FROM followers WHERE status = 'accepted'`
       for (const row of rows ?? []) {
         const follower = row.actor_id as string | null
         if (follower) {

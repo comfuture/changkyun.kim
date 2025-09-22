@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { H3Event } from 'h3';
 
 import { verifySignature } from './auth';
+import { collectOutboxActivities, OUTBOX_PAGE_SIZE } from './outboxHelpers';
 
 /**
  * Fetches an Actor from a given URL using ActivityPub protocol.
@@ -118,38 +119,6 @@ export async function sendActivity(activity: Activity, target: string): Promise<
   })
 }
 
-export async function ensureActivitySchema(db: ReturnType<typeof useDatabase>) {
-  await db.sql`CREATE TABLE IF NOT EXISTS activity (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    activity_id TEXT,
-    actor_id TEXT,
-    type TEXT,
-    object TEXT,
-    payload TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`
-
-  try {
-    await db.sql`ALTER TABLE activity ADD COLUMN activity_id TEXT`
-  } catch (error) {
-    const message = (error as Error)?.message ?? ''
-    if (!/duplicate column name/i.test(message)) {
-      throw error
-    }
-  }
-
-  try {
-    await db.sql`ALTER TABLE activity ADD COLUMN payload TEXT`
-  } catch (error) {
-    const message = (error as Error)?.message ?? ''
-    if (!/duplicate column name/i.test(message)) {
-      throw error
-    }
-  }
-
-  await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_activity_activity_id ON activity(activity_id)`
-}
-
 /**
  * Accepts a follow request from a federated actor.
  * This function verifies the signature of the request, and if valid,
@@ -208,64 +177,13 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
 
   const payload = JSON.stringify(followActivity)
 
-  const insertActivity = () => db.sql`INSERT INTO activity (
-    activity_id, actor_id, type, object, payload
-  ) VALUES (
-    ${followActivity.id}, ${followActivity.actor}, ${followActivity.type}, ${followActivity.object}, ${payload}
-  )`
-
-  const updateStoredFollow = () => db.sql`UPDATE activity
-    SET actor_id = ${followActivity.actor}, object = ${followActivity.object}, payload = ${payload}
-    WHERE activity_id = ${followActivity.id}`
-
-  const ensureSchemaAndRetry = async () => {
-    try {
-      await ensureActivitySchema(db)
-    } catch (migrationError) {
-      console.error('Failed migrating activity table', migrationError)
-      return false
-    }
-
-    try {
-      await insertActivity()
-      return true
-    } catch (retryError) {
-      const retryMessage = (retryError as Error)?.message ?? ''
-      if (/unique constraint failed|duplicate/i.test(retryMessage)) {
-        try {
-          await updateStoredFollow()
-        } catch (updateError) {
-          console.error('Failed updating stored follow activity', updateError)
-          return false
-        }
-        return true
-      }
-      console.error('Failed inserting follow activity', retryError)
-      return false
-    }
-  }
-
-  try {
-    await insertActivity()
-  } catch (error) {
-    const message = (error as Error)?.message ?? ''
-    if (/no such table: activity/i.test(message) || /no column named (activity_id|payload)/i.test(message)) {
-      const migrated = await ensureSchemaAndRetry()
-      if (!migrated) {
-        return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
-      }
-    } else if (/unique constraint failed|duplicate/i.test(message)) {
-      try {
-        await updateStoredFollow()
-      } catch (updateError) {
-        console.error('Failed updating stored follow activity', updateError)
-        return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
-      }
-    } else {
-      console.error('Failed inserting follow activity', error)
-      return sendError(event, createError({ statusCode: 500, statusMessage: 'Failed accepting follow request' }))
-    }
-  }
+  await db.sql`INSERT INTO followers (actor_id, activity_id, activity_payload, status)
+    VALUES (${actorId}, ${followActivity.id}, ${payload}, 'accepted')
+    ON CONFLICT(actor_id) DO UPDATE SET
+      activity_id = excluded.activity_id,
+      activity_payload = excluded.activity_payload,
+      status = 'accepted',
+      updated_at = CURRENT_TIMESTAMP`
 
   const acceptHash = createHash('sha256')
     .update(`${actorId}|${followActivity.id}`)
@@ -291,14 +209,47 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
     console.error('Failed scheduling Accept activity delivery', error)
   }
 
+  try {
+    const { orderedItems } = await collectOutboxActivities(event, { limit: OUTBOX_PAGE_SIZE })
+    for (const createActivity of orderedItems) {
+      try {
+        await runTask('ap:deliver', {
+          payload: {
+            activity: createActivity,
+            target: actorId,
+          },
+        })
+      } catch (deliveryError) {
+        console.error('Failed delivering backlog activity to new follower', deliveryError)
+      }
+    }
+  } catch (error) {
+    console.error('Failed preparing backlog activities for follower', error)
+  }
+
   setJsonLdHeader(event)
   setResponseStatus(event, 202)
   return acceptActivity
 }
 
+export async function removeFollower(actorId: string, followActivityId?: string | null): Promise<void> {
+  if (!actorId) {
+    return
+  }
+
+  const db = useDatabase()
+  const normalizedFollowId = followActivityId ?? null
+
+  await db.sql`UPDATE followers
+    SET status = 'removed',
+        activity_id = COALESCE(${normalizedFollowId}, activity_id),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE actor_id = ${actorId}`
+}
+
 /**
  * Accepts a reply request from a federated actor after verifying their signature.
- * 
+ *
  * This function processes incoming ActivityPub reply requests. It verifies the
  * signature of the actor making the request, and if valid, responds with a 202
  * Accepted status.

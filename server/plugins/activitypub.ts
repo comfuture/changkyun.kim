@@ -1,4 +1,3 @@
-import { ensureActivitySchema } from "../utils/federation"
 import {
   buildCreateActivityFromEntry,
   resolveLegacyActivityIds,
@@ -35,18 +34,18 @@ async function broadcastDocument(document: ContentEntry) {
   const legacyActivityIds = objectId ? resolveLegacyActivityIds(objectId, document) : []
 
   try {
-    const { rows } = await db.sql`SELECT 1 FROM activity WHERE activity_id = ${activity.id} LIMIT 1`
+    const { rows } = await db.sql`SELECT 1 FROM activity WHERE activity_id = ${activity.id} AND direction = 'outbox' LIMIT 1`
     if (rows && rows.length) {
       return
     }
 
     for (const legacyId of legacyActivityIds) {
-      const { rows: legacyRows } = await db.sql`SELECT 1 FROM activity WHERE activity_id = ${legacyId} LIMIT 1`
+      const { rows: legacyRows } = await db.sql`SELECT 1 FROM activity WHERE activity_id = ${legacyId} AND direction = 'outbox' LIMIT 1`
       if (legacyRows && legacyRows.length) {
         const payload = JSON.stringify(activity)
         try {
           await db.sql`UPDATE activity
-            SET activity_id = ${activity.id}, actor_id = ${actorId}, object = ${objectId}, payload = ${payload}
+            SET activity_id = ${activity.id}, actor_id = ${actorId}, object = ${objectId}, payload = ${payload}, direction = 'outbox'
             WHERE activity_id = ${legacyId}`
           return
         } catch (updateError) {
@@ -56,18 +55,8 @@ async function broadcastDocument(document: ContentEntry) {
       }
     }
   } catch (error) {
-    const message = (error as Error)?.message ?? ""
-    if (/no such table: activity/i.test(message) || /no column named (activity_id|payload)/i.test(message)) {
-      try {
-        await ensureActivitySchema(db)
-      } catch (migrationError) {
-        console.error('Failed to prepare ActivityPub activity table', migrationError)
-        return
-      }
-    } else {
-      console.error('Failed checking existing ActivityPub activity', error)
-      return
-    }
+    console.error('Failed checking existing ActivityPub activity', error)
+    return
   }
 
   try {

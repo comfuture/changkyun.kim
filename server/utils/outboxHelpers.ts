@@ -1,3 +1,5 @@
+import type { H3Event } from 'h3'
+
 import { stringifyMarkdown } from '@nuxtjs/mdc/runtime'
 import { stringify as stringifyMinimark } from 'minimark/stringify'
 import { toHtml } from 'hast-util-to-html'
@@ -43,6 +45,7 @@ const processor = unified()
 const siteOrigin = new URL(me.id).origin
 
 export const CONTENT_CONTEXT = 'https://www.w3.org/ns/activitystreams'
+export const OUTBOX_PAGE_SIZE = 20
 
 export type ContentEntry = {
   id?: string | null
@@ -216,4 +219,51 @@ export async function buildCreateActivityFromEntry(entry: ContentEntry): Promise
   }
 
   return activity
+}
+
+type CollectOutboxOptions = {
+  limit?: number | null
+  offset?: number
+}
+
+export async function collectOutboxActivities(
+  event: H3Event,
+  options: CollectOutboxOptions = {},
+): Promise<{ totalItems: number; orderedItems: CreateActivity[] }> {
+  const limit = typeof options.limit === 'number' && Number.isFinite(options.limit)
+    ? Math.max(0, options.limit)
+    : options.limit === null
+      ? null
+      : OUTBOX_PAGE_SIZE
+  const offset = Math.max(0, options.offset ?? 0)
+
+  const [blogEntries, appEntries] = await Promise.all([
+    queryCollection(event, 'blog').order('createdAt', 'DESC').all(),
+    queryCollection(event, 'app').order('createdAt', 'DESC').all(),
+  ])
+
+  const entries = [...(blogEntries ?? []), ...(appEntries ?? [])]
+  entries.sort((a, b) => {
+    const aDate = a?.createdAt ? new Date(a.createdAt).getTime() : 0
+    const bDate = b?.createdAt ? new Date(b.createdAt).getTime() : 0
+    return bDate - aDate
+  })
+
+  const activities: CreateActivity[] = []
+  for (const entry of entries) {
+    const activity = await buildCreateActivityFromEntry(entry)
+    if (activity) {
+      activities.push(activity)
+    }
+  }
+
+  const totalItems = activities.length
+  const start = Math.min(offset, totalItems)
+  let end = totalItems
+  if (typeof limit === 'number') {
+    end = Math.min(totalItems, start + limit)
+  }
+  const orderedItems = activities.slice(start, end)
+
+  return { totalItems, orderedItems }
 }

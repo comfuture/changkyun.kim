@@ -1,4 +1,4 @@
-import { ensureActivitySchema, me } from "../../utils/federation"
+import { me } from "../../utils/federation"
 
 type BroadcastPayload = {
   activity: CreateActivity
@@ -31,27 +31,20 @@ export default defineTask({
 
     const payload = JSON.stringify(activity)
     const insertActivity = () => db.sql`INSERT INTO activity (
-      activity_id, actor_id, type, object, payload
+      activity_id, actor_id, type, object, payload, direction
     ) VALUES (
-      ${activityId}, ${actorId}, ${activity.type}, ${objectId}, ${payload}
+      ${activityId}, ${actorId}, ${activity.type}, ${objectId}, ${payload}, 'outbox'
     )`
 
     try {
       await insertActivity()
     } catch (error) {
       const message = (error as Error)?.message ?? ''
-      if (/no such table: activity/i.test(message)) {
-        await ensureActivitySchema(db)
-        await insertActivity()
-      } else if (/no column named (activity_id|payload)/i.test(message)) {
-        await ensureActivitySchema(db)
-        await insertActivity()
-      } else if (/unique constraint failed|duplicate/i.test(message)) {
+      if (/unique constraint failed|duplicate/i.test(message)) {
         return { result: false, reason: 'duplicate' }
-      } else {
-        console.error('Failed storing Create activity before broadcast', error)
-        throw error
       }
+      console.error('Failed storing Create activity before broadcast', error)
+      throw error
     }
 
     await runTask('ap:sendActivity', {
