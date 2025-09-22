@@ -1,17 +1,5 @@
+import { resolveActorId } from "../../utils/activitypub"
 import { me, sendActivity } from "../../utils/federation"
-
-function resolveActorId(actor: unknown): string | null {
-  if (!actor) {
-    return null
-  }
-  if (typeof actor === 'string') {
-    return actor
-  }
-  if (typeof actor === 'object' && typeof (actor as Actor | null)?.id === 'string') {
-    return (actor as Actor).id
-  }
-  return null
-}
 
 type DeliverPayload = {
   activity: Activity

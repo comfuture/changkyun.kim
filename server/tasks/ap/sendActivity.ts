@@ -1,36 +1,11 @@
 import { randomUUID } from "node:crypto"
 
+import { resolveActorId, resolveObjectId } from "../../utils/activitypub"
 import { me, sendActivity } from "../../utils/federation"
 
 type Payload = {
   activity: Activity
   target?: string | string[]
-}
-
-function resolveActorId(actor: unknown): string | null {
-  if (!actor) {
-    return null
-  }
-  if (typeof actor === 'string') {
-    return actor
-  }
-  if (typeof actor === 'object' && typeof (actor as Actor | null)?.id === 'string') {
-    return (actor as Actor).id
-  }
-  return null
-}
-
-function resolveObjectId(object: unknown): string | null {
-  if (!object) {
-    return null
-  }
-  if (typeof object === 'string') {
-    return object
-  }
-  if (typeof object === 'object' && typeof (object as { id?: string | null })?.id === 'string') {
-    return (object as { id: string }).id
-  }
-  return null
 }
 export default defineTask({
   meta: {

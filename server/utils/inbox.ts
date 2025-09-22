@@ -1,50 +1,16 @@
 import { randomUUID } from 'node:crypto'
 import type { H3Event } from 'h3'
 
-import { acceptFollowRequest, me, removeFollower, setJsonLdHeader } from './federation'
+import { resolveActorId, resolveObjectId } from './activitypub'
 import { verifySignature } from './auth'
-
-function normalizeActorId(actor: unknown): string | null {
-  if (!actor) {
-    return null
-  }
-  if (typeof actor === 'string') {
-    return actor
-  }
-  if (typeof actor === 'object' && typeof (actor as Actor | null)?.id === 'string') {
-    return (actor as Actor).id
-  }
-  return null
-}
-
-function normalizeObjectIdentifier(object: unknown): string | null {
-  if (!object) {
-    return null
-  }
-  if (typeof object === 'string') {
-    return object
-  }
-  if (Array.isArray(object)) {
-    for (const entry of object) {
-      const candidate = normalizeObjectIdentifier(entry)
-      if (candidate) {
-        return candidate
-      }
-    }
-    return null
-  }
-  if (typeof object === 'object' && typeof (object as { id?: string | null })?.id === 'string') {
-    return (object as { id: string }).id
-  }
-  return null
-}
+import { acceptFollowRequest, me, removeFollower, setJsonLdHeader } from './federation'
 
 async function recordActivity(activity: Activity): Promise<string> {
   const db = useDatabase()
   const activityId = typeof activity.id === 'string' && activity.id
     ? activity.id
     : randomUUID()
-  const actorId = normalizeActorId(activity.actor)
+  const actorId = resolveActorId(activity.actor)
   const objectValue = activity.object
   const object = Array.isArray(objectValue)
     ? JSON.stringify(objectValue)
@@ -77,7 +43,7 @@ async function deleteRecordedActivity(activityId: string | null | undefined): Pr
 }
 
 async function handleUndoActivity(event: H3Event, activity: UndoActivity) {
-  const actorId = normalizeActorId(activity.actor)
+  const actorId = resolveActorId(activity.actor)
   if (!actorId) {
     return sendError(event, createError({ statusCode: 400, statusMessage: 'Undo activity missing actor' }))
   }
@@ -97,8 +63,8 @@ async function handleUndoActivity(event: H3Event, activity: UndoActivity) {
   } else if (objectValue && typeof objectValue === 'object') {
     const followObject = objectValue as Partial<FollowActivity> & { type?: string }
     followActivityId = typeof followObject.id === 'string' ? followObject.id : null
-    followActorId = normalizeActorId(followObject.actor as unknown)
-    followTarget = normalizeObjectIdentifier(followObject.object as unknown)
+    followActorId = resolveActorId(followObject.actor as unknown)
+    followTarget = resolveObjectId(followObject.object as unknown)
     followType = typeof followObject.type === 'string' ? followObject.type : null
   }
 
@@ -125,7 +91,7 @@ async function handleUndoActivity(event: H3Event, activity: UndoActivity) {
 }
 
 async function handleAcceptActivity(event: H3Event, activity: AcceptActivity) {
-  const actorId = normalizeActorId(activity.actor)
+  const actorId = resolveActorId(activity.actor)
   if (!actorId) {
     return sendError(event, createError({ statusCode: 400, statusMessage: 'Accept activity missing actor' }))
   }
@@ -146,8 +112,8 @@ async function handleAcceptActivity(event: H3Event, activity: AcceptActivity) {
   } else if (objectValue && typeof objectValue === 'object') {
     const followObject = objectValue as Partial<FollowActivity>
     followActivityId = typeof followObject.id === 'string' ? followObject.id : null
-    followActorId = normalizeActorId(followObject.actor as unknown)
-    followTargetId = normalizeObjectIdentifier(followObject.object as unknown)
+    followActorId = resolveActorId(followObject.actor as unknown)
+    followTargetId = resolveObjectId(followObject.object as unknown)
 
     const normalizedFollow: FollowActivity = {
       '@context': followObject['@context'] ?? 'https://www.w3.org/ns/activitystreams',
