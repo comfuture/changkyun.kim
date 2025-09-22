@@ -81,6 +81,14 @@ function resolveArticleUrl(entry: ContentEntry): string | null {
   if (!path) {
     return null
   }
+  return `${siteOrigin}${path}`
+}
+
+function resolvePublicArticleUrl(entry: ContentEntry): string | null {
+  const path = resolveEntryPath(entry)
+  if (!path) {
+    return null
+  }
   if (path === BLOG_COLLECTION_PREFIX || path.startsWith(`${BLOG_COLLECTION_PREFIX}/`)) {
     const relative = normalizeRelativePath(path.slice(BLOG_COLLECTION_PREFIX.length) || '/')
     if (relative === '/') {
@@ -101,6 +109,11 @@ function resolveLegacyArticleUrls(entry: ContentEntry, canonicalUrl: string): st
   const defaultUrl = `${siteOrigin}${path}`
   if (defaultUrl !== canonicalUrl) {
     legacy.add(defaultUrl)
+  }
+
+  const publicUrl = resolvePublicArticleUrl(entry)
+  if (publicUrl && publicUrl !== canonicalUrl) {
+    legacy.add(publicUrl)
   }
 
   if (path === BLOG_COLLECTION_PREFIX || path.startsWith(`${BLOG_COLLECTION_PREFIX}/`)) {
@@ -159,6 +172,8 @@ export async function buildArticleObjectFromEntry(entry: ContentEntry): Promise<
     return null
   }
 
+  const publicUrl = resolvePublicArticleUrl(entry)
+
   let markdown = ''
   const body = entry?.body
   if (typeof body === 'string') {
@@ -173,6 +188,18 @@ export async function buildArticleObjectFromEntry(entry: ContentEntry): Promise<
   const publishedAt = normalizeDate(entry?.createdAt)
   const title = entry?.title || entry?.stem || articleUrl
 
+  const urlCandidates: string[] = [articleUrl]
+  if (publicUrl && publicUrl !== articleUrl) {
+    urlCandidates.push(publicUrl)
+  }
+  for (const legacyUrl of resolveLegacyArticleUrls(entry, articleUrl)) {
+    if (legacyUrl && legacyUrl !== articleUrl) {
+      urlCandidates.push(legacyUrl)
+    }
+  }
+  const uniqueUrls = Array.from(new Set(urlCandidates))
+  const resolvedUrl = uniqueUrls.length === 1 ? uniqueUrls[0] : uniqueUrls
+
   const article: ObjectT = {
     id: articleUrl,
     type: 'Article',
@@ -182,7 +209,7 @@ export async function buildArticleObjectFromEntry(entry: ContentEntry): Promise<
     mediaType: isHtml ? 'text/html' : markdown ? 'text/markdown' : undefined,
     published: publishedAt,
     summary: entry?.description || undefined,
-    url: articleUrl,
+    url: resolvedUrl,
     to: [PUBLIC_AUDIENCE],
     source: markdown
       ? {

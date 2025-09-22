@@ -36,6 +36,8 @@ export const setJsonLdHeader = (event: H3Event) => {
 /**
  * XXX: My federation profile.
  */
+const BACKLOG_INITIAL_DELAY_MS = 1500
+
 export const me = {
   '@context': [
     'https://www.w3.org/ns/activitystreams',
@@ -43,7 +45,7 @@ export const me = {
   ],
   id: 'https://changkyun.kim/@me',
   type: 'Person',
-  preferredUsername: 'changkyun.kim',
+  preferredUsername: 'me',
   names: ['Changkyun Kim', '김창균', '金昌均'],
   icon: {
     type: 'Image',
@@ -211,16 +213,21 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
 
   try {
     const { orderedItems } = await collectOutboxActivities(event, { limit: OUTBOX_PAGE_SIZE })
-    for (const createActivity of orderedItems) {
+    if (orderedItems.length) {
+      const backlogActivities = orderedItems.slice().reverse()
       try {
-        await runTask('ap:deliver', {
+        const backlogPromise = runTask('ap:deliverBacklog', {
           payload: {
-            activity: createActivity,
+            activities: backlogActivities,
             target: actorId,
+            initialDelay: BACKLOG_INITIAL_DELAY_MS,
           },
         })
-      } catch (deliveryError) {
-        console.error('Failed delivering backlog activity to new follower', deliveryError)
+        backlogPromise.catch((deliveryError) => {
+          console.error('Failed delivering backlog activities to new follower', deliveryError)
+        })
+      } catch (scheduleError) {
+        console.error('Failed scheduling backlog activities for follower', scheduleError)
       }
     }
   } catch (error) {
