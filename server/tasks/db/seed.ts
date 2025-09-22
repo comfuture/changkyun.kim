@@ -63,7 +63,7 @@ export default defineTask({
 
     await db.sql`CREATE TABLE IF NOT EXISTS actor (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      actor_id INTEGER,
+      actor_id TEXT,
       private_key TEXT,
       public_key TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -1,3 +1,4 @@
+import { queryCollection } from '#content/server'
 import type { H3Event } from 'h3'
 
 import { stringifyMarkdown } from '@nuxtjs/mdc/runtime'
