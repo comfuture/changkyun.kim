@@ -319,7 +319,7 @@ async function processCollection(collection: string) {
     }
 
     const result = await broadcastDocument(entry, activity)
-    if (result.status === "skipped") {
+    if (result.status !== "scheduled") {
       continue
     }
 
