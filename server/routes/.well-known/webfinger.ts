@@ -1,15 +1,27 @@
-export default defineEventHandler(async (event) => {
-  const { resource } = getQuery<{ resource: string }>(event)
+import { me } from '../../utils/federation'
+
+const DOMAIN = 'changkyun.kim'
+const ACTOR_HANDLE = 'me'
+
+const VALID_RESOURCES = new Set([
+  `acct:${ACTOR_HANDLE}@${DOMAIN}`,
+  `acct:${me.preferredUsername.toLowerCase()}@${DOMAIN}`,
+])
+
+export default defineEventHandler((event) => {
+  const { resource } = getQuery<{ resource?: string }>(event)
 
   if (!resource) {
-    return createError({
+    throw createError({
       statusCode: 400,
       statusMessage: 'Missing resource parameter',
     })
   }
 
-  if (resource !== 'acct:me@changkyun.kim') {
-    return createError({
+  const normalizedResource = resource.toLowerCase()
+
+  if (!VALID_RESOURCES.has(normalizedResource)) {
+    throw createError({
       statusCode: 404,
       statusMessage: 'Resource not found',
     })
@@ -17,13 +29,13 @@ export default defineEventHandler(async (event) => {
 
   setResponseHeader(event, 'Content-Type', 'application/jrd+json')
   return {
-    subject: resource,
+    subject: normalizedResource,
     aliases: ['https://changkyun.kim/@me'],
     links: [
       {
         rel: 'self',
         type: 'application/activity+json',
-        href: 'https://changkyun.kim/@me',
+        href: me.id,
       },
       {
         rel: 'https://webfinger.net/rel/profile-page',
