@@ -241,19 +241,27 @@ async function broadcastDocument(document: ContentEntry, preparedActivity?: Crea
 
 async function processCollection(collection: string) {
   const db = useDatabase()
-  let state = await getDeliveryState(db, collection)
+  const initialState = await getDeliveryState(db, collection)
 
-  let lastPublishedTime: number | null = null
-  if (state?.lastPublishedAt) {
-    const parsed = Date.parse(state.lastPublishedAt)
+  let initialLastPublishedTime: number | null = null
+  if (initialState?.lastPublishedAt) {
+    const parsed = Date.parse(initialState.lastPublishedAt)
     if (!Number.isNaN(parsed)) {
-      lastPublishedTime = parsed
+      initialLastPublishedTime = parsed
     }
+  }
+
+  const initialLastDocumentPath = initialState?.lastDocumentPath ?? null
+  const initialLastActivityId = initialState?.lastActivityId ?? null
+
+  let query = queryCollection(collection).order('createdAt', 'ASC')
+  if (initialState?.lastPublishedAt && initialLastPublishedTime !== null) {
+    query = query.where({ createdAt: { $gte: initialState.lastPublishedAt } })
   }
 
   let entries: ContentEntry[] = []
   try {
-    entries = await queryCollection(collection).order('createdAt', 'ASC').all()
+    entries = await query.all()
   } catch (error) {
     console.error(`Failed to query content collection ${collection}`, error)
     return
@@ -265,19 +273,62 @@ async function processCollection(collection: string) {
 
   const documents = entries.filter((entry) => isFederatedDocument(entry)).sort(compareEntries)
 
+  let lastDeliveredTime = initialLastPublishedTime
+  let lastDeliveredPath = initialLastDocumentPath
+  let lastDeliveredActivityId = initialLastActivityId
+
   for (const entry of documents) {
     const activity = await buildCreateActivityFromEntry(entry)
     if (!activity) {
       continue
     }
 
-    const { iso: publishedAt, timestamp: publishedTime } = resolvePublishedInfo(entry, activity)
-    if (lastPublishedTime !== null && publishedTime < lastPublishedTime) {
+    if (initialLastActivityId && activity.id === initialLastActivityId) {
       continue
     }
 
-    if (state?.lastActivityId && activity.id === state.lastActivityId) {
+    if (lastDeliveredActivityId && activity.id === lastDeliveredActivityId) {
       continue
+    }
+
+    const { iso: publishedAt, timestamp: publishedTime } = resolvePublishedInfo(entry, activity)
+    const documentPath = resolveDocumentPath(entry)
+
+    if (
+      initialLastPublishedTime === null &&
+      initialLastDocumentPath &&
+      documentPath &&
+      documentPath === initialLastDocumentPath
+    ) {
+      continue
+    }
+
+    if (initialLastPublishedTime !== null) {
+      if (publishedTime < initialLastPublishedTime) {
+        continue
+      }
+      if (
+        publishedTime === initialLastPublishedTime &&
+        initialLastDocumentPath &&
+        documentPath &&
+        documentPath.localeCompare(initialLastDocumentPath) <= 0
+      ) {
+        continue
+      }
+    }
+
+    if (lastDeliveredTime !== null) {
+      if (publishedTime < lastDeliveredTime) {
+        continue
+      }
+      if (
+        publishedTime === lastDeliveredTime &&
+        lastDeliveredPath &&
+        documentPath &&
+        documentPath.localeCompare(lastDeliveredPath) <= 0
+      ) {
+        continue
+      }
     }
 
     const result = await broadcastDocument(entry, activity)
@@ -293,14 +344,13 @@ async function processCollection(collection: string) {
         ? null
         : (deliveredActivity.object as { id?: string | null })?.id ?? null
 
-    const documentPath = resolveDocumentPath(entry)
     const documentId = typeof entry._id === "string"
       ? entry._id
       : typeof entry.id === "string"
         ? entry.id
         : null
 
-    state = {
+    const state: DeliveryState = {
       collection,
       lastDocumentPath: documentPath,
       lastDocumentId: documentId,
@@ -310,7 +360,10 @@ async function processCollection(collection: string) {
     }
 
     await updateDeliveryState(db, state)
-    lastPublishedTime = publishedTime
+
+    lastDeliveredTime = publishedTime
+    lastDeliveredPath = documentPath ?? lastDeliveredPath
+    lastDeliveredActivityId = deliveredActivity.id ?? lastDeliveredActivityId
   }
 }
 
