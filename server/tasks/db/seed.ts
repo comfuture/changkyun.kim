@@ -8,12 +8,6 @@ export default defineTask({
   async run(event) {
     const db = useDatabase()
 
-    // Drop existing tables so we can recreate them with the latest schema
-    await db.sql`DROP TABLE IF EXISTS activity;`
-    await db.sql`DROP TABLE IF EXISTS followers;`
-    await db.sql`DROP TABLE IF EXISTS following;`
-    await db.sql`DROP TABLE IF EXISTS actor;`
-
     // Activity queue table for inbound/outbound ActivityPub messages
     await db.sql`CREATE TABLE IF NOT EXISTS activity (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,6 +64,18 @@ export default defineTask({
     );`
     await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_actor_actor_id ON actor(actor_id);`
     console.info('Created actor table and index')
+
+    await db.sql`CREATE TABLE IF NOT EXISTS content_delivery_state (
+      collection TEXT PRIMARY KEY,
+      last_document_path TEXT,
+      last_document_id TEXT,
+      last_article_url TEXT,
+      last_activity_id TEXT,
+      last_published_at TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`
+    console.info('Ensured content_delivery_state table')
 
     // Insert initial data
     const { publicKey, privateKey } = generateRsaKeyPair()
