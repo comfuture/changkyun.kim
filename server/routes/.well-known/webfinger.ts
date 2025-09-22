@@ -1,4 +1,4 @@
-import { me } from '~/server/utils/federation'
+import { me } from '../../utils/federation'
 
 const DOMAIN = 'changkyun.kim'
 const ACTOR_HANDLE = 'me'
