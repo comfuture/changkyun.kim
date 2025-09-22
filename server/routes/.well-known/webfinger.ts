@@ -2,11 +2,16 @@ import { me } from '../../utils/federation'
 
 const DOMAIN = 'changkyun.kim'
 const ACTOR_HANDLE = 'me'
+const CANONICAL_SUBJECT = `acct:${ACTOR_HANDLE}@${DOMAIN}`
+const LEGACY_RESOURCES = [`acct:changkyun.kim@${DOMAIN}`]
 
-const VALID_RESOURCES = new Set([
-  `acct:${ACTOR_HANDLE}@${DOMAIN}`,
-  `acct:${me.preferredUsername.toLowerCase()}@${DOMAIN}`,
-])
+const VALID_RESOURCES = new Set(
+  [
+    CANONICAL_SUBJECT,
+    `acct:${me.preferredUsername.toLowerCase()}@${DOMAIN}`,
+    ...LEGACY_RESOURCES,
+  ].map((value) => value.toLowerCase()),
+)
 
 export default defineEventHandler((event) => {
   const { resource } = getQuery<{ resource?: string }>(event)
@@ -29,8 +34,11 @@ export default defineEventHandler((event) => {
 
   setResponseHeader(event, 'Content-Type', 'application/jrd+json')
   return {
-    subject: normalizedResource,
-    aliases: ['https://changkyun.kim/@me'],
+    subject: CANONICAL_SUBJECT,
+    aliases: [
+      'https://changkyun.kim/@me',
+      ...LEGACY_RESOURCES,
+    ],
     links: [
       {
         rel: 'self',
