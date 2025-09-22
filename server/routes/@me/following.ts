@@ -2,17 +2,18 @@ import { me, setJsonLdHeader } from "../../utils/federation"
 
 export default defineEventHandler(async (event) => {
   const db = useDatabase()
-  const { rows: following } = await db.sql`SELECT activity_id, object, payload FROM activity WHERE actor_id = ${me.id} AND type = 'Follow' ORDER BY created_at DESC`
+  const { rows } = await db.sql`SELECT actor_id, activity_payload FROM following WHERE status IN ('accepted', 'requested') ORDER BY updated_at DESC`
 
-  const orderedItems = following?.map((row) => {
-    if (typeof row?.payload === 'string') {
+  const orderedItems = rows?.map((row) => {
+    const payload = typeof row?.activity_payload === 'string' ? row.activity_payload : null
+    if (payload) {
       try {
-        return JSON.parse(row.payload)
+        return JSON.parse(payload)
       } catch {
-        // ignore parsing error and fall back to object URI
+        // ignore parsing error and fall back to actor URI
       }
     }
-    return row?.object as string
+    return row?.actor_id as string
   }).filter(Boolean) ?? []
 
   setJsonLdHeader(event)

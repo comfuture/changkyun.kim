@@ -1,4 +1,7 @@
-import { sendActivity } from "../../utils/federation"
+import { randomUUID } from "node:crypto"
+
+import { resolveActorId, resolveObjectId } from "../../utils/activitypub"
+import { me, sendActivity } from "../../utils/federation"
 
 type Payload = {
   activity: Activity
@@ -24,9 +27,31 @@ export default defineTask({
       recipients.add(target)
     }
 
-    const actorId = typeof activity.actor === 'string' ? activity.actor : activity.actor?.id
-    if (!recipients.size && actorId) {
-      const { rows } = await db.sql`SELECT actor_id FROM activity WHERE object = ${actorId} AND type = 'Follow'`
+    const actorId = resolveActorId(activity?.actor)
+
+    if (activity?.type === 'Follow' && actorId === me.id) {
+      const followTarget = resolveObjectId(activity.object)
+      if (followTarget) {
+        const followId = typeof activity.id === 'string' && activity.id ? activity.id : randomUUID()
+        const payload = JSON.stringify({
+          '@context': activity['@context'] ?? 'https://www.w3.org/ns/activitystreams',
+          id: followId,
+          type: 'Follow',
+          actor: me.id,
+          object: followTarget,
+        })
+        await db.sql`INSERT INTO following (actor_id, activity_id, activity_payload, status)
+          VALUES (${followTarget}, ${followId}, ${payload}, 'requested')
+          ON CONFLICT(actor_id) DO UPDATE SET
+            activity_id = excluded.activity_id,
+            activity_payload = excluded.activity_payload,
+            status = 'requested',
+            updated_at = CURRENT_TIMESTAMP`
+      }
+    }
+
+    if (!recipients.size && actorId === me.id) {
+      const { rows } = await db.sql`SELECT actor_id FROM followers WHERE status = 'accepted'`
       for (const row of rows ?? []) {
         const follower = row.actor_id as string | null
         if (follower) {
