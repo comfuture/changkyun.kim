@@ -69,6 +69,78 @@ export const me = {
 
 export const PUBLIC_AUDIENCE = 'https://www.w3.org/ns/activitystreams#Public'
 
+function normalizeCount(value: unknown): number {
+  if (typeof value === 'number') {
+    return value
+  }
+  if (typeof value === 'bigint') {
+    return Number(value)
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  return 0
+}
+
+function extractCount(rows?: Array<Record<string, unknown>>): number {
+  if (!rows?.length) {
+    return 0
+  }
+  const row = rows[0] ?? {}
+  const raw = (row as Record<string, unknown>).count ?? Object.values(row)[0]
+  return normalizeCount(raw)
+}
+
+export async function buildActorDocument(): Promise<Actor> {
+  const db = useDatabase()
+  const [followersResult, followingResult, actorResult] = await Promise.all([
+    db.sql`SELECT COUNT(*) AS count FROM followers WHERE status = 'accepted'`,
+    db.sql`SELECT COUNT(*) AS count FROM following WHERE status = 'accepted'`,
+    db.sql`SELECT actor_id, public_key FROM actor WHERE actor_id = ${me.id} LIMIT 1`,
+  ])
+
+  const followersCount = extractCount(followersResult?.rows as Array<Record<string, unknown>> | undefined)
+  const followingCount = extractCount(followingResult?.rows as Array<Record<string, unknown>> | undefined)
+
+  const actorDocument: Actor = { ...me }
+
+  actorDocument.followersCount = followersCount
+  actorDocument.followers_count = followersCount
+  actorDocument.followingCount = followingCount
+  actorDocument.following_count = followingCount
+
+  const actorRow = actorResult?.rows?.[0] as { actor_id?: string; public_key?: string } | undefined
+  if (actorRow?.public_key && actorRow?.actor_id) {
+    actorDocument.publicKey = {
+      id: `${actorRow.actor_id}#main-key`,
+      owner: actorRow.actor_id,
+      publicKeyPem: actorRow.public_key,
+    }
+  }
+
+  return actorDocument
+}
+
+async function broadcastFollowersCountUpdate(): Promise<void> {
+  const actorDocument = await buildActorDocument()
+  const updateActivity: Activity = {
+    '@context': 'https://www.w3.org/ns/activitystreams',
+    id: `${me.id}#update-${randomUUID()}`,
+    type: 'Update',
+    actor: me.id,
+    object: actorDocument,
+    to: [PUBLIC_AUDIENCE],
+    cc: [me.followers],
+  }
+
+  await runTask('ap:sendActivity', {
+    payload: {
+      activity: updateActivity,
+    },
+  })
+}
+
 export async function sendActivity(activity: Activity, target: string): Promise<void> {
   const recipient = typeof target === 'string' ? target : target?.id
   if (!recipient) {
@@ -179,6 +251,19 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
 
   const payload = JSON.stringify(followActivity)
 
+  let shouldBroadcastFollowersUpdate = true
+  try {
+    const { rows: existingRows } = await db.sql`SELECT status FROM followers WHERE actor_id = ${actorId} LIMIT 1`
+    if (existingRows?.length) {
+      const [existing] = existingRows as Array<{ status?: string | null }>
+      if (existing?.status === 'accepted') {
+        shouldBroadcastFollowersUpdate = false
+      }
+    }
+  } catch (lookupError) {
+    console.error('Failed checking existing follower state', lookupError)
+  }
+
   await db.sql`INSERT INTO followers (actor_id, activity_id, activity_payload, status)
     VALUES (${actorId}, ${followActivity.id}, ${payload}, 'accepted')
     ON CONFLICT(actor_id) DO UPDATE SET
@@ -234,6 +319,14 @@ export async function acceptFollowRequest(event: H3Event, activity: FollowActivi
     console.error('Failed preparing backlog activities for follower', error)
   }
 
+  if (shouldBroadcastFollowersUpdate) {
+    try {
+      await broadcastFollowersCountUpdate()
+    } catch (error) {
+      console.error('Failed broadcasting follower count update', error)
+    }
+  }
+
   setJsonLdHeader(event)
   setResponseStatus(event, 202)
   return acceptActivity
@@ -247,11 +340,32 @@ export async function removeFollower(actorId: string, followActivityId?: string 
   const db = useDatabase()
   const normalizedFollowId = followActivityId ?? null
 
+  let shouldBroadcastFollowersUpdate = false
+  try {
+    const { rows } = await db.sql`SELECT status FROM followers WHERE actor_id = ${actorId} LIMIT 1`
+    if (rows?.length) {
+      const [existing] = rows as Array<{ status?: string | null }>
+      if (existing?.status === 'accepted') {
+        shouldBroadcastFollowersUpdate = true
+      }
+    }
+  } catch (error) {
+    console.error('Failed checking follower state before removal', error)
+  }
+
   await db.sql`UPDATE followers
     SET status = 'removed',
         activity_id = COALESCE(${normalizedFollowId}, activity_id),
         updated_at = CURRENT_TIMESTAMP
     WHERE actor_id = ${actorId}`
+
+  if (shouldBroadcastFollowersUpdate) {
+    try {
+      await broadcastFollowersCountUpdate()
+    } catch (error) {
+      console.error('Failed broadcasting follower count update after removal', error)
+    }
+  }
 }
 
 /**
