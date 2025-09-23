@@ -1,7 +1,7 @@
 import Negotiator from 'negotiator'
 import { getHeader, sendRedirect } from 'h3'
 
-import { me, setJsonLdHeader } from '../../utils/federation'
+import { buildActorDocument, setJsonLdHeader } from '../../utils/federation'
 
 const HTML_MEDIA_TYPES = new Set(['text/html', 'application/xhtml+xml'])
 const ACTIVITY_MEDIA_TYPES = new Set(['application/activity+json', 'application/ld+json', 'application/json'])
@@ -63,21 +63,7 @@ export default defineEventHandler(async (event) => {
     return sendRedirect(event, '/about')
   }
 
-  const db = useDatabase()
-  const { rows } = await db.sql`SELECT * FROM actor WHERE actor_id = ${me.id}`
-  let publicKey: PublicKey | undefined = undefined;
-  if (rows?.length === 1) {
-    const { actor_id, public_key } = rows[0]
-
-    publicKey = {
-      id: `${actor_id}#main-key`,
-      owner: `${actor_id}`,
-      publicKeyPem: `${public_key}`
-    }
-  }
+  const actorDocument = await buildActorDocument()
   setJsonLdHeader(event)
-  return {
-    ...me,
-    publicKey
-  }
+  return actorDocument
 })

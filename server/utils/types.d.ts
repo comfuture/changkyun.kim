@@ -53,6 +53,7 @@ interface Actor {
     sharedInbox?: string
   }
   publicKey?: PublicKey
+  [key: string]: unknown
 }
 
 interface ObjectT {
@@ -84,17 +85,17 @@ interface Activity {
   published?: DateLike
   to?: string | string[]
   cc?: string | string[]
-  object?: ObjectT | ObjectT[] | string
+  object?: ObjectT | ObjectT[] | string | Actor
 }
 
 type AcceptActivity = Omit<Activity, 'type' | 'object'> & {
   type: 'Accept'
-  object: Activity | ObjectT | string
+  object: Activity | ObjectT | string | Actor
 }
 
 interface UndoActivity extends Activity {
   type: 'Undo'
-  object: Activity | ObjectT | string
+  object: Activity | ObjectT | string | Actor
 }
 
 interface FollowActivity extends Activity {
