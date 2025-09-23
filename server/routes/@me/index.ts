@@ -57,7 +57,7 @@ function prefersHtml(accept?: string | null): boolean {
   return false
 }
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
   const accept = getHeader(event, 'accept')
   if (prefersHtml(accept)) {
     return sendRedirect(event, '/about')
@@ -66,4 +66,10 @@ export default defineEventHandler(async (event) => {
   const actorDocument = await buildActorDocument()
   setJsonLdHeader(event)
   return actorDocument
+}, {
+  maxAge: 60 * 60,
+  shouldBypassCache(event) {
+    const accept = getHeader(event, 'accept')
+    return prefersHtml(accept)
+  },
 })
