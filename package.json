@@ -32,7 +32,7 @@
     "@types/sharp": "^0.32.0",
     "glob": "^11.0.1",
     "sharp": "^0.34.3",
-    "wrangler": "^4.29.1"
+    "wrangler": "^4.42.2"
   },
   "resolutions": {
     "rdf-canonize-native": "npm:rdf-canonize"
