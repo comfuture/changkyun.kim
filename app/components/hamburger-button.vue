@@ -28,6 +28,12 @@ onMounted(() => {
 </template>
 <style lang="postcss">
 button.hamburger {
-  @apply inline-block md:hidden;
+  display: inline-block;
+}
+
+@media (min-width: 768px) {
+  button.hamburger {
+    display: none;
+  }
 }
 </style>

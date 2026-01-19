@@ -46,7 +46,7 @@ const dropdownItems = [
 </template>
 <style lang="postcss">
 .material-symbols-outlined {
-  @apply align-middle;
+  vertical-align: middle;
   font-variation-settings:
     'FILL' 1,
     'wght' 400,
@@ -65,19 +65,40 @@ const dropdownItems = [
 }
 
 body {
-  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200;
+  background-color: #ffffff;
+  color: #111827;
+}
+
+.dark body {
+  background-color: #1f2937;
+  color: #e5e7eb;
 }
 
 .site {
-  @apply min-h-screen flex flex-col;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .site-header {
-  @apply sticky top-0 z-50 border-b border-gray-200/70 dark:border-gray-700/60;
-  @apply bg-white/70 dark:bg-gray-800/70 backdrop-blur;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.7);
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+}
+
+.dark .site-header {
+  border-bottom-color: rgba(55, 65, 81, 0.6);
+  background-color: rgba(31, 41, 55, 0.7);
 }
 
 .site-footer {
-  @apply border-t border-gray-200 dark:border-gray-700;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dark .site-footer {
+  border-top-color: #374151;
 }
 </style>

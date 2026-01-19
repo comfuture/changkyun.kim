@@ -43,7 +43,7 @@ export default defineNuxtConfig({
   ],
 
   css: [
-    "~/app/assets/css/tailwind.css"
+    "~/assets/css/tailwind.css"
   ],
 
   postcss: {
