@@ -1,10 +1,23 @@
+<script setup lang="ts">
+const props = defineProps<{
+  type?: 'info' | 'success' | 'warning' | 'error'
+}>()
+
+const color = computed(() => {
+  switch (props.type) {
+    case 'success':
+      return 'success'
+    case 'warning':
+      return 'warning'
+    case 'error':
+      return 'error'
+    default:
+      return 'info'
+  }
+})
+</script>
 <template>
-  <div class="x-notice">
+  <UAlert :color="color" variant="subtle" class="my-3">
     <slot />
-  </div>
+  </UAlert>
 </template>
-<style lang="postcss">
-.x-notice {
-  @apply my-3 px-2 rounded border border-blue-500 bg-blue-100 text-blue-500;
-}
-</style>

@@ -9,45 +9,20 @@ const { data } = await useAsyncData(path, () => {
 })
 </script>
 <template>
-  <main>
-    <!-- <img src="/image/article-cover.jpg" alt="cover image" /> -->
-    <header class="cover">
-      <nuxt-img src="/image/article-cover.jpg" preset="cover" alt="cover image" />
-    </header>
-    <section class="container">
-      <ul>
-        <li v-for="item in data" :key="item.id">
-          <nuxt-link :to="item.path">{{ item.title }} {{ item.createdAt }}</nuxt-link>
+  <main class="space-y-10">
+    <UCard class="overflow-hidden">
+      <nuxt-img src="/image/article-cover.jpg" preset="cover" alt="cover image" class="h-64 w-full object-cover" />
+    </UCard>
+    <UCard class="p-6 md:p-8">
+      <h1 class="text-2xl font-semibold">Articles</h1>
+      <ul class="mt-4 space-y-2" v-if="data">
+        <li v-for="item in data" :key="item.id" class="flex items-center justify-between">
+          <UButton :to="item.path" variant="link" class="p-0 text-left">
+            {{ item.title }}
+          </UButton>
+          <span class="text-xs text-gray-500">{{ item.createdAt }}</span>
         </li>
       </ul>
-    </section>
+    </UCard>
   </main>
 </template>
-<style lang="postcss" scoped>
-main {
-  @apply flex flex-col;
-
-  section.cover {
-    img {
-      @apply object-cover w-full h-64;
-
-      @screen lg {
-        @apply h-[300px];
-        height: 300px !important;
-      }
-
-      @screen xl {
-        height: 400px !important;
-      }
-    }
-  }
-
-  section.text {
-    @apply py-10 px-2 md:px-0 md:py-16;
-  }
-
-  .content {
-    @apply container mx-auto px-2 md:px-0;
-  }
-}
-</style>

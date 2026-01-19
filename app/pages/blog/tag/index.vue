@@ -24,15 +24,15 @@ const { data: tags } = useAsyncData('tags', async () => {
 </script>
 <template>
   <main>
-    <h2>tags</h2>
-    {{ serverData?.name }}
-    {{ serverData?.result }}
-    <!-- <ul>
-      <li v-for="tag in tags">
-        <nuxt-link :to="{ name: 'blog-tag-tag', params: { tag } }">
-          {{ tag }}
-        </nuxt-link>
-      </li>
-    </ul> -->
+    <UCard class="p-6 md:p-8">
+      <h2 class="text-xl font-semibold">Tags</h2>
+      <ul class="mt-4 flex flex-wrap gap-2" v-if="tags">
+        <li v-for="tag in tags" :key="tag">
+          <UButton :to="{ name: 'blog-tag-tag', params: { tag } }" variant="outline" size="xs">
+            {{ tag }}
+          </UButton>
+        </li>
+      </ul>
+    </UCard>
   </main>
 </template>
