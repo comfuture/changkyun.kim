@@ -1,0 +1,8 @@
+name = "changkyun.kim"
+compatibility_date = "2025-02-28"
+
+[build]
+command = "yarn build"
+
+[assets]
+directory = ".output/public"
