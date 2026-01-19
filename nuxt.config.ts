@@ -39,9 +39,28 @@ export default defineNuxtConfig({
   },
 
   modules: [
-    "@nuxt/content", "@nuxtjs/tailwindcss", "@nuxt/image", "@justway/nuxt",
-    "@nuxthub/core"
+    "@nuxt/content", "@nuxt/ui", "@nuxt/image", "@justway/nuxt"
   ],
+
+  css: [
+    "~/app/assets/css/tailwind.css"
+  ],
+
+  postcss: {
+    plugins: {
+      "@tailwindcss/postcss": {},
+    }
+  },
+
+  ui: {
+    theme: {
+      colors: ['primary', 'neutral', 'info', 'success', 'warning', 'error'],
+      defaultVariants: {
+        color: 'neutral',
+        size: 'sm'
+      }
+    }
+  },
 
   content: {
     build: {

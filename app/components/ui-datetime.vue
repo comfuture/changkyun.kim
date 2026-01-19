@@ -2,7 +2,7 @@
 const props = defineProps<{
   datetime: Date | string
 }>()
-let dt: Date;
+let dt: Date
 if (typeof props.datetime === 'string') {
   dt = new Date(Date.parse(props.datetime))
 } else {
@@ -10,11 +10,12 @@ if (typeof props.datetime === 'string') {
 }
 const formatter = Intl.DateTimeFormat('ko-KR', {
   dateStyle: 'full',
-  // timeStyle: 'short',
   timeZone: 'Asia/Seoul',
 })
 const dateString = formatter.format(dt)
 </script>
 <template>
-  <time datetime="datetime">{{ dateString }}</time>
+  <UBadge variant="subtle" color="neutral" class="text-xs">
+    <time :datetime="dt.toISOString()">{{ dateString }}</time>
+  </UBadge>
 </template>

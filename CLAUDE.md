@@ -55,7 +55,7 @@ This is a Nuxt 3-based personal website with ActivityPub federation capabilities
 - MDC components are available:
   - Block: `::component-name` ... `::` 
   - Inline: `:component-name{prop="value"}[content]:`
-  - Available: ui-button, ui-alert, ui-segment, x-notice, x-series
+  - Available: ui-button, ui-alert, ui-segment, x-notice
 
 ## Server Architecture
 
