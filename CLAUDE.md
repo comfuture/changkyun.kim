@@ -6,16 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Development with hot reload
-yarn dev
+pnpm dev
 
 # Production build
-yarn build
+pnpm build
 
 # Start production server
-yarn start
+pnpm start
 
 # Generate static site
-yarn generate
+pnpm generate
 ```
 
 Note: No linting or testing commands are configured. When making changes, ensure code follows the style guidelines below.

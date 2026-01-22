@@ -1,12 +1,8 @@
 import type { H3Event } from 'h3'
 
-import { stringifyMarkdown } from '@nuxtjs/mdc/runtime'
+import { toHast } from 'minimark/hast'
 import { stringify as stringifyMinimark } from 'minimark/stringify'
 import { toHtml } from 'hast-util-to-html'
-import remarkGfm from 'remark-gfm'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-import { unified } from 'unified'
 
 import { me, PUBLIC_AUDIENCE } from './federation'
 
@@ -37,11 +33,6 @@ function normalizeRelativePath(path: string): string {
   return normalized === '/' ? '/' : normalized
 }
 
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkGfm)
-  .use(remarkRehype, { allowDangerousHtml: true })
-
 const siteOrigin = new URL(me.id).origin
 
 export const CONTENT_CONTEXT = 'https://www.w3.org/ns/activitystreams'
@@ -59,13 +50,11 @@ export type ContentEntry = {
   createdAt?: string | Date | null
 }
 
-async function renderMarkdown(markdown: string): Promise<string> {
-  if (!markdown) {
+function renderMinimark(tree: any): string {
+  if (!tree || tree.type !== 'minimark') {
     return ''
   }
-  const tree = processor.parse(markdown)
-  const result = await processor.run(tree)
-  return toHtml(result, { allowDangerousHtml: true })
+  return toHtml(toHast(tree), { allowDangerousHtml: true })
 }
 
 function resolveEntryPath(entry: ContentEntry): string | null {
@@ -175,15 +164,14 @@ export async function buildArticleObjectFromEntry(entry: ContentEntry): Promise<
   const publicUrl = resolvePublicArticleUrl(entry)
 
   let markdown = ''
+  let contentHtml = ''
   const body = entry?.body
   if (typeof body === 'string') {
     markdown = body
   } else if (body?.type === 'minimark') {
     markdown = stringifyMinimark(body) || ''
-  } else if (body) {
-    markdown = (await stringifyMarkdown(body, {})) ?? ''
+    contentHtml = renderMinimark(body)
   }
-  const contentHtml = await renderMarkdown(markdown)
   const isHtml = Boolean(contentHtml)
   const publishedAt = normalizeDate(entry?.createdAt)
   const title = entry?.title || entry?.stem || articleUrl

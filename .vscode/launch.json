@@ -7,10 +7,15 @@
         {
             "name": "run dev",
             "request": "launch",
-            "type": "node",
-            "program": "${workspaceFolder}/node_modules/.bin/nuxt",
-            "args": [
+            "type": "pwa-node",
+            "runtimeExecutable": "pnpm",
+            "runtimeArgs": [
                 "dev"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "skipFiles": [
+                "<node_internals>/**"
             ]
         },
         {
