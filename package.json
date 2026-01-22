@@ -27,7 +27,6 @@
     "nuxt": "^4.2.2"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
     "@types/glob": "^9.0.0",
     "@types/negotiator": "^0.6.4",
     "@types/sharp": "^0.32.0",

@@ -1,11 +1,13 @@
 <template>
-  <main class="space-y-10">
-    <UCard class="overflow-hidden">
-      <nuxt-img preset="cover" class="object-cover w-full max-h-[400px]" src="/image/cover3.jpg" />
-    </UCard>
-    <UCard class="p-6 md:p-8">
-      <h2 class="text-2xl font-semibold">Contact</h2>
-      <ul class="mt-4 space-y-3 text-sm">
+  <UPage>
+    <UContainer>
+      <main>
+        <section>
+          <nuxt-img preset="cover" class="object-cover w-full max-h-[400px]" src="/image/cover3.jpg" />
+        </section>
+        <section class="mt-10 px-6 sm:px-8">
+          <h2 class="text-2xl font-semibold">Contact</h2>
+          <ul class="mt-4 space-y-3 text-sm">
         <li>
           me<span></span>@<span></span>changkyun.kim
         </li>
@@ -30,7 +32,9 @@
             Kakao
           </UButton>
         </li>
-      </ul>
-    </UCard>
-  </main>
+          </ul>
+        </section>
+      </main>
+    </UContainer>
+  </UPage>
 </template>

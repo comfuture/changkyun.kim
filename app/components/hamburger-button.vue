@@ -26,14 +26,3 @@ onMounted(() => {
     </svg>
   </button>
 </template>
-<style lang="postcss">
-button.hamburger {
-  display: inline-block;
-}
-
-@media (min-width: 768px) {
-  button.hamburger {
-    display: none;
-  }
-}
-</style>
