@@ -1,6 +1,11 @@
 <script setup lang="ts">
-const { path } = useRoute()
-const { data } = await useAsyncData(() => queryCollection('app').path(path).first())
+const route = useRoute()
+const { data } = await useAsyncData(route.path, () => queryCollection('app').path(route.path).first())
+const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
+  return queryCollectionItemSurroundings('app', route.path, {
+    fields: ['title', 'description'],
+  })
+})
 
 useSeoMeta({
   title: data.value?.title,
@@ -22,9 +27,12 @@ useSeoMeta({
           </UBadge>
         </div>
       </header>
+      <UContentToc v-if="data?.body?.toc?.links?.length" class="mt-6" :links="data.body.toc.links" />
       <UProse class="mt-6 max-w-none">
-        <content-renderer :value="data" />
+        <ContentRenderer :value="data" />
       </UProse>
+      <USeparator v-if="surround?.filter(Boolean).length" class="my-8" />
+      <UContentSurround v-if="surround?.filter(Boolean).length" :surround="(surround as any)" />
     </UCard>
   </UContainer>
   <div v-else>Document Not Found</div>

@@ -22,6 +22,7 @@
     "@popperjs/core": "^2.11.8",
     "@tailwindcss/typography": "^0.5.19",
     "better-sqlite3": "^12.6.2",
+    "minimark": "0.2.0",
     "negotiator": "^1.0.0",
     "nuxt": "^4.2.2"
   },
@@ -39,5 +40,5 @@
   "resolutions": {
     "rdf-canonize-native": "npm:rdf-canonize"
   },
-  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
+  "packageManager": "pnpm@9.12.3"
 }

@@ -2,7 +2,7 @@ name = "changkyun.kim"
 compatibility_date = "2025-02-28"
 
 [build]
-command = "yarn build"
+command = "pnpm build"
 
 [assets]
 directory = ".output/public"

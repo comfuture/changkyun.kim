@@ -75,7 +75,7 @@ export default defineNuxtConfig({
 
   image: {
     format: ['webp', 'jpg', 'png'],
-    provider: process.env.DEV === '1' ? 'ipx' : 'cloudflare',
+    // provider: process.env.DEV === '1' ? 'ipx' : 'cloudflare',
     cloudflare: {
       baseURL: 'https://changkyun.kim'
     },
