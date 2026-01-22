@@ -46,12 +46,6 @@ export default defineNuxtConfig({
     "~/assets/css/tailwind.css"
   ],
 
-  postcss: {
-    plugins: {
-      "@tailwindcss/postcss": {},
-    }
-  },
-
   ui: {
     theme: {
       colors: ['primary', 'neutral', 'info', 'success', 'warning', 'error'],
@@ -89,7 +83,7 @@ export default defineNuxtConfig({
 
       cover: {
         modifiers: {
-          fit: 'crop',
+          fit: 'cover',
           width: 1280,
           height: 400,
         }

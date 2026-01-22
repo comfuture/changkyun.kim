@@ -23,16 +23,20 @@ const { data: tags } = useAsyncData('tags', async () => {
 })
 </script>
 <template>
-  <main>
-    <UCard class="p-6 md:p-8">
-      <h2 class="text-xl font-semibold">Tags</h2>
-      <ul class="mt-4 flex flex-wrap gap-2" v-if="tags">
-        <li v-for="tag in tags" :key="tag">
-          <UButton :to="{ name: 'blog-tag-tag', params: { tag } }" variant="outline" size="xs">
-            {{ tag }}
-          </UButton>
-        </li>
-      </ul>
-    </UCard>
-  </main>
+  <UPage>
+    <UContainer>
+      <main>
+        <section class="px-6 sm:px-8">
+          <h2 class="text-xl font-semibold">Tags</h2>
+          <ul class="mt-4 flex flex-wrap gap-2" v-if="tags">
+            <li v-for="tag in tags" :key="tag">
+              <UButton :to="{ name: 'blog-tag-tag', params: { tag } }" variant="outline" size="xs">
+                {{ tag }}
+              </UButton>
+            </li>
+          </ul>
+        </section>
+      </main>
+    </UContainer>
+  </UPage>
 </template>
