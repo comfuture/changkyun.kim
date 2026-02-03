@@ -15,12 +15,35 @@ type SrcSetCandidate = {
   density?: number
 }
 
+const splitSrcSet = (srcset: string) => {
+  const entries: string[] = []
+  let current = ''
+  let i = 0
+  while (i < srcset.length) {
+    const char = srcset[i]
+    if (char === ',') {
+      const next = srcset[i + 1]
+      if (next && !/\s/.test(next)) {
+        current += char
+        i += 1
+        continue
+      }
+      if (current.trim()) entries.push(current.trim())
+      current = ''
+      i += 1
+      while (i < srcset.length && /\s/.test(srcset[i])) i += 1
+      continue
+    }
+    current += char
+    i += 1
+  }
+  if (current.trim()) entries.push(current.trim())
+  return entries
+}
+
 const parseSrcSet = (srcset?: string) => {
   if (!srcset) return []
-  return srcset
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter(Boolean)
+  return splitSrcSet(srcset)
     .map((entry) => {
       const [url, size] = entry.split(/\s+/)
       if (!url) return null
