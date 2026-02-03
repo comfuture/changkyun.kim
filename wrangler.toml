@@ -1,8 +1,21 @@
-name = "changkyun_kim"
+name = "changkyun-kim"
+main = ".output/server/index.mjs"
 compatibility_date = "2025-02-28"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+routes = [
+  { pattern = "changkyun.kim/*", zone_name = "changkyun.kim" }
+]
 
 [build]
 command = "pnpm build"
 
 [assets]
 directory = ".output/public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "changkyun-kim"
+database_id = "cec021c4-7e27-490a-bbf7-59d41c2a64a6"
+migrations_dir = "migrations"

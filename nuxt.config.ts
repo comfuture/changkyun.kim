@@ -3,11 +3,28 @@ export default defineNuxtConfig({
     shim: false
   },
   nitro: {
+    preset: 'cloudflare-module',
     experimental: {
       database: true,
       tasks: true,
       openAPI: true
     },
+    database: {
+      default: {
+        connector: 'cloudflare-d1',
+        options: {
+          bindingName: 'DB'
+        }
+      }
+    },
+    devDatabase: {
+      default: {
+        connector: 'better-sqlite3',
+        options: {
+          path: '.data/db.sqlite'
+        }
+      }
+    }
   },
   app: {
     head: {
