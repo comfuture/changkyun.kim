@@ -8,7 +8,6 @@ const navItems = [
 <template>
   <div>
     <UHeader
-      title="Changkyun Kim"
       :ui="{
         container: 'flex items-center gap-3 h-full w-full',
         left: 'flex items-center gap-1.5 shrink-0 lg:flex-none',
@@ -16,10 +15,10 @@ const navItems = [
         right: 'flex items-center gap-1.5 shrink-0 lg:flex-none',
       }"
     >
-      <template #title>
-        <UButton to="/" variant="ghost" class="text-base font-semibold uppercase tracking-wide">
+      <template #left>
+        <ULink to="/" class="text-base font-semibold uppercase tracking-wide">
           Changkyun Kim
-        </UButton>
+        </ULink>
       </template>
       <UNavigationMenu :items="navItems" class="w-full justify-end uppercase" />
       <template #right>

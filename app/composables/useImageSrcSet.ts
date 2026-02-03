@@ -1,4 +1,4 @@
-import { computed, ref, unref, watchEffect } from 'vue'
+import { computed, onMounted, ref, unref, watchEffect } from 'vue'
 import { useDevicePixelRatio, useWindowSize } from '@vueuse/core'
 import { useImage } from '#imports'
 
@@ -55,8 +55,15 @@ const pickByDensity = (candidates: SrcSetCandidate[], dpr: number) => {
 export const useImageSrcSet = (src: string | Ref<string | undefined>, options: SrcSetOptions | Ref<SrcSetOptions> = {}) => {
   const img = useImage()
   const el = ref<HTMLElement | null>(null)
-  const { width } = useWindowSize()
+  const isHydrated = ref(false)
+  const { width } = useWindowSize({ initialWidth: 0, initialHeight: 0 })
   const { pixelRatio } = useDevicePixelRatio()
+
+  if (import.meta.client) {
+    onMounted(() => {
+      isHydrated.value = true
+    })
+  }
 
   const sources = computed(() => {
     const resolvedSrc = unref(src)
@@ -67,6 +74,7 @@ export const useImageSrcSet = (src: string | Ref<string | undefined>, options: S
 
   const selectedUrl = computed(() => {
     const fallback = sources.value?.src || unref(src)
+    if (!isHydrated.value) return fallback
     const candidates = parseSrcSet(sources.value?.srcset)
     if (!candidates.length) return fallback
 
@@ -83,11 +91,7 @@ export const useImageSrcSet = (src: string | Ref<string | undefined>, options: S
     return fallback
   })
 
-  const style = computed(() => {
-    if (import.meta.server) return {}
-    if (!selectedUrl.value) return {}
-    return { backgroundImage: `url('${selectedUrl.value}')` }
-  })
+  const style = computed(() => (selectedUrl.value ? { backgroundImage: `url('${selectedUrl.value}')` } : {}))
 
   if (import.meta.client) {
     watchEffect(() => {

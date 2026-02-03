@@ -18,7 +18,8 @@ useSeoMeta({
 })
 </script>
 <template>
-  <div v-if="data">
+  <div>
+    <div v-if="data">
     <section
       v-if="data.coverImage"
       class="h-48 w-full bg-cover bg-center bg-no-repeat sm:h-56 md:h-64 lg:h-72 xl:h-80"
@@ -63,5 +64,9 @@ useSeoMeta({
         </UPage>
       </div>
     </section>
+    </div>
+    <div v-else class="container mx-auto px-6 py-16 text-sm text-gray-500 sm:px-8">
+      Document Not Found
+    </div>
   </div>
 </template>
