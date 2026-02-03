@@ -6,22 +6,32 @@ const { data: recent } = await useAsyncData('recentArticles', () =>
     .limit(5)
     .all()
 )
+const img = useImage()
+const heroStyle = computed(() => ({
+  backgroundImage: `url('${img('/image/cover2.jpg', {}, { preset: 'cover' })}')`,
+}))
 </script>
 <template>
   <UPage>
-    <UContainer>
-      <main>
-        <section class="space-y-6">
-          <nuxt-img preset="cover" src="/image/cover2.jpg" alt="cover image" class="h-64 w-full object-cover" />
-          <div class="px-6 sm:px-8">
-            <UBadge variant="subtle" color="primary">Welcome</UBadge>
-            <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus eget nunc ultrices lacinia. Nullam nec
-            </p>
-          </div>
-        </section>
+    <main>
+      <section
+        class="h-64 w-full bg-cover bg-center bg-no-repeat sm:h-72 md:h-80 lg:h-96"
+        :style="heroStyle"
+        role="img"
+        aria-label="Cover image"
+      />
 
-        <UPageSection>
+      <section class="mt-8">
+        <div class="container mx-auto px-6 sm:px-8">
+          <UBadge variant="subtle" color="primary">Welcome</UBadge>
+          <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus eget nunc ultrices lacinia. Nullam nec
+          </p>
+        </div>
+      </section>
+
+      <section class="mt-10">
+        <div class="container mx-auto px-6 sm:px-8">
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-xl font-semibold">Recent articles</h2>
             <UButton to="/blog/" variant="ghost" size="sm">View all</UButton>
@@ -33,8 +43,8 @@ const { data: recent } = await useAsyncData('recentArticles', () =>
               </UButton>
             </li>
           </ul>
-        </UPageSection>
-      </main>
-    </UContainer>
+        </div>
+      </section>
+    </main>
   </UPage>
 </template>

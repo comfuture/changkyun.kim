@@ -7,15 +7,22 @@ const { data } = await useAsyncData(path, () => {
     .limit(10)
     .all()
 })
+const img = useImage()
+const coverStyle = computed(() => ({
+  backgroundImage: `url('${img('/image/article-cover.jpg', {}, { preset: 'cover' })}')`,
+}))
 </script>
 <template>
   <UPage>
-    <UContainer>
-      <main>
-        <section>
-          <nuxt-img src="/image/article-cover.jpg" preset="cover" alt="cover image" class="h-64 w-full object-cover" />
-        </section>
-        <section class="mt-10 px-6 sm:px-8">
+    <main>
+      <section
+        class="h-64 w-full bg-cover bg-center bg-no-repeat sm:h-72 md:h-80 lg:h-96"
+        :style="coverStyle"
+        role="img"
+        aria-label="Articles cover"
+      />
+      <section class="mt-10">
+        <div class="container mx-auto px-6 sm:px-8">
           <h1 class="text-2xl font-semibold">Articles</h1>
           <ul class="mt-4 space-y-2" v-if="data">
             <li v-for="item in data" :key="item.id" class="flex items-center justify-between">
@@ -25,8 +32,8 @@ const { data } = await useAsyncData(path, () => {
               <span class="text-xs text-gray-500">{{ item.createdAt }}</span>
             </li>
           </ul>
-        </section>
-      </main>
-    </UContainer>
+        </div>
+      </section>
+    </main>
   </UPage>
 </template>

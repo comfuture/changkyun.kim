@@ -1,11 +1,21 @@
+<script setup lang="ts">
+const img = useImage()
+const coverStyle = computed(() => ({
+  backgroundImage: `url('${img('/image/cover3.jpg', {}, { preset: 'cover' })}')`,
+}))
+</script>
+
 <template>
   <UPage>
-    <UContainer>
-      <main>
-        <section>
-          <nuxt-img preset="cover" class="object-cover w-full max-h-[400px]" src="/image/cover3.jpg" />
-        </section>
-        <section class="mt-10 px-6 sm:px-8">
+    <main>
+      <section
+        class="h-56 w-full bg-cover bg-center bg-no-repeat sm:h-72 md:h-80 lg:h-[400px]"
+        :style="coverStyle"
+        role="img"
+        aria-label="Contact cover"
+      />
+      <section class="mt-10">
+        <div class="container mx-auto px-6 sm:px-8">
           <h2 class="text-2xl font-semibold">Contact</h2>
           <ul class="mt-4 space-y-3 text-sm">
         <li>
@@ -33,8 +43,8 @@
           </UButton>
         </li>
           </ul>
-        </section>
-      </main>
-    </UContainer>
+        </div>
+      </section>
+    </main>
   </UPage>
 </template>

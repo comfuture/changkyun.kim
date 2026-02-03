@@ -2,28 +2,31 @@
 useHead({
   title: 'about me'
 })
+const img = useImage()
+const coverStyle = computed(() => ({
+  backgroundImage: `url('${img('/image/cover.jpg', {}, { preset: 'cover' })}')`,
+}))
 </script>
 <template>
   <UPage>
-    <UContainer>
-      <main class="pb-16">
-        <section class="relative">
+    <main class="pb-16">
+      <section
+        class="relative w-full overflow-visible bg-cover bg-center bg-no-repeat h-44 sm:h-56 md:h-72 lg:h-96"
+        :style="coverStyle"
+        role="img"
+        aria-label="Changkyun Kim cover"
+      >
+        <div class="absolute left-1/2 bottom-0 z-10 -translate-x-1/2 translate-y-1/2">
           <nuxt-img
-            class="h-44 w-full object-cover sm:h-56 md:h-72 lg:h-96"
-            preset="cover"
-            src="/image/cover.jpg"
-            alt="Changkyun Kim cover"
+            src="/image/avatar.jpg"
+            alt="Changkyun Kim"
+            class="h-28 w-28 rounded-full object-cover ring-4 ring-white shadow-lg sm:h-32 sm:w-32 md:h-36 md:w-36 dark:ring-gray-900"
           />
-          <div class="absolute left-1/2 -bottom-12 -translate-x-1/2 sm:-bottom-14">
-            <nuxt-img
-              src="/image/avatar.jpg"
-              alt="Changkyun Kim"
-              class="h-28 w-28 rounded-full object-cover ring-4 ring-white shadow-lg sm:h-32 sm:w-32 md:h-36 md:w-36 dark:ring-gray-900"
-            />
-          </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="mt-16 px-6 text-center sm:px-8">
+      <section class="mt-20 sm:mt-24 md:mt-28">
+        <div class="container mx-auto px-6 text-center sm:px-8">
           <h1 class="text-2xl font-semibold">김창균</h1>
           <p class="mt-2 text-sm text-gray-500">Seoul, KOREA</p>
           <div class="mt-3 flex flex-wrap justify-center gap-2 text-xs">
@@ -32,10 +35,14 @@ useHead({
             <UBadge variant="subtle" color="neutral">English</UBadge>
             <UBadge variant="subtle" color="neutral">Español</UBadge>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="mt-10 px-6 sm:px-8">
-          <div class="prose mx-auto max-w-2xl">
+      <section class="mt-10">
+        <div class="container mx-auto px-6 sm:px-8">
+          <div
+            class="mx-auto max-w-2xl text-[15px] leading-relaxed text-gray-700 dark:text-gray-200 [&>h3]:text-xl [&>h3]:font-semibold [&>h3]:mt-8 [&>h3]:mb-2 [&>p]:text-[15px] [&>p]:leading-relaxed [&>ul]:mt-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul>li]:my-1"
+          >
             <h3>의로운 원칙주의자</h3>
             <p>원리와 원칙을 중요시 여기며 말과 행동이 악의 편에 서지 않게 하기 위해 노력합니다.</p>
             <h3>슬로우 러너</h3>
@@ -50,8 +57,8 @@ useHead({
               <li>캠핑</li>
             </ul>
           </div>
-        </section>
-      </main>
-    </UContainer>
+        </div>
+      </section>
+    </main>
   </UPage>
 </template>
