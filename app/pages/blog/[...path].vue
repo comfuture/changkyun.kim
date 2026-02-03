@@ -6,12 +6,10 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
     fields: ['title', 'description'],
   })
 })
-const img = useImage()
-const coverStyle = computed(() => {
-  if (!data.value?.coverImage) return
-  return {
-    backgroundImage: `url('${img(data.value.coverImage, {}, { preset: 'cover' })}')`,
-  }
+const coverImage = computed(() => data.value?.coverImage)
+const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
+  preset: 'cover',
+  sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
 })
 
 useSeoMeta({
@@ -23,7 +21,8 @@ useSeoMeta({
   <div v-if="data">
     <section
       v-if="data.coverImage"
-      class="h-56 w-full bg-cover bg-center bg-no-repeat sm:h-72 md:h-80 lg:h-96"
+      class="h-48 w-full bg-cover bg-center bg-no-repeat sm:h-56 md:h-64 lg:h-72 xl:h-80"
+      v-bind="coverBind"
       :style="coverStyle"
       role="img"
       :aria-label="data.title"

@@ -6,16 +6,17 @@ const { data: recent } = await useAsyncData('recentArticles', () =>
     .limit(5)
     .all()
 )
-const img = useImage()
-const heroStyle = computed(() => ({
-  backgroundImage: `url('${img('/image/cover2.jpg', {}, { preset: 'cover' })}')`,
-}))
+const { style: heroStyle, bind: heroBind } = useImageSrcSet('/image/cover2.jpg', {
+  preset: 'cover',
+  sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
+})
 </script>
 <template>
   <UPage>
     <main>
       <section
-        class="h-64 w-full bg-cover bg-center bg-no-repeat sm:h-72 md:h-80 lg:h-96"
+        class="h-56 w-full bg-cover bg-center bg-no-repeat sm:h-64 md:h-72 lg:h-80 xl:h-88"
+        v-bind="heroBind"
         :style="heroStyle"
         role="img"
         aria-label="Cover image"

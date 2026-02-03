@@ -7,16 +7,17 @@ const { data } = await useAsyncData(path, () => {
     .limit(10)
     .all()
 })
-const img = useImage()
-const coverStyle = computed(() => ({
-  backgroundImage: `url('${img('/image/article-cover.jpg', {}, { preset: 'cover' })}')`,
-}))
+const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/article-cover.jpg', {
+  preset: 'cover',
+  sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
+})
 </script>
 <template>
   <UPage>
     <main>
       <section
-        class="h-64 w-full bg-cover bg-center bg-no-repeat sm:h-72 md:h-80 lg:h-96"
+        class="h-56 w-full bg-cover bg-center bg-no-repeat sm:h-64 md:h-72 lg:h-80 xl:h-88"
+        v-bind="coverBind"
         :style="coverStyle"
         role="img"
         aria-label="Articles cover"

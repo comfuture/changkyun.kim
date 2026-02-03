@@ -2,16 +2,17 @@
 useHead({
   title: 'about me'
 })
-const img = useImage()
-const coverStyle = computed(() => ({
-  backgroundImage: `url('${img('/image/cover.jpg', {}, { preset: 'cover' })}')`,
-}))
+const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover.jpg', {
+  preset: 'cover',
+  sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
+})
 </script>
 <template>
   <UPage>
     <main class="pb-16">
       <section
-        class="relative w-full overflow-visible bg-cover bg-center bg-no-repeat h-44 sm:h-56 md:h-72 lg:h-96"
+        class="relative w-full overflow-visible bg-cover bg-center bg-no-repeat h-40 sm:h-48 md:h-64 lg:h-72 xl:h-80"
+        v-bind="coverBind"
         :style="coverStyle"
         role="img"
         aria-label="Changkyun Kim cover"

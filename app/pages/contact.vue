@@ -1,15 +1,16 @@
 <script setup lang="ts">
-const img = useImage()
-const coverStyle = computed(() => ({
-  backgroundImage: `url('${img('/image/cover3.jpg', {}, { preset: 'cover' })}')`,
-}))
+const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover3.jpg', {
+  preset: 'cover',
+  sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
+})
 </script>
 
 <template>
   <UPage>
     <main>
       <section
-        class="h-56 w-full bg-cover bg-center bg-no-repeat sm:h-72 md:h-80 lg:h-[400px]"
+        class="h-48 w-full bg-cover bg-center bg-no-repeat sm:h-56 md:h-64 lg:h-72 xl:h-80"
+        v-bind="coverBind"
         :style="coverStyle"
         role="img"
         aria-label="Contact cover"
