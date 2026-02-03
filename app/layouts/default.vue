@@ -7,18 +7,26 @@ const navItems = [
 </script>
 <template>
   <div>
-    <UHeader title="Changkyun Kim">
+    <UHeader
+      title="Changkyun Kim"
+      :ui="{
+        container: 'flex items-center gap-3 h-full w-full',
+        left: 'flex items-center gap-1.5 shrink-0 lg:flex-none',
+        center: 'hidden lg:flex flex-1 justify-end',
+        right: 'flex items-center gap-1.5 shrink-0 lg:flex-none',
+      }"
+    >
       <template #title>
         <UButton to="/" variant="ghost" class="text-base font-semibold uppercase tracking-wide">
           Changkyun Kim
         </UButton>
       </template>
-      <UNavigationMenu :items="navItems" class="flex-1 justify-center" />
+      <UNavigationMenu :items="navItems" class="w-full justify-end uppercase" />
       <template #right>
         <UColorModeSwitch />
       </template>
       <template #body>
-        <UNavigationMenu :items="navItems" orientation="vertical" class="-mx-2.5" />
+        <UNavigationMenu :items="navItems" orientation="vertical" class="-mx-2.5 uppercase" />
       </template>
     </UHeader>
     <NuxtPage />
