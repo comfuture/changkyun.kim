@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Blog Post"
+  short_description: "Create Nuxt Content blog posts from source materials"
+  default_prompt: "Create a Nuxt Content blog post from the provided materials and references."
