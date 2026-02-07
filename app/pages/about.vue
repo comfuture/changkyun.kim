@@ -1,6 +1,12 @@
 <script setup lang="ts">
-useHead({
-  title: 'about me'
+useSeoMeta({
+  title: 'About | Changkyun Kim',
+  description: 'about | Changkyun Kim',
+  ogTitle: 'About | Changkyun Kim',
+  ogDescription: 'about | Changkyun Kim',
+  ogType: 'profile',
+  ogImage: '/image/cover.jpg',
+  twitterCard: 'summary_large_image',
 })
 const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover.jpg', {
   preset: 'cover',

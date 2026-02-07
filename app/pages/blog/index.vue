@@ -1,5 +1,15 @@
 <script setup lang="ts">
 const { path } = useRoute()
+useSeoMeta({
+  title: 'Blog | Changkyun Kim',
+  description: 'blog | Changkyun Kim',
+  ogTitle: 'Blog | Changkyun Kim',
+  ogDescription: 'blog | Changkyun Kim',
+  ogType: 'website',
+  ogImage: '/image/article-cover.jpg',
+  twitterCard: 'summary_large_image',
+})
+
 const { data } = await useAsyncData(path, () => {
   return queryCollection('blog')
     .select('id', 'path', 'title', 'createdAt')

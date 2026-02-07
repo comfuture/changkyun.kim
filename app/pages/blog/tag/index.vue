@@ -1,4 +1,13 @@
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Blog Tags | Changkyun Kim',
+  description: 'blog | Changkyun Kim',
+  ogTitle: 'Blog Tags | Changkyun Kim',
+  ogDescription: 'blog | Changkyun Kim',
+  ogType: 'website',
+  twitterCard: 'summary',
+})
+
 // const route = useRoute()
 // const { data: serverData } = await useFetch('/api/blog/tag', {
 //   params: {

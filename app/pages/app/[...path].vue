@@ -1,10 +1,22 @@
 <script setup lang="ts">
 const route = useRoute()
-const { data } = await useAsyncData(route.path, () => queryCollection('app').path(route.path).first())
-const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
-  return queryCollectionItemSurroundings('app', route.path, {
+
+const { data, error } = await useAsyncData(
+  () => `app-entry:${route.fullPath}`,
+  () => queryCollection('app').path(route.path).first(),
+  {
+    watch: [() => route.fullPath],
+  },
+)
+
+const resolvedPath = computed(() => data.value?.path || route.path)
+const { data: surround } = await useAsyncData(() => `app-surround:${resolvedPath.value}`, () => {
+  return queryCollectionItemSurroundings('app', resolvedPath.value, {
     fields: ['title', 'description'],
   })
+}, {
+  default: () => [],
+  watch: [resolvedPath],
 })
 const coverImage = computed(() => data.value?.coverImage)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
@@ -13,9 +25,27 @@ const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
 })
 
 useSeoMeta({
-  title: data.value?.title,
-  description: data.value?.description,
+  title: () => data.value?.title ? `${data.value.title} | Changkyun Kim` : 'Document Not Found | Changkyun Kim',
+  description: () => data.value?.description || 'app | Changkyun Kim',
+  ogTitle: () => data.value?.title || 'Changkyun Kim App',
+  ogDescription: () => data.value?.description || 'app | Changkyun Kim',
+  ogType: 'article',
+  ogImage: () => data.value?.coverImage,
+  twitterCard: 'summary_large_image',
 })
+
+if (import.meta.server) {
+  if (error.value) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Failed to load app content',
+    })
+  }
+
+  if (data.value === null) {
+    setResponseStatus(404, 'Document Not Found')
+  }
+}
 </script>
 <template>
   <div v-if="data">

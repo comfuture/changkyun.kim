@@ -1,4 +1,14 @@
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Contact | Changkyun Kim',
+  description: 'contact | Changkyun Kim',
+  ogTitle: 'Contact | Changkyun Kim',
+  ogDescription: 'contact | Changkyun Kim',
+  ogType: 'website',
+  ogImage: '/image/cover3.jpg',
+  twitterCard: 'summary_large_image',
+})
+
 const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover3.jpg', {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',

@@ -1,4 +1,14 @@
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Home | Changkyun Kim',
+  description: 'home | Changkyun Kim',
+  ogTitle: 'Changkyun Kim',
+  ogDescription: 'home | Changkyun Kim',
+  ogType: 'website',
+  ogImage: '/image/cover2.jpg',
+  twitterCard: 'summary_large_image',
+})
+
 const { data: recent } = await useAsyncData('recentArticles', () =>
   queryCollection('blog')
     .select('id', 'path', 'title', 'createdAt')

@@ -1,5 +1,14 @@
 <script setup lang="ts">
 const { params: { tag } } = useRoute()
+
+useSeoMeta({
+  title: `Tag: ${tag} | Changkyun Kim`,
+  description: 'blog | Changkyun Kim',
+  ogTitle: `Tag: ${tag} | Changkyun Kim`,
+  ogDescription: 'blog | Changkyun Kim',
+  ogType: 'website',
+  twitterCard: 'summary',
+})
 </script>
 <template>
   <UPage>
