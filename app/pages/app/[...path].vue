@@ -41,10 +41,6 @@ if (import.meta.server) {
       statusMessage: 'Failed to load app content',
     })
   }
-
-  if (data.value === null) {
-    setResponseStatus(404, 'Document Not Found')
-  }
 }
 </script>
 <template>

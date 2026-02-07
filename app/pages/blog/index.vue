@@ -17,6 +17,39 @@ const { data } = await useAsyncData(path, () => {
     .limit(10)
     .all()
 })
+
+if (import.meta.prerender) {
+  const [allEntries, tagEntries] = await Promise.all([
+    queryCollection('blog').select('path').all(),
+    queryCollection('blog').select('tags').all(),
+  ])
+
+  const routes = new Set<string>(['/blog', '/blog/tag'])
+  for (const entry of allEntries) {
+    if (entry.path) {
+      routes.add(entry.path)
+    }
+  }
+
+  const tags = new Set<string>()
+  for (const entry of tagEntries) {
+    if (!entry.tags) {
+      continue
+    }
+    for (const tag of entry.tags) {
+      tags.add(tag)
+    }
+  }
+
+  for (const tag of tags) {
+    routes.add(`/blog/tag/${encodeURIComponent(tag)}`)
+  }
+
+  for (const route of routes) {
+    prerenderRoutes(route)
+  }
+}
+
 const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/article-cover.jpg', {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',

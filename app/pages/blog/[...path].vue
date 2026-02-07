@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
 
-const { data, error } = await useAsyncData(
+const { data } = await useAsyncData(
   () => `blog-entry:${route.fullPath}`,
   () => queryCollection('blog').path(route.path).first(),
   {
@@ -34,18 +34,6 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
-if (import.meta.server) {
-  if (error.value) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Failed to load blog content',
-    })
-  }
-
-  if (data.value === null) {
-    setResponseStatus(404, 'Document Not Found')
-  }
-}
 </script>
 <template>
   <div>

@@ -24,7 +24,15 @@ export default defineNuxtConfig({
           path: '.data/db.sqlite'
         }
       }
+    },
+    prerender: {
+      crawlLinks: true,
+      routes: ['/', '/blog', '/blog/tag']
     }
+  },
+  routeRules: {
+    '/blog': { prerender: true },
+    '/blog/**': { prerender: true }
   },
   app: {
     head: {
