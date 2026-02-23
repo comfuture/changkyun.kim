@@ -9,19 +9,45 @@ const { data, error } = await useAsyncData(
   },
 )
 
-const resolvedPath = computed(() => data.value?.path || route.path)
-const { data: surround } = await useAsyncData(() => `app-surround:${resolvedPath.value}`, () => {
-  return queryCollectionItemSurroundings('app', resolvedPath.value, {
-    fields: ['title', 'description'],
-  })
-}, {
-  default: () => [],
-  watch: [resolvedPath],
-})
 const coverImage = computed(() => data.value?.coverImage)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
+})
+
+type TocLink = {
+  id: string
+  depth: number
+  text: string
+  children?: TocLink[]
+}
+
+const tocLinks = computed(() => {
+  const links = (data.value?.body?.toc?.links ?? []) as TocLink[]
+  const flattened: TocLink[] = []
+  const stack = [...links]
+
+  while (stack.length) {
+    const link = stack.shift()
+    if (!link) continue
+    flattened.push(link)
+    if (link.children?.length) {
+      stack.unshift(...link.children)
+    }
+  }
+
+  if (!flattened.length) return []
+
+  const minDepth = flattened.reduce((min, link) => Math.min(min, link.depth), flattened[0].depth)
+  const targetDepth = minDepth === 1 ? 2 : minDepth
+
+  return flattened
+    .filter(link => link.depth === targetDepth)
+    .map(link => ({
+      id: link.id,
+      depth: link.depth,
+      text: link.text,
+    }))
 })
 
 useSeoMeta({
@@ -44,40 +70,52 @@ if (import.meta.server) {
 }
 </script>
 <template>
-  <div v-if="data">
-    <section
-      v-if="data.coverImage"
-      class="h-48 w-full bg-cover bg-center bg-no-repeat sm:h-56 md:h-64 lg:h-72 xl:h-80"
-      v-bind="coverBind"
-      :style="coverStyle"
-      role="img"
-      :aria-label="data.title"
-    />
-    <section class="mt-10">
-      <div class="container mx-auto px-2 sm:px-4">
-        <UPage>
-          <UPageBody class="mt-0">
-            <section>
-              <header class="space-y-3">
-                <h1 class="text-2xl font-semibold">{{ data.title }}</h1>
-                <ui-datetime :datetime="data.createdAt" />
-                <div class="flex flex-wrap gap-2" v-if="data.tags">
-                  <UBadge v-for="tag in data.tags" :key="tag" variant="subtle" color="primary">
-                    {{ tag }}
-                  </UBadge>
-                </div>
-              </header>
-              <UContentToc v-if="data?.body?.toc?.links?.length" class="mt-6" :links="data.body.toc.links" />
-              <div class="prose mt-6 max-w-none">
+  <div>
+    <div v-if="data">
+      <section
+        v-if="data.coverImage"
+        class="h-48 w-full bg-cover bg-center bg-no-repeat sm:h-56 md:h-64 lg:h-72 xl:h-80"
+        v-bind="coverBind"
+        :style="coverStyle"
+        role="img"
+        :aria-label="data.title"
+      />
+      <section class="mt-10">
+        <div class="container mx-auto px-2 sm:px-4">
+          <UPage class="lg:gap-12">
+            <template #right>
+              <UPageAside class="lg:ps-2">
+                <UContentToc
+                  v-if="tocLinks.length"
+                  class="lg:sticky lg:top-24"
+                  :links="tocLinks"
+                  :ui="{
+                    root: 'overflow-visible max-h-none',
+                  }"
+                />
+              </UPageAside>
+            </template>
+            <UPageBody class="mt-0 pb-20 space-y-10">
+              <section class="space-y-4">
+                <h1 class="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
+                  {{ data.title }}
+                </h1>
+                <p v-if="data.description" class="max-w-2xl text-base text-gray-600 dark:text-gray-300">
+                  {{ data.description }}
+                </p>
+              </section>
+              <section
+                class="max-w-none text-[15px] leading-relaxed text-gray-700 dark:text-gray-200 [&_h2]:!mt-10 [&_h2]:!text-2xl [&_h2]:!font-semibold [&_h2]:!tracking-tight [&_h3]:!mt-8 [&_h3]:!text-xl [&_h3]:!font-semibold [&_h2_a]:!text-current [&_h2_a]:no-underline [&_h2_a:hover]:no-underline [&_h2_a]:!border-0 [&_h2_a:hover]:!border-0 [&_h3_a]:!text-current [&_h3_a]:no-underline [&_h3_a:hover]:no-underline [&_h3_a]:!border-0 [&_h3_a:hover]:!border-0 [&_h4_a]:!text-current [&_h4_a]:no-underline [&_h4_a:hover]:no-underline [&_h4_a]:!border-0 [&_h4_a:hover]:!border-0 [&_p]:mt-4 [&_p]:text-[15px] [&_p]:leading-relaxed [&_ul]:mt-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mt-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul>li]:my-1 [&_ol>li]:my-1 [&_blockquote]:my-6 [&_blockquote]:border-l-2 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:text-gray-600 [&_pre]:my-6 [&_pre]:rounded-lg [&_pre]:!bg-neutral-950 [&_pre]:!border-neutral-800 [&_pre]:p-4 dark:[&_pre]:!bg-neutral-900 dark:[&_pre]:!border-neutral-700 [&_pre_code]:block [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-neutral-100 [&_code]:rounded [&_code]:bg-neutral-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-neutral-800 dark:[&_code]:bg-neutral-800 dark:[&_code]:text-neutral-100 [&_a]:text-primary-600 [&_a]:no-underline [&_a]:underline-offset-4 [&_a:hover]:underline [&_img]:my-6 [&_img]:rounded-lg"
+              >
                 <ContentRenderer :value="data" />
-              </div>
-              <USeparator v-if="surround?.filter(Boolean).length" class="my-8" />
-              <UContentSurround v-if="surround?.filter(Boolean).length" :surround="(surround as any)" />
-            </section>
-          </UPageBody>
-        </UPage>
-      </div>
-    </section>
+              </section>
+            </UPageBody>
+          </UPage>
+        </div>
+      </section>
+    </div>
+    <div v-else class="container mx-auto px-6 py-16 text-sm text-gray-500 sm:px-8">
+      Document Not Found
+    </div>
   </div>
-  <div v-else>Document Not Found</div>
 </template>
