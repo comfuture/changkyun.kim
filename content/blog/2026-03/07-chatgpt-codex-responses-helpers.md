@@ -45,7 +45,7 @@ https://platform.openai.com/docs/guides/compaction
 
 Python 구현은 이 점을 아주 직접적으로 드러냅니다.
 
-```py
+```python
 def load_access_token(auth_path: Optional[str] = None) -> str:
     env_token = os.environ.get("CHATGPT_ACCESS_TOKEN", "").strip()
     if env_token:
@@ -78,7 +78,7 @@ https://gist.github.com/comfuture/0859a1f07d0961f536d2bb61f6526736#file-chatgpt-
 
 그래서 Python 구현은 아예 요청 페이로드를 이렇게 구성합니다.
 
-```py
+```python
 payload: Dict[str, Any] = {
     "model": model,
     "instructions": instructions,
@@ -92,7 +92,7 @@ if reasoning_effort:
 
 헤더도 `text/event-stream` 쪽으로 고정했습니다.
 
-```py
+```python
 request = urllib.request.Request(
     RESPONSES_URL,
     data=json.dumps(payload).encode(),
@@ -109,7 +109,7 @@ request = urllib.request.Request(
 
 실제로 출력도 한 번에 떨어지는 완성 문자열을 기다리기보다, `response.output_text.delta`를 모아 가는 식으로 처리하는 편이 자연스러웠습니다.
 
-```py
+```python
 for event in stream_response(model, instructions, input_items, auth_path, reasoning_effort):
     if event["event"] == "response.output_text.delta" and isinstance(event["data"], dict):
         delta = event["data"].get("delta")
@@ -125,7 +125,7 @@ for event in stream_response(model, instructions, input_items, auth_path, reason
 
 Python helper는 처음부터 user 입력을 message item 배열로 만듭니다.
 
-```py
+```python
 def create_user_input(text: str) -> List[Dict[str, Any]]:
     return [{
         "type": "message",
@@ -155,7 +155,7 @@ https://gist.github.com/comfuture/0859a1f07d0961f536d2bb61f6526736#file-chatgpt-
 
 공식 compaction 문서가 말하는 것처럼, compact 결과는 사람이 해석할 요약문이 아니라 다음 `responses` 호출에 다시 넣을 opaque window에 가깝습니다. Python 구현도 이 점을 강하게 지킵니다.
 
-```py
+```python
 def compact_input_window(
     model: str,
     instructions: str,
@@ -200,7 +200,7 @@ def compact_input_window(
 
 Python 구현은 아래처럼 되어 있습니다.
 
-```py
+```python
 response = run_text_response(
     model=model,
     auth_path=auth_path,
@@ -219,7 +219,7 @@ response = run_text_response(
 
 그리고 그 결과 텍스트를 짧은 bullet 형식으로 다시 정리했습니다.
 
-```py
+```python
 def normalize_recovered_summary(text: str, max_lines: int = 6) -> str:
     lines: List[str] = []
     for raw_line in text.splitlines():
@@ -233,7 +233,7 @@ def normalize_recovered_summary(text: str, max_lines: int = 6) -> str:
 
 이렇게 만든 summary는 다시 developer instructions 형태로 감싸서 다음 런타임에 넣었습니다. 결국 compacted output은 machine-facing state로 유지하고, 그 상태를 바탕으로 사람이 읽을 수 있는 carry-over memory를 별도로 생성해 활용한 셈입니다.
 
-```py
+```python
 developer_instructions = "\n".join([
     "[Recovered prior conversation summary]",
     "The following summary comes from a previous conversation and should be treated as carry-over context for this new harness.",
