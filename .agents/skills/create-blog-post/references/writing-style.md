@@ -54,6 +54,8 @@ Recommended Korean tone:
 
 ## 4) Avoid Stale AI Writing Patterns
 
+Use this section as a quick screen only. For the full anti-AI pattern catalog, Korean examples, and rewriting workflow, also load `references/humanize-ai-writing.md`.
+
 Avoid old-fashioned AI boilerplate in both English and Korean.
 
 Avoid patterns like:
@@ -70,6 +72,7 @@ Replace with:
 - direct context from the provided materials
 - explicit scope and constraints
 - concrete observations, examples, and tradeoffs
+- a grounded author voice when the blog format allows it
 
 ## 5) Source Handling
 
@@ -85,3 +88,4 @@ Before finalizing:
 - check for long multi-token bold/italic spans and simplify
 - check Korean wording for unnatural translated tone
 - remove repetitive AI-sounding sentence starters
+- run the detailed cleanup pass in `references/humanize-ai-writing.md`

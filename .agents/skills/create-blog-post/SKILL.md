@@ -20,10 +20,16 @@ Create a high-quality blog post file in this repository using Nuxt Content Markd
 3. Create path from date and slug:
    - directory: `content/blog/<YYYY-MM>/`
    - filename: `<DD>-<slug>.md`
-4. Load and apply writing style rules from `references/writing-style.md`.
-5. Write frontmatter and body in one `.md` file.
-6. Add or create images when needed, then reference them with `/public` removed.
-7. Run quick checks, then apply git flow only when requested.
+4. Load and apply writing rules from:
+   - `references/writing-style.md` for Markdown, diction, and source handling
+   - `references/humanize-ai-writing.md` for AI-pattern removal and Korean examples
+5. Write frontmatter and body in one `.md` file from the provided materials.
+6. Run one mandatory humanization pass after drafting:
+   - remove AI-sounding patterns, promotional filler, and vague authority claims
+   - replace generic significance statements with concrete facts, tradeoffs, or sourced context
+   - make the opening and ending sound authored, not templated
+7. Add or create images when needed, then reference them with `/public` removed.
+8. Run quick checks, then apply git flow only when requested.
 
 ## Apply Slug And File Rules
 
@@ -57,13 +63,26 @@ Then write the article body in Markdown that is compatible with Nuxt Content MDC
 - Use MDC component syntax only when needed and keep syntax valid.
 - Keep frontmatter YAML valid and stable.
 - Follow style constraints in `references/writing-style.md`.
+- Follow humanization rules in `references/humanize-ai-writing.md`.
 
 ## Apply Writing Style Rules
 
-- Treat `references/writing-style.md` as mandatory when writing or revising post bodies.
-- Apply both English and Korean guidance from that file.
+- Treat `references/writing-style.md` and `references/humanize-ai-writing.md` as mandatory when writing or revising post bodies.
+- Use `references/writing-style.md` for formatting, Korean-first diction, and source placement.
+- Use `references/humanize-ai-writing.md` for pattern-level cleanup based on the Wikipedia AI-writing signs and the Humanizer workflow, adapted to Korean blog writing.
 - Prefer natural, concrete Korean wording unless the user requests another tone.
 - Avoid stale AI writing patterns and over-formal boilerplate phrasing.
+- Do not stop at deleting bad phrases. Replace them with sourced specifics, real constraints, explicit tradeoffs, or a grounded author voice when the post format allows it.
+- Keep the intended voice and meaning intact. Humanizing means rewriting for clarity and credibility, not inventing personal anecdotes or unsourced opinions.
+
+## Remove AI Writing Signals
+
+- Treat humanization as a required editing pass, not an optional polish step.
+- Cut sentences that only announce importance, summarize obvious takeaways, or praise the subject without evidence.
+- Prefer simple declarative Korean over translated abstractions such as "빠르게 변화하는 환경 속에서", "중요한 역할을 수행한다", "여정을 함께 살펴보자".
+- Replace vague attributions like "업계에서는", "전문가들은", "많은 이들이" with named sources or verifiable facts.
+- Break formulaic patterns such as forced three-item lists, "단순히 A가 아니라 B" contrasts, and generic "과제와 전망" sections unless the material truly requires them.
+- When the draft feels clean but lifeless, use the guidance in `references/humanize-ai-writing.md` to add rhythm, specificity, and limited first-person judgment where appropriate for the blog voice.
 
 ## Manage Images
 
@@ -100,3 +119,6 @@ Only apply git actions when the user explicitly requests publication mode.
 - Verify Korean default language is respected.
 - Verify all image links omit `/public`.
 - Verify article satisfies provided source materials and guide prompt.
+- Verify the opening and ending are specific to the topic, not reusable AI templates.
+- Verify vague praise, vague authority, and unsupported significance claims were removed or grounded in evidence.
+- Verify the prose passes the humanization checklist in `references/humanize-ai-writing.md`.
