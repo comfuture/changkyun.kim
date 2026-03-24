@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import { normalizeRoutePath } from '~/composables/normalizeRoutePath'
+
 const route = useRoute()
+const contentPath = computed(() => normalizeRoutePath(route.path))
 
 const { data, error } = await useAsyncData(
-  () => `app-entry:${route.fullPath}`,
-  () => queryCollection('app').path(route.path).first(),
-  {
-    watch: [() => route.fullPath],
-  },
+  () => `app-entry:${contentPath.value}`,
+  () => queryCollection('app').path(contentPath.value).first(),
 )
 
 const coverImage = computed(() => data.value?.coverImage)
