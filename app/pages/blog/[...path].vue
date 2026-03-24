@@ -1,22 +1,21 @@
 <script setup lang="ts">
+import { normalizeRoutePath } from '~/composables/normalizeRoutePath'
+
 const route = useRoute()
+const contentPath = computed(() => normalizeRoutePath(route.path))
 
 const { data } = await useAsyncData(
-  () => `blog-entry:${route.fullPath}`,
-  () => queryCollection('blog').path(route.path).first(),
-  {
-    watch: [() => route.fullPath],
-  },
+  () => `blog-entry:${contentPath.value}`,
+  () => queryCollection('blog').path(contentPath.value).first(),
 )
 
-const resolvedPath = computed(() => data.value?.path || route.path)
+const resolvedPath = computed(() => normalizeRoutePath(data.value?.path || contentPath.value))
 const { data: surround } = await useAsyncData(() => `blog-surround:${resolvedPath.value}`, () => {
   return queryCollectionItemSurroundings('blog', resolvedPath.value, {
     fields: ['title', 'description'],
   })
 }, {
   default: () => [],
-  watch: [resolvedPath],
 })
 const coverImage = computed(() => data.value?.coverImage)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
