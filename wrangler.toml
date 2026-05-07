@@ -8,6 +8,9 @@ routes = [
   { pattern = "changkyun.kim/*", zone_name = "changkyun.kim" }
 ]
 
+[triggers]
+crons = ["*/10 * * * *"]
+
 [build]
 command = "pnpm build"
 
@@ -19,3 +22,16 @@ binding = "DB"
 database_name = "changkyun-kim"
 database_id = "cec021c4-7e27-490a-bbf7-59d41c2a64a6"
 migrations_dir = "migrations"
+
+[[queues.producers]]
+binding = "FEDIFY_QUEUE"
+queue = "changkyun-kim-fedify"
+
+[[queues.consumers]]
+queue = "changkyun-kim-fedify"
+dead_letter_queue = "changkyun-kim-fedify-dlq"
+max_retries = 5
+
+[[kv_namespaces]]
+binding = "FEDIFY_KV"
+id = "98f85a0cf61b4288a08ba18f6e961786"

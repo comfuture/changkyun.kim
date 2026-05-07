@@ -1,54 +1,42 @@
-import { me } from '../../utils/federation'
+import { ACTOR_IDENTIFIER, SITE_ORIGIN } from "../../utils/fedifyContent"
 
-const DOMAIN = 'changkyun.kim'
-const ACTOR_HANDLE = 'me'
-const CANONICAL_SUBJECT = `acct:${ACTOR_HANDLE}@${DOMAIN}`
-const LEGACY_RESOURCES = [`acct:changkyun.kim@${DOMAIN}`]
+const HANDLE_HOST = new URL(SITE_ORIGIN).host
+const ACTOR_URL = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN).href
+const ACCOUNT = `acct:${ACTOR_IDENTIFIER}@${HANDLE_HOST}`
 
-const VALID_RESOURCES = new Set(
-  [
-    CANONICAL_SUBJECT,
-    `acct:${me.preferredUsername.toLowerCase()}@${DOMAIN}`,
-    ...LEGACY_RESOURCES,
-  ].map((value) => value.toLowerCase()),
-)
+function isKnownResource(resource: unknown): boolean {
+  if (typeof resource !== "string") {
+    return false
+  }
+  return resource === ACCOUNT || resource === ACTOR_URL
+}
 
 export default defineEventHandler((event) => {
-  const { resource } = getQuery<{ resource?: string }>(event)
-
-  if (!resource) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Missing resource parameter',
-    })
+  const { resource } = getQuery(event)
+  if (!isKnownResource(resource)) {
+    throw createError({ statusCode: 404, statusMessage: "Not Found" })
   }
 
-  const normalizedResource = resource.toLowerCase()
+  setResponseHeader(event, "Access-Control-Allow-Origin", "*")
+  setResponseHeader(event, "Content-Type", "application/jrd+json; charset=utf-8")
 
-  if (!VALID_RESOURCES.has(normalizedResource)) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Resource not found',
-    })
-  }
-
-  setResponseHeader(event, 'Content-Type', 'application/jrd+json')
   return {
-    subject: CANONICAL_SUBJECT,
-    aliases: [
-      'https://changkyun.kim/@me',
-      ...LEGACY_RESOURCES,
-    ],
+    subject: ACCOUNT,
+    aliases: [ACTOR_URL],
     links: [
       {
-        rel: 'self',
-        type: 'application/activity+json',
-        href: me.id,
+        rel: "self",
+        type: "application/activity+json",
+        href: ACTOR_URL,
       },
       {
-        rel: 'https://webfinger.net/rel/profile-page',
-        type: 'text/html',
-        href: 'https://changkyun.kim/about',
+        rel: "http://webfinger.net/rel/profile-page",
+        href: new URL("/about", SITE_ORIGIN).href,
+      },
+      {
+        rel: "http://webfinger.net/rel/avatar",
+        type: "image/jpeg",
+        href: new URL("/image/avatar.jpg", SITE_ORIGIN).href,
       },
     ],
   }
