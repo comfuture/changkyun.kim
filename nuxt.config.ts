@@ -31,13 +31,13 @@ export default defineNuxtConfig({
       }
     },
     prerender: {
-      crawlLinks: true,
-      routes: ['/', '/blog', '/blog/tag']
+      crawlLinks: false,
+      routes: ['/']
     }
   },
   routeRules: {
-    '/blog': { prerender: true },
-    '/blog/**': { prerender: true }
+    '/blog': { prerender: false },
+    '/blog/**': { prerender: false }
   },
   app: {
     head: {
