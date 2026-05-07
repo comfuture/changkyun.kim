@@ -5,6 +5,8 @@ import {
   PUBLIC_COLLECTION,
   Source,
 } from "@fedify/vocab"
+import { toHtml } from "hast-util-to-html"
+import { toHast } from "minimark/hast"
 import { stringify as stringifyMinimark } from "minimark/stringify"
 
 export const ACTOR_IDENTIFIER = "me"
@@ -65,14 +67,6 @@ function toFedifyContentEntry(row: ContentRow): FedifyContentEntry {
   }
 }
 
-function hasStablePublishedDate(entry: FedifyContentEntry): boolean {
-  if (!entry.createdAt) {
-    return false
-  }
-  const date = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)
-  return !Number.isNaN(date.getTime())
-}
-
 export async function fetchFedifyContentEntry(collection: FedifyCollection, path: string): Promise<FedifyContentEntry | null> {
   const db = useDatabase()
   const normalizedPath = normalizeArticlePath(path)
@@ -81,12 +75,18 @@ export async function fetchFedifyContentEntry(collection: FedifyCollection, path
       SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
       FROM _content_blog
       WHERE path = ${normalizedPath}
+        AND createdAt IS NOT NULL
+        AND datetime(createdAt) IS NOT NULL
+        AND json_extract(meta, '$.draft') IS NOT TRUE
       LIMIT 1
     `
     : await db.sql`
       SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
       FROM _content_app
       WHERE path = ${normalizedPath}
+        AND createdAt IS NOT NULL
+        AND datetime(createdAt) IS NOT NULL
+        AND json_extract(meta, '$.draft') IS NOT TRUE
       LIMIT 1
     `
   const row = rows?.[0] as ContentRow | undefined
@@ -108,23 +108,35 @@ export async function fetchFedifyContentEntries(collection: FedifyCollection, op
           SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
           FROM _content_blog
           WHERE createdAt >= ${since}
+            AND createdAt IS NOT NULL
+            AND datetime(createdAt) IS NOT NULL
+            AND json_extract(meta, '$.draft') IS NOT TRUE
           ORDER BY createdAt ASC, path ASC
         `
         : await db.sql`
           SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
           FROM _content_blog
           WHERE createdAt >= ${since}
+            AND createdAt IS NOT NULL
+            AND datetime(createdAt) IS NOT NULL
+            AND json_extract(meta, '$.draft') IS NOT TRUE
           ORDER BY createdAt DESC, path DESC
         `
       : order === "ASC"
         ? await db.sql`
           SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
           FROM _content_blog
+          WHERE createdAt IS NOT NULL
+            AND datetime(createdAt) IS NOT NULL
+            AND json_extract(meta, '$.draft') IS NOT TRUE
           ORDER BY createdAt ASC, path ASC
         `
         : await db.sql`
           SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
           FROM _content_blog
+          WHERE createdAt IS NOT NULL
+            AND datetime(createdAt) IS NOT NULL
+            AND json_extract(meta, '$.draft') IS NOT TRUE
           ORDER BY createdAt DESC, path DESC
         `
     : since
@@ -133,29 +145,40 @@ export async function fetchFedifyContentEntries(collection: FedifyCollection, op
           SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
           FROM _content_app
           WHERE createdAt >= ${since}
+            AND createdAt IS NOT NULL
+            AND datetime(createdAt) IS NOT NULL
+            AND json_extract(meta, '$.draft') IS NOT TRUE
           ORDER BY createdAt ASC, path ASC
         `
         : await db.sql`
           SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
           FROM _content_app
           WHERE createdAt >= ${since}
+            AND createdAt IS NOT NULL
+            AND datetime(createdAt) IS NOT NULL
+            AND json_extract(meta, '$.draft') IS NOT TRUE
           ORDER BY createdAt DESC, path DESC
         `
       : order === "ASC"
         ? await db.sql`
           SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
           FROM _content_app
+          WHERE createdAt IS NOT NULL
+            AND datetime(createdAt) IS NOT NULL
+            AND json_extract(meta, '$.draft') IS NOT TRUE
           ORDER BY createdAt ASC, path ASC
         `
         : await db.sql`
           SELECT id, title, body, coverImage, createdAt, description, extension, meta, navigation, path, seo, stem, tags
           FROM _content_app
+          WHERE createdAt IS NOT NULL
+            AND datetime(createdAt) IS NOT NULL
+            AND json_extract(meta, '$.draft') IS NOT TRUE
           ORDER BY createdAt DESC, path DESC
         `
 
   return ((result.rows ?? []) as ContentRow[])
     .map(toFedifyContentEntry)
-    .filter((entry) => !entry.draft && hasStablePublishedDate(entry))
 }
 
 function ensureLeadingSlash(value: string): string {
@@ -201,6 +224,42 @@ function stringifyMinimarkSafe(tree: any): string {
     return stringifyMinimark(tree) || ""
   } catch (error) {
     console.error("Failed to stringify minimark content for ActivityPub", error)
+    return ""
+  }
+}
+
+function normalizeHastForHtml(node: any): any {
+  if (!node || typeof node !== "object") {
+    return node
+  }
+  if (node.type === "root") {
+    return {
+      type: "root",
+      children: Array.isArray(node.children) ? node.children.map(normalizeHastForHtml) : [],
+    }
+  }
+  if (node.type === "element") {
+    return {
+      type: "element",
+      tagName: node.tagName ?? node.tag,
+      properties: node.properties ?? node.props ?? {},
+      children: Array.isArray(node.children) ? node.children.map(normalizeHastForHtml) : [],
+    }
+  }
+  if (node.type === "text" || node.type === "comment" || node.type === "raw") {
+    return {
+      type: node.type,
+      value: node.value ?? "",
+    }
+  }
+  return node
+}
+
+function renderMinimarkHtmlSafe(tree: any): string {
+  try {
+    return toHtml(normalizeHastForHtml(toHast(tree)), { allowDangerousHtml: true }) || ""
+  } catch (error) {
+    console.error("Failed to render minimark content for ActivityPub", error)
     return ""
   }
 }
@@ -318,6 +377,7 @@ export async function buildArticleFromEntry(entry: FedifyContentEntry): Promise<
     markdown = body
   } else if (body?.type === "minimark") {
     markdown = stringifyMinimarkSafe(body)
+    contentHtml = renderMinimarkHtmlSafe(body)
   }
 
   const urlCandidates: URL[] = [articleUrl]

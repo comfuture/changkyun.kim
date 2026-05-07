@@ -3,12 +3,18 @@ import { ACTOR_IDENTIFIER, SITE_ORIGIN } from "../../utils/fedifyContent"
 const HANDLE_HOST = new URL(SITE_ORIGIN).host
 const ACTOR_URL = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN).href
 const ACCOUNT = `acct:${ACTOR_IDENTIFIER}@${HANDLE_HOST}`
+const LEGACY_ACCOUNTS = [`acct:changkyun.kim@${HANDLE_HOST}`] as const
+const KNOWN_RESOURCES = new Set<string>([
+  ACCOUNT,
+  ACTOR_URL,
+  ...LEGACY_ACCOUNTS,
+].map((resource) => resource.toLowerCase()))
 
 function isKnownResource(resource: unknown): boolean {
   if (typeof resource !== "string") {
     return false
   }
-  return resource === ACCOUNT || resource === ACTOR_URL
+  return KNOWN_RESOURCES.has(resource.toLowerCase())
 }
 
 export default defineEventHandler((event) => {
@@ -22,7 +28,7 @@ export default defineEventHandler((event) => {
 
   return {
     subject: ACCOUNT,
-    aliases: [ACTOR_URL],
+    aliases: [ACTOR_URL, ...LEGACY_ACCOUNTS],
     links: [
       {
         rel: "self",

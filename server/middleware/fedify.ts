@@ -4,6 +4,7 @@ import { createFedify, getCloudflareEnv } from "../utils/fedify"
 import {
   FEDIFY_BLOG_CANONICAL_HOSTNAMES,
   FEDIFY_BLOG_COLLECTION_PREFIX,
+  SITE_ORIGIN,
 } from "../utils/fedifyContent"
 
 const BLOG_HOSTS = new Set(Array.from(FEDIFY_BLOG_CANONICAL_HOSTNAMES, (host) => host.toLowerCase()))
@@ -41,7 +42,7 @@ function isFederationRequest(method: string, pathname: string, accept?: string |
 function toFedifyUrl(url: URL): URL {
   const fedifyUrl = new URL(url.href)
   fedifyUrl.protocol = "https:"
-  fedifyUrl.host = new URL("https://changkyun.kim").host
+  fedifyUrl.host = new URL(SITE_ORIGIN).host
 
   const hostname = url.hostname.toLowerCase()
   if (BLOG_HOSTS.has(hostname)) {
