@@ -337,7 +337,7 @@ function normalizeDate(value?: string | Date | null): Temporal.Instant {
 export function resolveFedifyActivityId(articleUrl: URL | string): URL {
   const href = typeof articleUrl === "string" ? articleUrl : articleUrl.href
   const normalized = href.endsWith("/") && href.length > 1 ? href.slice(0, -1) : href
-  return new URL(`${normalized}/activity`)
+  return new URL(`${normalized}#create`)
 }
 
 function appendLegacyActivityIds(collection: Set<string>, baseUrl: URL | string) {
