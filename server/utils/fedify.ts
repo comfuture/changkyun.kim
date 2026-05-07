@@ -21,7 +21,6 @@ import {
   Undo,
   Update,
   type Actor,
-  type Recipient,
 } from "@fedify/vocab"
 import {
   ACTOR_IDENTIFIER,
@@ -181,27 +180,13 @@ async function recordFollowingAccepted(actorId: string, follow: Follow): Promise
       updated_at = CURRENT_TIMESTAMP`
 }
 
-async function loadFollowers(ctx: { lookupObject(identifier: string | URL): Promise<unknown> }): Promise<Recipient[]> {
+async function loadFollowers(): Promise<URL[]> {
   const db = getDatabase()
   const { rows } = await db.sql`SELECT actor_id FROM followers WHERE status = 'accepted' ORDER BY updated_at DESC`
-  const recipients: Recipient[] = []
-
-  for (const row of rows ?? []) {
-    const actorId = (row as { actor_id?: string | null }).actor_id
-    if (!actorId) {
-      continue
-    }
-    try {
-      const object = await ctx.lookupObject(actorId)
-      if (isActor(object)) {
-        recipients.push(object)
-      }
-    } catch (error) {
-      console.error("Failed to look up follower actor", actorId, error)
-    }
-  }
-
-  return recipients
+  return (rows ?? [])
+    .map((row) => (row as { actor_id?: string | null }).actor_id)
+    .filter((actorId): actorId is string => Boolean(actorId))
+    .map((actorId) => new URL(actorId))
 }
 
 async function sendFollowersUpdate(ctx: { sendActivity: any }): Promise<void> {
@@ -283,7 +268,8 @@ builder
     if (
       value === ACTOR_URI.href ||
       value === `acct:${ACTOR_IDENTIFIER}@${new URL(SITE_ORIGIN).host}` ||
-      value === `acct:${ACTOR_IDENTIFIER}@changkyun.kim`
+      value === `acct:${ACTOR_IDENTIFIER}@changkyun.kim` ||
+      value === `acct:changkyun.kim@changkyun.kim`
     ) {
       return { identifier: ACTOR_IDENTIFIER }
     }
@@ -328,11 +314,11 @@ builder
   .setFirstCursor(async () => "0")
 
 builder
-  .setFollowersDispatcher("/@{identifier}/followers", async (ctx, identifier) => {
+  .setFollowersDispatcher("/@{identifier}/followers", async (_ctx, identifier) => {
     if (identifier !== ACTOR_IDENTIFIER) {
       return null
     }
-    return { items: await loadFollowers(ctx) }
+    return { items: await loadFollowers() }
   })
   .setCounter(async () => await countRows("followers"))
 

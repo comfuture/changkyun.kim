@@ -25,6 +25,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@tiptap/y-tiptap": "^3.0.3",
     "better-sqlite3": "^12.9.0",
+    "hast-util-to-html": "9.0.5",
     "minimark": "1.0.0",
     "negotiator": "^1.0.0",
     "nuxt": "^4.4.4"
