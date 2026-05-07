@@ -4,6 +4,11 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'cloudflare-module',
+    esbuild: {
+      options: {
+        target: 'es2020'
+      }
+    },
     experimental: {
       database: true,
       tasks: true,
@@ -63,8 +68,24 @@ export default defineNuxtConfig({
     payloadExtraction: false,
   },
 
+  vite: {
+    optimizeDeps: {
+      include: []
+    }
+  },
+
+  hooks: {
+    'vite:extendConfig'(config) {
+      const include = config.optimizeDeps?.include
+
+      if (Array.isArray(include)) {
+        config.optimizeDeps!.include = include.filter((entry) => !entry.startsWith('@nuxtjs/mdc > '))
+      }
+    }
+  },
+
   modules: [
-    "@nuxt/content", "@nuxt/ui", "@nuxt/image", "@justway/nuxt"
+    "@nuxt/content", "@nuxt/ui", "@nuxt/image"
   ],
 
   css: [

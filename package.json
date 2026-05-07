@@ -15,28 +15,28 @@
   },
   "dependencies": {
     "@csjewell-activitypub/types": "^0.1.0",
-    "@justway/nuxt": "^0.0.3",
-    "@nuxt/content": "3.10.0",
+    "@nuxt/content": "3.13.0",
     "@nuxt/image": "^2.0.0",
-    "@nuxt/ui": "^4.3.0",
+    "@nuxt/ui": "^4.7.1",
     "@popperjs/core": "^2.11.8",
     "@tailwindcss/typography": "^0.5.19",
-    "better-sqlite3": "^12.6.2",
-    "minimark": "0.2.0",
+    "@tiptap/y-tiptap": "^3.0.3",
+    "better-sqlite3": "^12.9.0",
+    "minimark": "1.0.0",
     "negotiator": "^1.0.0",
-    "nuxt": "^4.2.2"
+    "nuxt": "^4.4.4"
   },
   "devDependencies": {
-    "@types/glob": "^9.0.0",
+    "@iconify-json/lucide": "^1.2.105",
     "@types/negotiator": "^0.6.4",
-    "@types/sharp": "^0.32.0",
-    "glob": "^13.0.0",
-    "postcss": "^8.5.6",
+    "glob": "^13.0.6",
+    "postcss": "^8.5.14",
     "sharp": "^0.34.5",
-    "tailwindcss": "^4.1.18",
-    "wrangler": "^4.59.2"
+    "tailwindcss": "^4.2.4",
+    "wrangler": "^4.88.0"
   },
   "resolutions": {
+    "@tiptap/y-tiptap": "^3.0.3",
     "rdf-canonize-native": "npm:rdf-canonize"
   },
   "packageManager": "pnpm@9.12.3"
