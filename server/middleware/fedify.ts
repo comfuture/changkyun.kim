@@ -121,12 +121,25 @@ function toFedifyUrl(url: URL): URL {
     if (pathname !== "/" && pathname.endsWith("/")) {
       pathname = pathname.replace(/\/+$/, "")
     }
-    if (pathname !== "/" && pathname !== FEDIFY_BLOG_COLLECTION_PREFIX && !pathname.startsWith(`${FEDIFY_BLOG_COLLECTION_PREFIX}/`)) {
+    const isReservedFederationPath = pathname.startsWith("/.well-known/")
+      || pathname === "/inbox"
+      || pathname === "/@me"
+      || pathname.startsWith("/@me/")
+    if (
+      pathname !== "/"
+      && !isReservedFederationPath
+      && pathname !== FEDIFY_BLOG_COLLECTION_PREFIX
+      && !pathname.startsWith(`${FEDIFY_BLOG_COLLECTION_PREFIX}/`)
+    ) {
       fedifyUrl.pathname = `${FEDIFY_BLOG_COLLECTION_PREFIX}${pathname}`
     }
   }
 
   return fedifyUrl
+}
+
+function isDraftEntry(entry: FedifyContentEntry | null): boolean {
+  return entry?.draft === true
 }
 
 function resolveContentRequestPath(url: URL): {
@@ -481,6 +494,9 @@ async function maybeHandleContentObject(event: H3Event, url: URL): Promise<unkno
     entry = await queryCollection(event, requestPath.collection)
       .path(requestPath.path)
       .first() as FedifyContentEntry | null
+    if (isDraftEntry(entry)) {
+      entry = null
+    }
   } catch (error) {
     console.error("Failed to query Nuxt Content for ActivityPub object", error)
   }
@@ -536,18 +552,18 @@ export default defineEventHandler(async (event) => {
   exposeCloudflareContextForNuxtContent(event)
 
   const url = getRequestURL(event)
+  const fedifyUrl = toFedifyUrl(url)
   const accept = getHeader(event, "accept")
-  const syncTarget = resolveContentSyncTarget(url.pathname)
+  const syncTarget = resolveContentSyncTarget(fedifyUrl.pathname)
 
   if (syncTarget && (event.method === "GET" || event.method === "HEAD" || event.method === "POST")) {
     await ensureContentD1Synced(event, syncTarget.collection)
   }
 
-  if (!isFederationRequest(event.method, url.pathname, accept)) {
+  if (!isFederationRequest(event.method, fedifyUrl.pathname, accept)) {
     return
   }
 
-  const fedifyUrl = toFedifyUrl(url)
   const contentObject = await maybeHandleContentObject(event, fedifyUrl)
   if (contentObject !== undefined) {
     return contentObject
