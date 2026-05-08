@@ -1,6 +1,7 @@
 import {
   createFederationBuilder,
   MemoryKvStore,
+  type NodeInfo,
   type Federation,
   type KvStore,
   type Message,
@@ -32,6 +33,7 @@ import {
   fetchFedifyContentEntry,
   SITE_ORIGIN,
 } from "./fedifyContent"
+import packageJson from "../../package.json"
 import {
   markCommentDeletedFromDelete,
   persistCommentFromCreate,
@@ -131,6 +133,79 @@ async function countRows(table: "followers" | "following", status = "accepted"):
     return Number.parseInt(raw, 10) || 0
   }
   return 0
+}
+
+function countValue(raw: unknown): number {
+  if (typeof raw === "number") {
+    return raw
+  }
+  if (typeof raw === "bigint") {
+    return Number(raw)
+  }
+  if (typeof raw === "string") {
+    return Number.parseInt(raw, 10) || 0
+  }
+  return 0
+}
+
+async function countLocalPosts(): Promise<number> {
+  try {
+    const { totalItems } = await collectCreateActivities({ limit: null })
+    return totalItems
+  } catch (error) {
+    console.error("Failed to count ActivityPub local posts from content", error)
+  }
+
+  try {
+    await ensureActivityPubSchema()
+    const db = getDatabase()
+    const { rows } = await db.sql`SELECT COUNT(*) AS count FROM activity WHERE direction = 'outbox' AND type = 'Create'`
+    return countValue((rows?.[0] as Record<string, unknown> | undefined)?.count)
+  } catch (error) {
+    console.error("Failed to count ActivityPub local posts from outbox", error)
+    return 0
+  }
+}
+
+async function countLocalComments(): Promise<number> {
+  try {
+    await ensureActivityPubSchema()
+    const db = getDatabase()
+    const { rows } = await db.sql`SELECT COUNT(*) AS count FROM activitypub_comments WHERE status = 'visible'`
+    return countValue((rows?.[0] as Record<string, unknown> | undefined)?.count)
+  } catch (error) {
+    console.error("Failed to count ActivityPub comments for NodeInfo", error)
+    return 0
+  }
+}
+
+async function buildNodeInfo(): Promise<NodeInfo> {
+  const [localPosts, localComments] = await Promise.all([
+    countLocalPosts(),
+    countLocalComments(),
+  ])
+
+  return {
+    software: {
+      name: "changkyun-kim",
+      version: packageJson.version,
+      homepage: new URL(SITE_ORIGIN),
+    },
+    protocols: ["activitypub"],
+    services: {
+      inbound: [],
+      outbound: [],
+    },
+    openRegistrations: false,
+    usage: {
+      users: {
+        total: 1,
+      },
+      localPosts,
+      localComments,
+    },
+    metadata: {},
+  }
 }
 
 async function activityToPayload(activity: Activity): Promise<string> {
@@ -264,6 +339,9 @@ async function buildActor(ctx: { getActorUri(identifier: string): URL; getInboxU
 }
 
 const builder = createFederationBuilder<FedifyContextData>()
+
+builder
+  .setNodeInfoDispatcher("/nodeinfo/2.1", async () => await buildNodeInfo())
 
 builder
   .setActorDispatcher("/@{identifier}", buildActor)
