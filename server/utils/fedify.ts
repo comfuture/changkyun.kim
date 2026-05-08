@@ -16,9 +16,11 @@ import {
   Create,
   Delete,
   Endpoints,
+  EmojiReact,
   Follow,
   Image,
   isActor,
+  Like,
   Person,
   PUBLIC_COLLECTION,
   Undo,
@@ -39,6 +41,10 @@ import {
   markCommentDeletedFromDelete,
   persistCommentFromCreate,
 } from "./fedifyComments"
+import {
+  persistReactionFromActivity,
+  removeReactionFromUndo,
+} from "./fedifyReactions"
 import { persistFeedPostFromCreate } from "./activityPubFeed"
 import { ensureActivityPubSchema } from "./activityPubSchema"
 
@@ -635,6 +641,15 @@ builder
       }
       return
     }
+    if (object instanceof Like || object instanceof EmojiReact) {
+      await removeReactionFromUndo(ctx, undo)
+      return
+    }
+
+    const reactionRemoved = await removeReactionFromUndo(ctx, undo)
+    if (reactionRemoved) {
+      return
+    }
 
     const removed = await removeFollower(actor.id.href, undo.objectId?.href ?? null)
     if (removed) {
@@ -658,6 +673,12 @@ builder
   .on(Create, async (ctx, create) => {
     await persistCommentFromCreate(ctx, create)
     await persistFeedPostFromCreate(ctx, create)
+  })
+  .on(Like, async (ctx, like) => {
+    await persistReactionFromActivity(ctx, like)
+  })
+  .on(EmojiReact, async (ctx, emojiReact) => {
+    await persistReactionFromActivity(ctx, emojiReact)
   })
   .on(Delete, async (ctx, del) => {
     await markCommentDeletedFromDelete(ctx, del)
