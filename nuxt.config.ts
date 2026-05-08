@@ -4,14 +4,14 @@ import { gunzipSync } from 'node:zlib'
 
 type ContentCollection = 'blog' | 'app'
 
-const contentDumpGeneratedPath = resolve(process.cwd(), '.nuxt/contentDump.generated.ts')
+const contentDumpGeneratedPath = resolve(process.cwd(), '.data/contentDump.generated.ts')
 const emptyContentDumps: Record<ContentCollection, string> = {
   blog: '',
   app: '',
 }
 
 function writeContentDumpModule(dumps: Record<ContentCollection, string>) {
-  mkdirSync(resolve(process.cwd(), '.nuxt'), { recursive: true })
+  mkdirSync(resolve(process.cwd(), '.data'), { recursive: true })
   const source = `const dumps = ${JSON.stringify(dumps)} as const\nexport default dumps\n`
   if (existsSync(contentDumpGeneratedPath) && readFileSync(contentDumpGeneratedPath, 'utf8') === source) {
     return
