@@ -9,6 +9,7 @@ import {
   type FedifyContentEntry,
 } from "../../utils/fedifyContent"
 import { createFedifyContext, getCloudflareEnv } from "../../utils/fedify"
+import { ensureActivityPubSchema } from "../../utils/activityPubSchema"
 
 const COLLECTIONS = ["blog", "app"] as const
 
@@ -261,6 +262,7 @@ export default defineTask({
     description: "Publish new Nuxt Content entries through Fedify",
   },
   async run(event) {
+    await ensureActivityPubSchema()
     const env = getCloudflareEnv(event)
     let published = 0
     for (const collection of COLLECTIONS) {
