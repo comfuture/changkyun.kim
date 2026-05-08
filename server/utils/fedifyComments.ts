@@ -1,0 +1,391 @@
+import {
+  Create,
+  Delete,
+  Image,
+  isActor,
+  Link,
+  Note,
+  PUBLIC_COLLECTION,
+} from "@fedify/vocab"
+
+import {
+  FEDIFY_BLOG_CANONICAL_HOSTNAMES,
+  FEDIFY_BLOG_COLLECTION_PREFIX,
+  fetchFedifyContentEntry,
+  normalizeArticlePath,
+  SITE_ORIGIN,
+} from "./fedifyContent"
+
+export type ActivityPubComment = {
+  id: number
+  objectId: string
+  articleId: string
+  articlePath: string
+  actorId: string
+  actorName: string
+  actorUrl: string
+  actorIconUrl: string | null
+  contentText: string
+  url: string
+  publishedAt: string | null
+  receivedAt: string
+}
+
+type CommentRow = {
+  id: number
+  object_id: string
+  article_id: string
+  article_path: string
+  actor_id: string
+  actor_name?: string | null
+  actor_url?: string | null
+  actor_icon_url?: string | null
+  content_text: string
+  url?: string | null
+  published_at?: string | null
+  received_at: string
+}
+
+const SITE_HOST = new URL(SITE_ORIGIN).host.toLowerCase()
+const BLOG_HOSTS = new Set(Array.from(FEDIFY_BLOG_CANONICAL_HOSTNAMES, (host) => host.toLowerCase()))
+
+function getDatabase() {
+  return useDatabase()
+}
+
+export async function ensureActivityPubCommentsTable(): Promise<void> {
+  const db = getDatabase()
+  await db.sql`CREATE TABLE IF NOT EXISTS activitypub_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    object_id TEXT NOT NULL,
+    activity_id TEXT,
+    article_id TEXT NOT NULL,
+    article_path TEXT NOT NULL,
+    actor_id TEXT NOT NULL,
+    actor_name TEXT,
+    actor_url TEXT,
+    actor_icon_url TEXT,
+    content_text TEXT NOT NULL,
+    content_html TEXT,
+    url TEXT,
+    published_at TEXT,
+    received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status TEXT NOT NULL DEFAULT 'visible',
+    payload TEXT
+  );`
+  await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_activitypub_comments_object_id ON activitypub_comments(object_id);`
+  await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_comments_article_status ON activitypub_comments(article_path, status, published_at);`
+  await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_comments_actor ON activitypub_comments(actor_id);`
+}
+
+function stringifyLanguageValue(value: unknown): string {
+  if (!value) {
+    return ""
+  }
+  if (typeof value === "string") {
+    return value
+  }
+  if (typeof value === "object") {
+    const candidate = value as { value?: unknown; toString?: () => string }
+    if (typeof candidate.value === "string") {
+      return candidate.value
+    }
+    if (typeof candidate.toString === "function") {
+      const text = candidate.toString()
+      return text === "[object Object]" ? "" : text
+    }
+  }
+  return ""
+}
+
+function decodeHtmlEntities(value: string): string {
+  const named: Record<string, string> = {
+    amp: "&",
+    apos: "'",
+    gt: ">",
+    lt: "<",
+    nbsp: " ",
+    quot: "\"",
+  }
+  return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
+    const normalized = entity.toLowerCase()
+    if (normalized.startsWith("#x")) {
+      const codePoint = Number.parseInt(normalized.slice(2), 16)
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match
+    }
+    if (normalized.startsWith("#")) {
+      const codePoint = Number.parseInt(normalized.slice(1), 10)
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match
+    }
+    return named[normalized] ?? match
+  })
+}
+
+function htmlToText(value: string): string {
+  return decodeHtmlEntities(
+    value
+      .replace(/<\s*br\s*\/?>/gi, "\n")
+      .replace(/<\/\s*p\s*>/gi, "\n\n")
+      .replace(/<[^>]*>/g, "")
+      .replace(/\r\n?/g, "\n")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim(),
+  )
+}
+
+function firstUrl(value: URL | Link | null): string | null {
+  if (!value) {
+    return null
+  }
+  if (value instanceof URL) {
+    return value.href
+  }
+  const link = value as Link
+  return link.href?.href ?? link.id?.href ?? null
+}
+
+function firstImageUrl(image: Image | URL | null): string | null {
+  if (!image) {
+    return null
+  }
+  if (image instanceof URL) {
+    return image.href
+  }
+  return firstUrl(image.url)
+}
+
+function normalizeCommentTarget(target: URL): { articleId: string; articlePath: string } | null {
+  const url = new URL(target.href)
+  url.hash = ""
+  const hostname = url.hostname.toLowerCase()
+  let pathname = normalizeArticlePath(url.pathname)
+
+  if (pathname.endsWith("/activity")) {
+    pathname = normalizeArticlePath(pathname.slice(0, -"/activity".length))
+  }
+
+  if (hostname === SITE_HOST) {
+    if (!pathname.startsWith(`${FEDIFY_BLOG_COLLECTION_PREFIX}/`)) {
+      return null
+    }
+  } else if (BLOG_HOSTS.has(hostname)) {
+    if (pathname !== FEDIFY_BLOG_COLLECTION_PREFIX && !pathname.startsWith(`${FEDIFY_BLOG_COLLECTION_PREFIX}/`)) {
+      pathname = normalizeArticlePath(`${FEDIFY_BLOG_COLLECTION_PREFIX}${pathname}`)
+    }
+    if (!pathname.startsWith(`${FEDIFY_BLOG_COLLECTION_PREFIX}/`)) {
+      return null
+    }
+  } else {
+    return null
+  }
+
+  return {
+    articleId: new URL(pathname, SITE_ORIGIN).href,
+    articlePath: pathname,
+  }
+}
+
+function isPublic(note: Note, create: Create): boolean {
+  const publicHref = (PUBLIC_COLLECTION as URL).href
+  const noteAudience = [...note.toIds, ...note.ccIds].map((url) => url.href)
+  const createAudience = [...create.toIds, ...create.ccIds].map((url) => url.href)
+  return noteAudience.includes(publicHref) || createAudience.includes(publicHref)
+}
+
+async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: any }, create: Create, note: Note): Promise<{
+  actorId: string
+  actorName: string
+  actorUrl: string
+  actorIconUrl: string | null
+} | null> {
+  const actor = await create.getActor({
+    documentLoader: ctx.documentLoader,
+    contextLoader: ctx.contextLoader,
+    suppressError: true,
+  })
+  if (!isActor(actor) || !actor.id) {
+    return null
+  }
+
+  const noteActorId = note.attributionId?.href
+  if (noteActorId && noteActorId !== actor.id.href) {
+    return null
+  }
+
+  const actorName = stringifyLanguageValue(actor.name)
+    || stringifyLanguageValue(actor.preferredUsername)
+    || actor.id.hostname
+  const actorUrl = firstUrl(actor.url) ?? actor.id.href
+  const icon = await actor.getIcon({
+    documentLoader: ctx.documentLoader,
+    contextLoader: ctx.contextLoader,
+    suppressError: true,
+  })
+
+  return {
+    actorId: actor.id.href,
+    actorName,
+    actorUrl,
+    actorIconUrl: firstImageUrl(icon),
+  }
+}
+
+export async function persistCommentFromCreate(ctx: { documentLoader: any; contextLoader: any }, create: Create): Promise<boolean> {
+  const object = await create.getObject({
+    documentLoader: ctx.documentLoader,
+    contextLoader: ctx.contextLoader,
+    suppressError: true,
+  })
+  if (!(object instanceof Note) || !object.id) {
+    return false
+  }
+  if (!isPublic(object, create)) {
+    return false
+  }
+
+  const target = object.replyTargetId ? normalizeCommentTarget(object.replyTargetId) : null
+  if (!target) {
+    return false
+  }
+  const entry = await fetchFedifyContentEntry("blog", target.articlePath)
+  if (!entry) {
+    return false
+  }
+
+  const actor = await resolveActorProfile(ctx, create, object)
+  if (!actor) {
+    return false
+  }
+
+  const contentHtml = stringifyLanguageValue(object.content)
+  const contentText = htmlToText(contentHtml)
+  if (!contentText) {
+    return false
+  }
+
+  await ensureActivityPubCommentsTable()
+  const db = getDatabase()
+  const payload = JSON.stringify(await create.toJsonLd({ format: "compact" }))
+  const publishedAt = object.published?.toString() ?? create.published?.toString() ?? null
+  const commentUrl = firstUrl(object.url) ?? object.id.href
+  const activityId = create.id?.href ?? null
+
+  await db.sql`INSERT INTO activitypub_comments (
+    object_id,
+    activity_id,
+    article_id,
+    article_path,
+    actor_id,
+    actor_name,
+    actor_url,
+    actor_icon_url,
+    content_text,
+    content_html,
+    url,
+    published_at,
+    status,
+    payload
+  ) VALUES (
+    ${object.id.href},
+    ${activityId},
+    ${target.articleId},
+    ${target.articlePath},
+    ${actor.actorId},
+    ${actor.actorName},
+    ${actor.actorUrl},
+    ${actor.actorIconUrl},
+    ${contentText},
+    ${contentHtml},
+    ${commentUrl},
+    ${publishedAt},
+    'visible',
+    ${payload}
+  )
+  ON CONFLICT(object_id) DO UPDATE SET
+    activity_id = excluded.activity_id,
+    article_id = excluded.article_id,
+    article_path = excluded.article_path,
+    actor_id = excluded.actor_id,
+    actor_name = excluded.actor_name,
+    actor_url = excluded.actor_url,
+    actor_icon_url = excluded.actor_icon_url,
+    content_text = excluded.content_text,
+    content_html = excluded.content_html,
+    url = excluded.url,
+    published_at = excluded.published_at,
+    status = 'visible',
+    payload = excluded.payload,
+    updated_at = CURRENT_TIMESTAMP`
+
+  return true
+}
+
+export async function markCommentDeletedFromDelete(ctx: { documentLoader: any; contextLoader: any }, del: Delete): Promise<boolean> {
+  const actor = await del.getActor({
+    documentLoader: ctx.documentLoader,
+    contextLoader: ctx.contextLoader,
+    suppressError: true,
+  })
+  if (!isActor(actor) || !actor.id || !del.objectId) {
+    return false
+  }
+
+  await ensureActivityPubCommentsTable()
+  const db = getDatabase()
+  const { rows } = await db.sql`SELECT actor_id FROM activitypub_comments WHERE object_id = ${del.objectId.href} LIMIT 1`
+  const existing = rows?.[0] as { actor_id?: string | null } | undefined
+  if (!existing || existing.actor_id !== actor.id.href) {
+    return false
+  }
+
+  await db.sql`UPDATE activitypub_comments
+    SET status = 'deleted',
+        updated_at = CURRENT_TIMESTAMP
+    WHERE object_id = ${del.objectId.href}
+      AND actor_id = ${actor.id.href}`
+  return true
+}
+
+export async function listActivityPubComments(articlePath: string): Promise<ActivityPubComment[]> {
+  const normalizedPath = normalizeArticlePath(articlePath)
+  if (!normalizedPath.startsWith(`${FEDIFY_BLOG_COLLECTION_PREFIX}/`)) {
+    return []
+  }
+
+  await ensureActivityPubCommentsTable()
+  const db = getDatabase()
+  const { rows } = await db.sql`SELECT
+      id,
+      object_id,
+      article_id,
+      article_path,
+      actor_id,
+      actor_name,
+      actor_url,
+      actor_icon_url,
+      content_text,
+      url,
+      published_at,
+      received_at
+    FROM activitypub_comments
+    WHERE article_path = ${normalizedPath}
+      AND status = 'visible'
+    ORDER BY COALESCE(published_at, received_at) ASC, id ASC`
+
+  return ((rows ?? []) as CommentRow[]).map((row) => ({
+    id: row.id,
+    objectId: row.object_id,
+    articleId: row.article_id,
+    articlePath: row.article_path,
+    actorId: row.actor_id,
+    actorName: row.actor_name || row.actor_id,
+    actorUrl: row.actor_url || row.actor_id,
+    actorIconUrl: row.actor_icon_url || null,
+    contentText: row.content_text,
+    url: row.url || row.object_id,
+    publishedAt: row.published_at || null,
+    receivedAt: row.received_at,
+  }))
+}

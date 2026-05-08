@@ -12,6 +12,7 @@ import {
   Article,
   CryptographicKey,
   Create,
+  Delete,
   Endpoints,
   Follow,
   Image,
@@ -31,6 +32,10 @@ import {
   fetchFedifyContentEntry,
   SITE_ORIGIN,
 } from "./fedifyContent"
+import {
+  markCommentDeletedFromDelete,
+  persistCommentFromCreate,
+} from "./fedifyComments"
 
 type CloudflareEnv = {
   FEDIFY_KV?: any
@@ -413,6 +418,12 @@ builder
     if (object instanceof Follow && object.actorIds.some((id) => id.href === ACTOR_URI.href)) {
       await recordFollowingAccepted(actor.id.href, object)
     }
+  })
+  .on(Create, async (ctx, create) => {
+    await persistCommentFromCreate(ctx, create)
+  })
+  .on(Delete, async (ctx, del) => {
+    await markCommentDeletedFromDelete(ctx, del)
   })
   .on(Activity, async () => {
     // Verified but unsupported activities are intentionally accepted.
