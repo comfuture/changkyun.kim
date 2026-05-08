@@ -55,3 +55,6 @@ sw.*
 *.swp
 
 .data
+
+# Generated Nuxt Content fallback module
+server/utils/contentDump.generated.ts

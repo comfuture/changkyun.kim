@@ -2,9 +2,9 @@ import { queryCollection } from "@nuxt/content/server"
 import { checksums } from "#content/manifest"
 import { createError, getHeader, getRequestURL, readRawBody, setHeader, setResponseStatus } from "h3"
 import type { H3Event } from "h3"
+import embeddedContentDumps from "#content-dump-generated"
 
 import { createFedify, getCloudflareEnv } from "../utils/fedify"
-import embeddedContentDumps from "../utils/contentDump.generated"
 import {
   buildArticleFromEntry,
   buildCreateFromEntry,
