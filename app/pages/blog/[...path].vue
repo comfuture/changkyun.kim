@@ -89,6 +89,9 @@ useHead(() => ({
             >
               <ContentRenderer :value="data" />
             </section>
+            <ActivitypubReactions
+              :path="resolvedPath"
+            />
             <ActivitypubComments
               :path="resolvedPath"
               :activity-url="canonicalActivityUrl"
