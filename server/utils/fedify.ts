@@ -42,8 +42,8 @@ import {
   persistCommentFromCreate,
 } from "./fedifyComments"
 import {
+  handleReactionUndo,
   persistReactionFromActivity,
-  removeReactionFromUndo,
 } from "./fedifyReactions"
 import { persistFeedPostFromCreate } from "./activityPubFeed"
 import { ensureActivityPubSchema } from "./activityPubSchema"
@@ -641,13 +641,8 @@ builder
       }
       return
     }
-    if (object instanceof Like || object instanceof EmojiReact) {
-      await removeReactionFromUndo(ctx, undo)
-      return
-    }
-
-    const reactionRemoved = await removeReactionFromUndo(ctx, undo)
-    if (reactionRemoved) {
+    const reactionHandled = await handleReactionUndo(ctx, undo, { actorId: actor.id.href, object })
+    if (reactionHandled || object instanceof Like || object instanceof EmojiReact) {
       return
     }
 

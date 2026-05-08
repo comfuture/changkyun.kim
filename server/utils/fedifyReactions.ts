@@ -199,20 +199,25 @@ export async function persistReactionFromActivity(
   return true
 }
 
-export async function removeReactionFromUndo(
+export async function handleReactionUndo(
   ctx: { documentLoader: any; contextLoader: any },
   undo: { objectId: URL | null; getActor: (options: any) => Promise<unknown>; getObject: (options: any) => Promise<unknown> },
+  options: { actorId?: string; object?: unknown } = {},
 ): Promise<boolean> {
-  const actor = await undo.getActor({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  if (!isActor(actor) || !actor.id) {
-    return false
+  let actorId = options.actorId ?? null
+  if (!actorId) {
+    const actor = await undo.getActor({
+      documentLoader: ctx.documentLoader,
+      contextLoader: ctx.contextLoader,
+      suppressError: true,
+    })
+    if (!isActor(actor) || !actor.id) {
+      return false
+    }
+    actorId = actor.id.href
   }
 
-  const object = await undo.getObject({
+  const object = options.object ?? await undo.getObject({
     documentLoader: ctx.documentLoader,
     contextLoader: ctx.contextLoader,
     suppressError: true,
@@ -221,29 +226,21 @@ export async function removeReactionFromUndo(
   await ensureActivityPubSchema()
   const db = getDatabase()
   if (object instanceof Like || object instanceof EmojiReact) {
-    const target = await resolveReactionTarget(ctx, object)
-    if (!target) {
-      const activityId = object.id?.href ?? undo.objectId?.href ?? null
-      if (!activityId) {
-        return false
-      }
-      const result = await db.sql`DELETE FROM activitypub_reactions
-        WHERE actor_id = ${actor.id.href}
-          AND activity_id = ${activityId}`
-      return countValue((result as { changes?: unknown }).changes) > 0
+    const activityId = object.id?.href ?? undo.objectId?.href ?? null
+    if (!activityId) {
+      return true
     }
-
-    const result = await db.sql`DELETE FROM activitypub_reactions
-      WHERE actor_id = ${actor.id.href}
-        AND article_path = ${target.articlePath}`
-    return countValue((result as { changes?: unknown }).changes) > 0
+    await db.sql`DELETE FROM activitypub_reactions
+      WHERE actor_id = ${actorId}
+        AND activity_id = ${activityId}`
+    return true
   }
 
   if (!undo.objectId) {
     return false
   }
   const result = await db.sql`DELETE FROM activitypub_reactions
-    WHERE actor_id = ${actor.id.href}
+    WHERE actor_id = ${actorId}
       AND activity_id = ${undo.objectId.href}`
   return countValue((result as { changes?: unknown }).changes) > 0
 }
