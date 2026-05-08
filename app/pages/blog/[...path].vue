@@ -19,6 +19,7 @@ const { data: surround } = await useAsyncData(() => `blog-surround:${resolvedPat
 })
 const coverImage = computed(() => data.value?.coverImage)
 const activityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}/activity` : null)
+const canonicalActivityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}` : '')
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
@@ -90,7 +91,7 @@ useHead(() => ({
             </section>
             <ActivitypubComments
               :path="resolvedPath"
-              :activity-url="activityUrl || ''"
+              :activity-url="canonicalActivityUrl"
             />
             <USeparator v-if="surround?.filter(Boolean).length" class="my-8" />
             <UContentSurround v-if="surround?.filter(Boolean).length" :surround="(surround as any)" />
