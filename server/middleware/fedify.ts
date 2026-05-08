@@ -55,6 +55,7 @@ type D1PreparedStatement = {
 
 type D1Database = {
   prepare: (query: string) => D1PreparedStatement
+  batch: (statements: D1PreparedStatement[]) => Promise<unknown[]>
 }
 
 type ContentSyncEnv = {
@@ -426,24 +427,33 @@ async function contentChecksumIsCurrent(db: D1Database, collection: "blog" | "ap
 }
 
 async function importContentDump(db: D1Database, collection: "blog" | "app", lines: string[]): Promise<void> {
-  await db.prepare("DELETE FROM _content_info WHERE id = ?")
-    .bind(`checksum_${collection}`)
+  const checksumId = `checksum_${collection}`
+  const deleteChecksum = () => db.prepare("DELETE FROM _content_info WHERE id = ?")
+    .bind(checksumId)
     .run()
     .catch(() => undefined)
 
+  await deleteChecksum()
+
   try {
+    const statements: D1PreparedStatement[] = []
     for (const line of lines) {
       const statement = getDumpStatement(line)
       if (!statement) {
         continue
       }
-      await db.prepare(statement).run()
+      statements.push(db.prepare(statement))
     }
-  } catch (error) {
-    await db.prepare("DELETE FROM _content_info WHERE id = ?")
-      .bind(`checksum_${collection}`)
+
+    if (statements.length > 0) {
+      await db.batch(statements)
+    }
+
+    await db.prepare("INSERT INTO _content_info (id, version, ready) VALUES (?, ?, 1)")
+      .bind(checksumId, checksums[collection])
       .run()
-      .catch(() => undefined)
+  } catch (error) {
+    await deleteChecksum()
     throw error
   }
 }
@@ -473,6 +483,7 @@ async function ensureContentD1Synced(
   })().catch((error) => {
     contentSyncCache.delete(cacheKey)
     console.error("Failed to prepare Nuxt Content D1 cache", error)
+    throw error
   })
 
   contentSyncCache.set(cacheKey, promise)
@@ -554,13 +565,15 @@ export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)
   const fedifyUrl = toFedifyUrl(url)
   const accept = getHeader(event, "accept")
-  const syncTarget = resolveContentSyncTarget(fedifyUrl.pathname)
+  const isFederation = isFederationRequest(event.method, fedifyUrl.pathname, accept)
+  const syncTarget = resolveContentSyncTarget(url.pathname)
+    ?? (isFederation ? resolveContentSyncTarget(fedifyUrl.pathname) : null)
 
   if (syncTarget && (event.method === "GET" || event.method === "HEAD" || event.method === "POST")) {
     await ensureContentD1Synced(event, syncTarget.collection)
   }
 
-  if (!isFederationRequest(event.method, fedifyUrl.pathname, accept)) {
+  if (!isFederation) {
     return
   }
 

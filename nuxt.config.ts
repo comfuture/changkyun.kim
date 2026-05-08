@@ -4,6 +4,11 @@ import { gunzipSync } from 'node:zlib'
 
 type ContentCollection = 'blog' | 'app'
 
+function isContentDumpForCollection(lines: unknown, collection: ContentCollection) {
+  return Array.isArray(lines)
+    && lines.some((line) => typeof line === 'string' && line.includes(`_content_${collection}`))
+}
+
 function readContentDump(collection: ContentCollection) {
   const root = process.cwd()
   const candidates = [
@@ -21,7 +26,7 @@ function readContentDump(collection: ContentCollection) {
     const dump = readFileSync(path, 'utf8')
     try {
       const lines = JSON.parse(gunzipSync(Buffer.from(dump.trim(), 'base64')).toString('utf8')) as unknown
-      if (Array.isArray(lines) && lines.some((line) => typeof line === 'string' && line.startsWith(`INSERT INTO _content_${collection} `))) {
+      if (isContentDumpForCollection(lines, collection)) {
         return dump
       }
     } catch {
@@ -29,7 +34,7 @@ function readContentDump(collection: ContentCollection) {
     }
   }
 
-  throw new Error(`Unable to find a non-empty Nuxt Content dump for ${collection}. Tried: ${candidates.join(', ')}`)
+  throw new Error(`Unable to find a Nuxt Content dump for ${collection}. Tried: ${candidates.join(', ')}`)
 }
 
 export default defineNuxtConfig({
