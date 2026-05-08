@@ -38,6 +38,7 @@ import {
   markCommentDeletedFromDelete,
   persistCommentFromCreate,
 } from "./fedifyComments"
+import { persistFeedPostFromCreate } from "./activityPubFeed"
 import { ensureActivityPubSchema } from "./activityPubSchema"
 
 type CloudflareEnv = {
@@ -47,28 +48,6 @@ type CloudflareEnv = {
 
 export type FedifyContextData = {
   env?: CloudflareEnv
-}
-
-export type ActivityPubFollowInput = {
-  actorId?: string
-  resource?: string
-}
-
-export type ActivityPubFollowResult = {
-  result: true
-  actorId: string
-  status: "accepted" | "requested"
-  sent: boolean
-}
-
-export class ActivityPubFollowError extends Error {
-  statusCode: number
-
-  constructor(statusCode: number, message: string) {
-    super(message)
-    this.name = "ActivityPubFollowError"
-    this.statusCode = statusCode
-  }
 }
 
 const ACTOR_PATH = `/@${ACTOR_IDENTIFIER}`
@@ -246,19 +225,6 @@ async function activityToPayload(activity: Activity): Promise<string> {
   return JSON.stringify(await activity.toJsonLd({ format: "compact" }))
 }
 
-function assertRemoteActorUrl(value: string): URL {
-  let url: URL
-  try {
-    url = new URL(value)
-  } catch {
-    throw new ActivityPubFollowError(400, "actorId must be a valid URL.")
-  }
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
-    throw new ActivityPubFollowError(400, "actorId must use http or https.")
-  }
-  return url
-}
-
 async function followActivityUri(actorId: string): Promise<URL> {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(actorId))
   const hash = Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("")
@@ -295,6 +261,42 @@ async function removeFollowingRequest(actorId: string, activityId: string): Prom
     WHERE actor_id = ${actorId}
       AND activity_id = ${activityId}
       AND status = 'requested'`
+}
+
+async function sendFollowBack(ctx: { sendActivity: any }, actor: Actor): Promise<void> {
+  const actorId = actor.id?.href
+  if (!actorId || !actor.inboxId || actorId === ACTOR_URI.href) {
+    return
+  }
+
+  let followId: URL | null = null
+  try {
+    const existingStatus = await getFollowingStatus(actorId)
+    if (existingStatus) {
+      return
+    }
+
+    followId = await followActivityUri(actorId)
+    const follow = new Follow({
+      id: followId,
+      actor: ACTOR_URI,
+      object: actor.id,
+      to: actor.id,
+    })
+
+    await recordFollowingRequested(actorId, follow)
+    await ctx.sendActivity(
+      { identifier: ACTOR_IDENTIFIER },
+      actor,
+      follow,
+      { preferSharedInbox: true },
+    )
+  } catch (error) {
+    if (followId) {
+      await removeFollowingRequest(actorId, followId.href).catch(() => undefined)
+    }
+    console.error("Failed to send ActivityPub follow-back", error)
+  }
 }
 
 async function recordFollower(actor: Actor, follow: Follow): Promise<boolean> {
@@ -534,6 +536,7 @@ builder
     })
 
     await ctx.sendActivity({ identifier: ACTOR_IDENTIFIER }, actor, accept, { preferSharedInbox: true })
+    await sendFollowBack(ctx, actor)
 
     const { items } = await collectCreateActivitiesSafe({ limit: FEDIFY_OUTBOX_PAGE_SIZE })
     for (const activity of items.slice().reverse()) {
@@ -592,6 +595,7 @@ builder
   })
   .on(Create, async (ctx, create) => {
     await persistCommentFromCreate(ctx, create)
+    await persistFeedPostFromCreate(ctx, create)
   })
   .on(Delete, async (ctx, del) => {
     await markCommentDeletedFromDelete(ctx, del)
@@ -623,65 +627,6 @@ export async function createFedify(env?: CloudflareEnv): Promise<Federation<Fedi
 export async function createFedifyContext(env?: CloudflareEnv) {
   const federation = await createFedify(env)
   return federation.createContext(new URL(SITE_ORIGIN), { env })
-}
-
-export async function followRemoteActor(input: ActivityPubFollowInput, env?: CloudflareEnv): Promise<ActivityPubFollowResult> {
-  const actorIdInput = typeof input.actorId === "string" ? input.actorId.trim() : ""
-  const resourceInput = typeof input.resource === "string" ? input.resource.trim() : ""
-  if (!actorIdInput && !resourceInput) {
-    throw new ActivityPubFollowError(400, "Either resource or actorId is required.")
-  }
-
-  const ctx = await createFedifyContext(env)
-  const lookupTarget = actorIdInput ? assertRemoteActorUrl(actorIdInput) : resourceInput
-  const object = await ctx.lookupObject(lookupTarget).catch(() => null)
-  if (!isActor(object) || !object.id) {
-    throw new ActivityPubFollowError(422, "The target did not resolve to an ActivityPub actor.")
-  }
-  if (!object.inboxId) {
-    throw new ActivityPubFollowError(422, "The resolved actor does not advertise an inbox.")
-  }
-  if (object.id.href === ACTOR_URI.href) {
-    throw new ActivityPubFollowError(400, "Cannot follow the local actor.")
-  }
-
-  const existingStatus = await getFollowingStatus(object.id.href)
-  if (existingStatus) {
-    return {
-      result: true,
-      actorId: object.id.href,
-      status: existingStatus,
-      sent: false,
-    }
-  }
-
-  const followId = await followActivityUri(object.id.href)
-  const follow = new Follow({
-    id: followId,
-    actor: ACTOR_URI,
-    object: object.id,
-    to: object.id,
-  })
-
-  await recordFollowingRequested(object.id.href, follow)
-  try {
-    await ctx.sendActivity(
-      { identifier: ACTOR_IDENTIFIER },
-      object,
-      follow,
-      { preferSharedInbox: true },
-    )
-  } catch (error) {
-    await removeFollowingRequest(object.id.href, followId.href)
-    throw error
-  }
-
-  return {
-    result: true,
-    actorId: object.id.href,
-    status: "requested",
-    sent: true,
-  }
 }
 
 export async function processFedifyQueueMessage(env: CloudflareEnv | undefined, body: unknown): Promise<void> {
