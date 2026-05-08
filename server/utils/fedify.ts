@@ -84,7 +84,8 @@ function importPemKey(pem: string, usage: KeyUsage[]): Promise<CryptoKey> {
       name: "RSASSA-PKCS1-v1_5",
       hash: { name: "SHA-256" },
     },
-    isPublicKey,
+    // Fedify validates actor keys as extractable before using authenticated document loaders.
+    true,
     usage,
   )
 }
