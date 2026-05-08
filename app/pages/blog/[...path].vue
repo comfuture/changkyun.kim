@@ -18,7 +18,7 @@ const { data: surround } = await useAsyncData(() => `blog-surround:${resolvedPat
   default: () => [],
 })
 const coverImage = computed(() => data.value?.coverImage)
-const activityUrl = computed(() => `https://changkyun.kim${resolvedPath.value}`)
+const activityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}/activity` : null)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
@@ -33,6 +33,18 @@ useSeoMeta({
   ogImage: () => data.value?.coverImage,
   twitterCard: 'summary_large_image',
 })
+
+useHead(() => ({
+  link: activityUrl.value
+    ? [
+        {
+          rel: 'alternate',
+          type: 'application/activity+json',
+          href: activityUrl.value,
+        },
+      ]
+    : [],
+}))
 
 </script>
 <template>
@@ -78,7 +90,7 @@ useSeoMeta({
             </section>
             <ActivitypubComments
               :path="resolvedPath"
-              :activity-url="activityUrl"
+              :activity-url="activityUrl || ''"
             />
             <USeparator v-if="surround?.filter(Boolean).length" class="my-8" />
             <UContentSurround v-if="surround?.filter(Boolean).length" :surround="(surround as any)" />

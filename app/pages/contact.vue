@@ -38,7 +38,9 @@ const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover3.jpg
           </UButton>
         </li>
         <li>
-          <UButton variant="link" to="#" class="p-0">@me@changkyun.kim</UButton>
+          <UButton variant="link" to="https://changkyun.kim/@me" target="_blank" class="p-0">
+            @me@changkyun.kim
+          </UButton>
         </li>
         <li>
           <UButton variant="link" to="https://open.kakao.com/me/changkyunkim" target="_blank" class="p-0">
