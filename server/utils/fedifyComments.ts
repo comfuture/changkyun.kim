@@ -15,6 +15,7 @@ import {
   normalizeArticlePath,
   SITE_ORIGIN,
 } from "./fedifyContent"
+import { ensureActivityPubSchema } from "./activityPubSchema"
 
 export type ActivityPubComment = {
   id: number
@@ -296,6 +297,7 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
     return false
   }
 
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const payload = JSON.stringify(await create.toJsonLd({ format: "compact" }))
   const publishedAt = object.published?.toString() ?? create.published?.toString() ?? new Date().toISOString()
@@ -362,6 +364,7 @@ export async function markCommentDeletedFromDelete(ctx: { documentLoader: any; c
     return false
   }
 
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const { rows } = await db.sql`SELECT actor_id FROM activitypub_comments WHERE object_id = ${del.objectId.href} LIMIT 1`
   const existing = rows?.[0] as { actor_id?: string | null } | undefined
@@ -383,6 +386,7 @@ export async function listActivityPubComments(articlePath: string): Promise<Acti
     return []
   }
 
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const { rows } = await db.sql`SELECT
       id,

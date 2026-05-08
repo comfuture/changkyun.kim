@@ -36,6 +36,7 @@ import {
   markCommentDeletedFromDelete,
   persistCommentFromCreate,
 } from "./fedifyComments"
+import { ensureActivityPubSchema } from "./activityPubSchema"
 
 type CloudflareEnv = {
   FEDIFY_KV?: any
@@ -100,6 +101,7 @@ function makeQueue(env?: CloudflareEnv) {
 }
 
 async function getActorKeyPair(): Promise<CryptoKeyPair | null> {
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const { rows } = await db.sql`SELECT private_key, public_key FROM actor WHERE actor_id = ${ACTOR_URI.href} LIMIT 1`
   const row = rows?.[0] as { private_key?: string | null; public_key?: string | null } | undefined
@@ -113,6 +115,7 @@ async function getActorKeyPair(): Promise<CryptoKeyPair | null> {
 }
 
 async function countRows(table: "followers" | "following", status = "accepted"): Promise<number> {
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const { rows } = table === "followers"
     ? await db.sql`SELECT COUNT(*) AS count FROM followers WHERE status = ${status}`
@@ -140,6 +143,7 @@ async function recordFollower(actor: Actor, follow: Follow): Promise<boolean> {
     return false
   }
 
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const existing = await db.sql`SELECT status FROM followers WHERE actor_id = ${actorId} LIMIT 1`
   const wasAccepted = (existing.rows?.[0] as { status?: string } | undefined)?.status === "accepted"
@@ -158,6 +162,7 @@ async function recordFollower(actor: Actor, follow: Follow): Promise<boolean> {
 }
 
 async function removeFollower(actorId: string, followActivityId?: string | null): Promise<boolean> {
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const existing = await db.sql`SELECT status FROM followers WHERE actor_id = ${actorId} LIMIT 1`
   const wasAccepted = (existing.rows?.[0] as { status?: string } | undefined)?.status === "accepted"
@@ -172,6 +177,7 @@ async function removeFollower(actorId: string, followActivityId?: string | null)
 }
 
 async function recordFollowingAccepted(actorId: string, follow: Follow): Promise<void> {
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const payload = await activityToPayload(follow)
   const activityId = follow.id?.href ?? `${ACTOR_URI.href}/follow/${crypto.randomUUID()}`
@@ -186,6 +192,7 @@ async function recordFollowingAccepted(actorId: string, follow: Follow): Promise
 }
 
 async function loadFollowers(): Promise<URL[]> {
+  await ensureActivityPubSchema()
   const db = getDatabase()
   const { rows } = await db.sql`SELECT actor_id FROM followers WHERE status = 'accepted' ORDER BY updated_at DESC`
   return (rows ?? [])
@@ -332,6 +339,7 @@ builder
     if (identifier !== ACTOR_IDENTIFIER) {
       return null
     }
+    await ensureActivityPubSchema()
     const db = getDatabase()
     const { rows } = await db.sql`SELECT actor_id FROM following WHERE status IN ('accepted', 'requested') ORDER BY updated_at DESC`
     return {
