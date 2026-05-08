@@ -18,6 +18,7 @@ const { data: surround } = await useAsyncData(() => `blog-surround:${resolvedPat
   default: () => [],
 })
 const coverImage = computed(() => data.value?.coverImage)
+const activityUrl = computed(() => `https://changkyun.kim${resolvedPath.value}`)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
@@ -75,6 +76,10 @@ useSeoMeta({
             >
               <ContentRenderer :value="data" />
             </section>
+            <ActivitypubComments
+              :path="resolvedPath"
+              :activity-url="activityUrl"
+            />
             <USeparator v-if="surround?.filter(Boolean).length" class="my-8" />
             <UContentSurround v-if="surround?.filter(Boolean).length" :surround="(surround as any)" />
           </UPageBody>
