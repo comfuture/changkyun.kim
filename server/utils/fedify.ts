@@ -1,6 +1,7 @@
 import {
   createFederationBuilder,
   MemoryKvStore,
+  nodeInfoToJson,
   type NodeInfo,
   type Federation,
   type KvStore,
@@ -151,10 +152,23 @@ function countValue(raw: unknown): number {
 
 async function countLocalPosts(): Promise<number> {
   try {
-    const { totalItems } = await collectCreateActivities({ limit: null })
-    return totalItems
+    const db = getDatabase()
+    const [blogCount, appCount] = await Promise.all([
+      db.sql`SELECT COUNT(*) AS count
+        FROM _content_blog
+        WHERE createdAt IS NOT NULL
+          AND datetime(createdAt) IS NOT NULL
+          AND json_extract(meta, '$.draft') IS NOT TRUE`,
+      db.sql`SELECT COUNT(*) AS count
+        FROM _content_app
+        WHERE createdAt IS NOT NULL
+          AND datetime(createdAt) IS NOT NULL
+          AND json_extract(meta, '$.draft') IS NOT TRUE`,
+    ])
+    return countValue((blogCount.rows?.[0] as Record<string, unknown> | undefined)?.count)
+      + countValue((appCount.rows?.[0] as Record<string, unknown> | undefined)?.count)
   } catch {
-    console.warn("Failed to count ActivityPub local posts from content; falling back to persisted outbox count.")
+    console.warn("Failed to count ActivityPub local posts from content tables; falling back to persisted outbox count.")
   }
 
   try {
@@ -166,6 +180,10 @@ async function countLocalPosts(): Promise<number> {
     console.warn("Failed to count ActivityPub local posts from outbox; using 0.")
     return 0
   }
+}
+
+export async function getActivityPubNodeInfoJson() {
+  return nodeInfoToJson(await getActivityPubNodeInfo())
 }
 
 async function countLocalComments(): Promise<number> {
@@ -252,6 +270,42 @@ async function recordFollowingRequested(actorId: string, follow: Follow): Promis
       activity_payload = excluded.activity_payload,
       status = 'requested',
       updated_at = CURRENT_TIMESTAMP`
+}
+
+async function loadFollowingActivity(ctx: { documentLoader: any; contextLoader: any }, activityId: string): Promise<Follow | null> {
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const { rows } = await db.sql`SELECT actor_id, activity_id, activity_payload
+    FROM following
+    WHERE activity_id = ${activityId}
+      AND status IN ('accepted', 'requested')
+    LIMIT 1`
+  const row = rows?.[0] as {
+    actor_id?: string | null
+    activity_id?: string | null
+    activity_payload?: string | null
+  } | undefined
+  if (!row?.actor_id || !row.activity_id) {
+    return null
+  }
+
+  if (row.activity_payload) {
+    try {
+      return await Follow.fromJsonLd(JSON.parse(row.activity_payload), {
+        documentLoader: ctx.documentLoader,
+        contextLoader: ctx.contextLoader,
+      })
+    } catch {
+      console.warn("Failed to parse persisted ActivityPub Follow; reconstructing minimal object.")
+    }
+  }
+
+  return new Follow({
+    id: new URL(row.activity_id),
+    actor: ACTOR_URI,
+    object: new URL(row.actor_id),
+    to: new URL(row.actor_id),
+  })
 }
 
 async function removeFollowingRequest(actorId: string, activityId: string): Promise<void> {
@@ -469,6 +523,14 @@ builder.setObjectDispatcher(Article, "/{collection}/{+path}", async (_ctx, value
   }
   const entry = await fetchFedifyContentEntry(collection, `/${collection}/${values.path}`)
   return entry ? await buildArticleFromEntry(entry) : null
+})
+
+builder.setObjectDispatcher(Follow, "/@{identifier}/follow/{hash}", async (ctx, values) => {
+  if (values.identifier !== ACTOR_IDENTIFIER || !values.hash) {
+    return null
+  }
+  const activityId = new URL(`/@${ACTOR_IDENTIFIER}/follow/${values.hash}`, SITE_ORIGIN).href
+  return await loadFollowingActivity(ctx, activityId)
 })
 
 builder
