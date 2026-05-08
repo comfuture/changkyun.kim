@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill"
 import {
   Article,
   Create,
+  Hashtag,
   PUBLIC_COLLECTION,
   Source,
 } from "@fedify/vocab"
@@ -27,6 +28,7 @@ export type FedifyContentEntry = {
   description?: string | null
   createdAt?: string | Date | null
   draft?: boolean | null
+  tags?: string[] | null
 }
 
 type FedifyCollection = "blog" | "app"
@@ -64,6 +66,7 @@ function toFedifyContentEntry(row: ContentRow): FedifyContentEntry {
     description: row.description ?? null,
     createdAt: row.createdAt ?? null,
     draft: Boolean(meta && typeof meta === "object" && meta.draft === true),
+    tags: normalizeTags(row.tags),
   }
 }
 
@@ -217,6 +220,40 @@ function parseJsonField(value: unknown): unknown {
   } catch {
     return value
   }
+}
+
+function normalizeTags(value: unknown): string[] {
+  const parsed = parseJsonField(value)
+  if (!Array.isArray(parsed)) {
+    return []
+  }
+
+  const tags = new Set<string>()
+  for (const item of parsed) {
+    if (typeof item !== "string") {
+      continue
+    }
+    const tag = item.trim().replace(/^#+/, "")
+    if (tag) {
+      tags.add(tag)
+    }
+  }
+  return Array.from(tags)
+}
+
+function buildHashtags(tags?: string[] | null): Hashtag[] {
+  return (tags ?? []).flatMap((tag) => {
+    const normalized = tag.trim().replace(/^#+/, "")
+    if (!normalized) {
+      return []
+    }
+    return [
+      new Hashtag({
+        name: `#${normalized}`,
+        href: new URL(`/blog/tag/${encodeURIComponent(normalized)}`, SITE_ORIGIN),
+      }),
+    ]
+  })
 }
 
 function stringifyMinimarkSafe(tree: any): string {
@@ -398,6 +435,7 @@ export async function buildArticleFromEntry(entry: FedifyContentEntry): Promise<
     name: entry?.title || entry?.stem || articleUrl.href,
     published: normalizeDate(entry?.createdAt),
     summary: entry?.description || null,
+    tags: buildHashtags(entry?.tags),
     urls: Array.from(new Map(urlCandidates.map((url) => [url.href, url])).values()),
     to: PUBLIC_COLLECTION,
     source: markdown

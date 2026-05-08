@@ -350,6 +350,7 @@ function toDumpEntry(values: unknown[]): FedifyContentEntry | null {
   }
 
   const meta = parseJson(row.meta) as { draft?: boolean } | null
+  const tags = parseJson(row.tags)
   return {
     id: typeof row.id === "string" ? row.id : null,
     _id: typeof row.id === "string" ? row.id : null,
@@ -361,6 +362,9 @@ function toDumpEntry(values: unknown[]): FedifyContentEntry | null {
     description: typeof row.description === "string" ? row.description : null,
     createdAt: typeof row.createdAt === "string" ? row.createdAt : null,
     draft: Boolean(meta && typeof meta === "object" && meta.draft === true),
+    tags: Array.isArray(tags)
+      ? tags.filter((tag): tag is string => typeof tag === "string")
+      : [],
   }
 }
 
