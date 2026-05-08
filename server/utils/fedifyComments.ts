@@ -53,32 +53,6 @@ function getDatabase() {
   return useDatabase()
 }
 
-export async function ensureActivityPubCommentsTable(): Promise<void> {
-  const db = getDatabase()
-  await db.sql`CREATE TABLE IF NOT EXISTS activitypub_comments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    object_id TEXT NOT NULL,
-    activity_id TEXT,
-    article_id TEXT NOT NULL,
-    article_path TEXT NOT NULL,
-    actor_id TEXT NOT NULL,
-    actor_name TEXT,
-    actor_url TEXT,
-    actor_icon_url TEXT,
-    content_text TEXT NOT NULL,
-    content_html TEXT,
-    url TEXT,
-    published_at TEXT,
-    received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status TEXT NOT NULL DEFAULT 'visible',
-    payload TEXT
-  );`
-  await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_activitypub_comments_object_id ON activitypub_comments(object_id);`
-  await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_comments_article_status ON activitypub_comments(article_path, status, published_at);`
-  await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_comments_actor ON activitypub_comments(actor_id);`
-}
-
 function stringifyLanguageValue(value: unknown): string {
   if (!value) {
     return ""
@@ -104,30 +78,87 @@ function decodeHtmlEntities(value: string): string {
     amp: "&",
     apos: "'",
     gt: ">",
+    hellip: "\u2026",
+    ldquo: "\u201c",
     lt: "<",
+    lsquo: "\u2018",
+    mdash: "\u2014",
+    middot: "\u00b7",
     nbsp: " ",
+    ndash: "\u2013",
     quot: "\"",
+    rdquo: "\u201d",
+    rsquo: "\u2019",
   }
   return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
     const normalized = entity.toLowerCase()
     if (normalized.startsWith("#x")) {
       const codePoint = Number.parseInt(normalized.slice(2), 16)
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match
+      return isValidUnicodeScalar(codePoint) ? String.fromCodePoint(codePoint) : match
     }
     if (normalized.startsWith("#")) {
       const codePoint = Number.parseInt(normalized.slice(1), 10)
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match
+      return isValidUnicodeScalar(codePoint) ? String.fromCodePoint(codePoint) : match
     }
     return named[normalized] ?? match
   })
 }
 
+function isValidUnicodeScalar(codePoint: number): boolean {
+  return Number.isInteger(codePoint)
+    && codePoint >= 0
+    && codePoint <= 0x10ffff
+    && (codePoint < 0xd800 || codePoint > 0xdfff)
+}
+
+function findHtmlTagEnd(value: string, start: number): number {
+  let quote: "\"" | "'" | null = null
+  for (let index = start + 1; index < value.length; index += 1) {
+    const char = value[index]
+    if (quote) {
+      if (char === quote) {
+        quote = null
+      }
+      continue
+    }
+    if (char === "\"" || char === "'") {
+      quote = char
+      continue
+    }
+    if (char === ">") {
+      return index
+    }
+  }
+  return -1
+}
+
+function stripHtmlTags(value: string): string {
+  let text = ""
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index]
+    if (char !== "<") {
+      text += char
+      continue
+    }
+
+    const tagEnd = findHtmlTagEnd(value, index)
+    if (tagEnd < 0) {
+      text += char
+      continue
+    }
+
+    const tag = value.slice(index + 1, tagEnd).trim()
+    if (/^br\b/i.test(tag) || /^\/p\b/i.test(tag)) {
+      text += /^br\b/i.test(tag) ? "\n" : "\n\n"
+    }
+    index = tagEnd
+  }
+  return text
+}
+
 function htmlToText(value: string): string {
   return decodeHtmlEntities(
-    value
-      .replace(/<\s*br\s*\/?>/gi, "\n")
-      .replace(/<\/\s*p\s*>/gi, "\n\n")
-      .replace(/<[^>]*>/g, "")
+    stripHtmlTags(value)
       .replace(/\r\n?/g, "\n")
       .replace(/[ \t]+\n/g, "\n")
       .replace(/\n{3,}/g, "\n\n")
@@ -265,10 +296,9 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
     return false
   }
 
-  await ensureActivityPubCommentsTable()
   const db = getDatabase()
   const payload = JSON.stringify(await create.toJsonLd({ format: "compact" }))
-  const publishedAt = object.published?.toString() ?? create.published?.toString() ?? null
+  const publishedAt = object.published?.toString() ?? create.published?.toString() ?? new Date().toISOString()
   const commentUrl = firstUrl(object.url) ?? object.id.href
   const activityId = create.id?.href ?? null
 
@@ -332,7 +362,6 @@ export async function markCommentDeletedFromDelete(ctx: { documentLoader: any; c
     return false
   }
 
-  await ensureActivityPubCommentsTable()
   const db = getDatabase()
   const { rows } = await db.sql`SELECT actor_id FROM activitypub_comments WHERE object_id = ${del.objectId.href} LIMIT 1`
   const existing = rows?.[0] as { actor_id?: string | null } | undefined
@@ -354,7 +383,6 @@ export async function listActivityPubComments(articlePath: string): Promise<Acti
     return []
   }
 
-  await ensureActivityPubCommentsTable()
   const db = getDatabase()
   const { rows } = await db.sql`SELECT
       id,
@@ -372,7 +400,7 @@ export async function listActivityPubComments(articlePath: string): Promise<Acti
     FROM activitypub_comments
     WHERE article_path = ${normalizedPath}
       AND status = 'visible'
-    ORDER BY COALESCE(published_at, received_at) ASC, id ASC`
+    ORDER BY published_at ASC, id ASC`
 
   return ((rows ?? []) as CommentRow[]).map((row) => ({
     id: row.id,

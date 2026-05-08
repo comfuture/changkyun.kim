@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS activitypub_comments (
   content_text TEXT NOT NULL,
   content_html TEXT,
   url TEXT,
-  published_at TEXT,
+  published_at TEXT NOT NULL,
   received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   status TEXT NOT NULL DEFAULT 'visible',
