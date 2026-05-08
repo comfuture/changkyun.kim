@@ -86,9 +86,6 @@ function acceptsActivityPub(acceptHeader?: string | null): boolean {
 }
 
 function isFederationRequest(method: string, pathname: string, accept?: string | null): boolean {
-  if (pathname.startsWith("/.well-known/nodeinfo")) {
-    return true
-  }
   if ((pathname === "/inbox" || pathname === "/@me/inbox") && method === "POST") {
     return true
   }
