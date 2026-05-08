@@ -4,6 +4,23 @@ import { gunzipSync } from 'node:zlib'
 
 type ContentCollection = 'blog' | 'app'
 
+const contentDumpGeneratedPath = resolve(process.cwd(), '.nuxt/contentDump.generated.ts')
+const emptyContentDumps: Record<ContentCollection, string> = {
+  blog: '',
+  app: '',
+}
+
+function writeContentDumpModule(dumps: Record<ContentCollection, string>) {
+  mkdirSync(resolve(process.cwd(), '.nuxt'), { recursive: true })
+  const source = `const dumps = ${JSON.stringify(dumps)} as const\nexport default dumps\n`
+  if (existsSync(contentDumpGeneratedPath) && readFileSync(contentDumpGeneratedPath, 'utf8') === source) {
+    return
+  }
+  writeFileSync(contentDumpGeneratedPath, source)
+}
+
+writeContentDumpModule(emptyContentDumps)
+
 function isContentDumpForCollection(lines: unknown, collection: ContentCollection) {
   return Array.isArray(lines)
     && lines.some((line) => typeof line === 'string' && line.includes(`_content_${collection}`))
@@ -38,6 +55,9 @@ function readContentDump(collection: ContentCollection) {
 }
 
 export default defineNuxtConfig({
+  alias: {
+    '#content-dump-generated': contentDumpGeneratedPath,
+  },
   typescript: {
     shim: false
   },
@@ -119,12 +139,7 @@ export default defineNuxtConfig({
         blog: readContentDump('blog'),
         app: readContentDump('app'),
       }
-      const generatedDir = resolve(process.cwd(), 'server/utils')
-      mkdirSync(generatedDir, { recursive: true })
-      writeFileSync(
-        resolve(generatedDir, 'contentDump.generated.ts'),
-        `const dumps = ${JSON.stringify(dumps)} as const\nexport default dumps\n`
-      )
+      writeContentDumpModule(dumps)
     },
     'vite:extendConfig'(config) {
       const include = config.optimizeDeps?.include
