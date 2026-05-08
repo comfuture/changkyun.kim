@@ -32,22 +32,13 @@ https://changkyun.kim/@me
 
 From another Fediverse server, search for `@me@changkyun.kim` and follow the result. The WebFinger endpoint also accepts the actor URL.
 
-To make the local actor follow another ActivityPub actor, call the authenticated operation endpoint with the same secret used for publishing:
+The site has no login-only admin UI or public follow endpoint. When a remote ActivityPub actor follows `@me@changkyun.kim`, the inbox accepts the Follow and sends a follow-back request from the local actor. Accepted followers and follow-back targets are used as the source set for the public following feed.
 
-```bash
-curl -sS -X POST 'https://changkyun.kim/__activitypub/follow' \
-  -H "authorization: Bearer $ACTIVITYPUB_PUBLISH_TOKEN" \
-  -H 'content-type: application/json' \
-  --data '{"resource":"acct:user@example.com"}'
-```
+Remote posts are collected in two ways:
 
-You can also pass an actor URL directly:
+- Public `Create<Note>` and `Create<Article>` activities delivered to the inbox are stored immediately.
+- The scheduled `ap:crawlFeed` task crawls public outboxes from connected actors and stores missing posts.
 
-```bash
-curl -sS -X POST 'https://changkyun.kim/__activitypub/follow' \
-  -H "authorization: Bearer $ACTIVITYPUB_PUBLISH_TOKEN" \
-  -H 'content-type: application/json' \
-  --data '{"actorId":"https://example.com/users/user"}'
-```
+Stored posts are exposed at `/following/`; `/feed` redirects there. Individual items are readable under `/following/:actor/:id`.
 
-Only add relays or shared actors that you trust, because following them can increase inbound and outbound federation traffic.
+Only allow follows or relay-style actors from sources you trust, because they can increase inbound traffic and affect what appears in the following feed.

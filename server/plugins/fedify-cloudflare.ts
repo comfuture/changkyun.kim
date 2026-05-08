@@ -19,5 +19,10 @@ export default defineNitroPlugin((nitroApp) => {
     } catch (error) {
       console.error("Failed publishing ActivityPub content on schedule", error)
     }
+    try {
+      await runTask("ap:crawlFeed")
+    } catch (error) {
+      console.error("Failed crawling ActivityPub feed on schedule", error)
+    }
   })
 })

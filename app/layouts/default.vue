@@ -2,6 +2,7 @@
 const navItems = [
   { label: 'About me', to: '/about' },
   { label: 'Articles', to: '/blog/' },
+  { label: 'Following', to: '/following/' },
   { label: 'Contact', to: '/contact' },
 ]
 </script>
