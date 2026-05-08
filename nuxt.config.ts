@@ -1,3 +1,37 @@
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { gunzipSync } from 'node:zlib'
+
+type ContentCollection = 'blog' | 'app'
+
+function readContentDump(collection: ContentCollection) {
+  const root = process.cwd()
+  const candidates = [
+    resolve(root, `.output/public/__nuxt_content/${collection}/sql_dump.txt`),
+    resolve(root, `.output/public/dump.${collection}.sql`),
+    resolve(root, `node_modules/.cache/nuxt/.nuxt/content/raw/dump.${collection}.sql`),
+    resolve(root, `.nuxt/content/raw/dump.${collection}.sql`),
+  ]
+
+  for (const path of candidates) {
+    if (!existsSync(path)) {
+      continue
+    }
+
+    const dump = readFileSync(path, 'utf8')
+    try {
+      const lines = JSON.parse(gunzipSync(Buffer.from(dump.trim(), 'base64')).toString('utf8')) as unknown
+      if (Array.isArray(lines) && lines.some((line) => typeof line === 'string' && line.startsWith(`INSERT INTO _content_${collection} `))) {
+        return dump
+      }
+    } catch {
+      continue
+    }
+  }
+
+  throw new Error(`Unable to find a non-empty Nuxt Content dump for ${collection}. Tried: ${candidates.join(', ')}`)
+}
+
 export default defineNuxtConfig({
   typescript: {
     shim: false
@@ -75,6 +109,18 @@ export default defineNuxtConfig({
   },
 
   hooks: {
+    'nitro:build:before'() {
+      const dumps = {
+        blog: readContentDump('blog'),
+        app: readContentDump('app'),
+      }
+      const generatedDir = resolve(process.cwd(), 'server/utils')
+      mkdirSync(generatedDir, { recursive: true })
+      writeFileSync(
+        resolve(generatedDir, 'contentDump.generated.ts'),
+        `const dumps = ${JSON.stringify(dumps)} as const\nexport default dumps\n`
+      )
+    },
     'vite:extendConfig'(config) {
       const include = config.optimizeDeps?.include
 
