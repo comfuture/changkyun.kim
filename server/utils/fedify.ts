@@ -174,8 +174,8 @@ async function countLocalPosts(): Promise<number> {
   try {
     const { totalItems } = await collectCreateActivities({ limit: null })
     return totalItems
-  } catch (error) {
-    console.error("Failed to count ActivityPub local posts from content", error)
+  } catch {
+    console.warn("Failed to count ActivityPub local posts from content; falling back to persisted outbox count.")
   }
 
   try {
@@ -183,8 +183,8 @@ async function countLocalPosts(): Promise<number> {
     const db = getDatabase()
     const { rows } = await db.sql`SELECT COUNT(*) AS count FROM activity WHERE direction = 'outbox' AND type = 'Create'`
     return countValue((rows?.[0] as Record<string, unknown> | undefined)?.count)
-  } catch (error) {
-    console.error("Failed to count ActivityPub local posts from outbox", error)
+  } catch {
+    console.warn("Failed to count ActivityPub local posts from outbox; using 0.")
     return 0
   }
 }
@@ -195,13 +195,13 @@ async function countLocalComments(): Promise<number> {
     const db = getDatabase()
     const { rows } = await db.sql`SELECT COUNT(*) AS count FROM activitypub_comments WHERE status = 'visible'`
     return countValue((rows?.[0] as Record<string, unknown> | undefined)?.count)
-  } catch (error) {
-    console.error("Failed to count ActivityPub comments for NodeInfo", error)
+  } catch {
+    console.warn("Failed to count ActivityPub comments for NodeInfo; using 0.")
     return 0
   }
 }
 
-async function buildNodeInfo(): Promise<NodeInfo> {
+export async function getActivityPubNodeInfo(): Promise<NodeInfo> {
   const [localPosts, localComments] = await Promise.all([
     countLocalPosts(),
     countLocalComments(),
@@ -227,6 +227,18 @@ async function buildNodeInfo(): Promise<NodeInfo> {
       localComments,
     },
     metadata: {},
+  }
+}
+
+async function collectCreateActivitiesSafe(options: {
+  limit?: number | null
+  offset?: number
+} = {}): Promise<{ totalItems: number; items: Create[] }> {
+  try {
+    return await collectCreateActivities(options)
+  } catch {
+    console.warn("Failed to collect ActivityPub outbox content; returning an empty collection.")
+    return { totalItems: 0, items: [] }
   }
 }
 
@@ -414,7 +426,7 @@ async function buildActor(ctx: { getActorUri(identifier: string): URL; getInboxU
 const builder = createFederationBuilder<FedifyContextData>()
 
 builder
-  .setNodeInfoDispatcher("/nodeinfo/2.1", async () => await buildNodeInfo())
+  .setNodeInfoDispatcher("/nodeinfo/2.1", async () => await getActivityPubNodeInfo())
 
 builder
   .setActorDispatcher("/@{identifier}", buildActor)
@@ -463,7 +475,7 @@ builder
       return null
     }
     const offset = cursor ? Number.parseInt(cursor, 10) || 0 : 0
-    const { totalItems, items } = await collectCreateActivities({ limit: FEDIFY_OUTBOX_PAGE_SIZE, offset })
+    const { totalItems, items } = await collectCreateActivitiesSafe({ limit: FEDIFY_OUTBOX_PAGE_SIZE, offset })
     const nextOffset = offset + items.length
     return {
       items,
@@ -471,7 +483,7 @@ builder
     }
   })
   .setCounter(async () => {
-    const { totalItems } = await collectCreateActivities({ limit: null })
+    const { totalItems } = await collectCreateActivitiesSafe({ limit: null })
     return totalItems
   })
   .setFirstCursor(async () => "0")
@@ -523,7 +535,7 @@ builder
 
     await ctx.sendActivity({ identifier: ACTOR_IDENTIFIER }, actor, accept, { preferSharedInbox: true })
 
-    const { items } = await collectCreateActivities({ limit: FEDIFY_OUTBOX_PAGE_SIZE })
+    const { items } = await collectCreateActivitiesSafe({ limit: FEDIFY_OUTBOX_PAGE_SIZE })
     for (const activity of items.slice().reverse()) {
       await ctx.sendActivity({ identifier: ACTOR_IDENTIFIER }, actor, activity, { preferSharedInbox: true })
     }
