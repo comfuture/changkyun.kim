@@ -5,8 +5,11 @@ useSeoMeta({
   ogTitle: 'Contact | Changkyun Kim',
   ogDescription: 'Email and social profiles for Changkyun Kim',
   ogType: 'website',
-  ogImage: '/image/cover3.jpg',
   twitterCard: 'summary_large_image',
+})
+useSiteOgImageMeta({
+  image: '/image/cover3.jpg',
+  alt: 'Contact | Changkyun Kim',
 })
 
 const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover3.jpg', {

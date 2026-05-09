@@ -20,6 +20,10 @@ useSeoMeta({
   ogType: 'website',
   twitterCard: 'summary',
 })
+useSiteOgImageMeta({
+  image: '/image/cover2.jpg',
+  alt: 'Following | Changkyun Kim',
+})
 
 const { data } = await useFetch<{ posts: FeedPost[] }>('/api/activitypub/feed', {
   query: { limit: 50 },

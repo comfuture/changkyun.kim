@@ -7,6 +7,10 @@ useSeoMeta({
   ogType: 'website',
   twitterCard: 'summary',
 })
+useSiteOgImageMeta({
+  image: '/image/article-cover.jpg',
+  alt: 'Blog Tags | Changkyun Kim',
+})
 
 // const route = useRoute()
 // const { data: serverData } = await useFetch('/api/blog/tag', {

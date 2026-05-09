@@ -8,8 +8,11 @@ useSeoMeta({
   ogTitle: 'Blog | Changkyun Kim',
   ogDescription: 'blog | Changkyun Kim',
   ogType: 'website',
-  ogImage: '/image/article-cover.jpg',
   twitterCard: 'summary_large_image',
+})
+useSiteOgImageMeta({
+  image: '/image/article-cover.jpg',
+  alt: 'Blog | Changkyun Kim',
 })
 
 const { data } = await useAsyncData('blogArticles', () => {

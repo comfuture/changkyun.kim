@@ -31,8 +31,11 @@ useSeoMeta({
   ogTitle: () => data.value?.title || 'Changkyun Kim Blog',
   ogDescription: () => data.value?.description || 'blog | Changkyun Kim',
   ogType: 'article',
-  ogImage: () => data.value?.coverImage,
   twitterCard: 'summary_large_image',
+})
+useSiteOgImageMeta({
+  image: () => data.value?.coverImage,
+  alt: () => data.value?.title || 'Changkyun Kim Blog',
 })
 
 useHead(() => ({

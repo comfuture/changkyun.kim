@@ -9,6 +9,10 @@ useSeoMeta({
   ogType: 'website',
   twitterCard: 'summary',
 })
+useSiteOgImageMeta({
+  image: '/image/article-cover.jpg',
+  alt: `Tag: ${tag} | Changkyun Kim`,
+})
 </script>
 <template>
   <UPage>

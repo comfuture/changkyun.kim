@@ -36,6 +36,10 @@ useSeoMeta({
   ogType: 'article',
   twitterCard: 'summary',
 })
+useSiteOgImageMeta({
+  image: '/image/cover2.jpg',
+  alt: () => post.value?.name || post.value?.actorName || 'Following',
+})
 
 function hostFromUrl(value: string): string {
   try {

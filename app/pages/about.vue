@@ -5,8 +5,11 @@ useSeoMeta({
   ogTitle: 'About | Changkyun Kim',
   ogDescription: 'about | Changkyun Kim',
   ogType: 'profile',
-  ogImage: '/image/cover.jpg',
   twitterCard: 'summary_large_image',
+})
+useSiteOgImageMeta({
+  image: '/image/cover.jpg',
+  alt: 'Changkyun Kim',
 })
 const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover.jpg', {
   preset: 'cover',

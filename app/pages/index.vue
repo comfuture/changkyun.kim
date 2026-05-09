@@ -5,8 +5,11 @@ useSeoMeta({
   ogTitle: 'Changkyun Kim',
   ogDescription: 'home | Changkyun Kim',
   ogType: 'website',
-  ogImage: '/image/cover2.jpg',
   twitterCard: 'summary_large_image',
+})
+useSiteOgImageMeta({
+  image: '/image/cover2.jpg',
+  alt: 'Changkyun Kim',
 })
 
 const { data: recent } = await useAsyncData('recentArticles', () =>
