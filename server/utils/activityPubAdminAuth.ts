@@ -170,6 +170,24 @@ async function verifyDigestHeader(event: H3Event, bodyText: string | null | unde
   return digestHeader === await createDigest(bodyText)
 }
 
+function hasSignedHeader(headers: string[], headerName: string): boolean {
+  return headers.includes(headerName.toLowerCase())
+}
+
+function hasRequiredSignedHeaders(method: string, headers: string[]): boolean {
+  if (!hasSignedHeader(headers, "(request-target)")
+    || !hasSignedHeader(headers, "host")
+    || !hasSignedHeader(headers, "date")) {
+    return false
+  }
+
+  const normalizedMethod = method.toUpperCase()
+  if (normalizedMethod === "GET" || normalizedMethod === "HEAD") {
+    return true
+  }
+  return hasSignedHeader(headers, "digest")
+}
+
 function buildSigningString(method: string, path: string, headers: string[], values: Record<string, string>): string {
   const signed = []
   for (const header of headers) {
@@ -273,7 +291,7 @@ export async function verifyActivityPubAdminRequestSignature(event: H3Event, bod
     }
 
     const headersToSign = parsed.headers
-    if (!headersToSign.includes("(request-target)")) {
+    if (!hasRequiredSignedHeaders(method, headersToSign)) {
       return false
     }
     if (!await verifyDigestHeader(event, bodyText)) {
