@@ -1,0 +1,4 @@
+interface:
+  display_name: "Changkyun Admin"
+  short_description: "Manage changkyun.kim ActivityPub admin"
+  default_prompt: "Use $changkyun-admin to inspect recent ActivityPub comments and summarize items needing action."
