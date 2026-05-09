@@ -1,9 +1,9 @@
 <script setup lang="ts">
 useSeoMeta({
   title: 'Contact | Changkyun Kim',
-  description: 'contact | Changkyun Kim',
+  description: 'Email and social profiles for Changkyun Kim',
   ogTitle: 'Contact | Changkyun Kim',
-  ogDescription: 'contact | Changkyun Kim',
+  ogDescription: 'Email and social profiles for Changkyun Kim',
   ogType: 'website',
   ogImage: '/image/cover3.jpg',
   twitterCard: 'summary_large_image',
@@ -13,11 +13,96 @@ const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover3.jpg
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
 })
+
+type ContactMethod = {
+  label: string
+  value?: string
+  splitValue?: {
+    prefix?: string
+    user: string
+    domainParts: string[]
+  }
+  description: string
+  actionLabel: string
+  to?: string
+  encodedHref?: string
+  target?: '_blank'
+  rel?: string
+  icon: string
+  badge: string
+  iconClass: string
+}
+
+const contactMethods: ContactMethod[] = [
+  {
+    label: 'Email',
+    splitValue: {
+      user: 'me',
+      domainParts: ['changkyun', 'kim'],
+    },
+    description: '업무 제안이나 비교적 긴 이야기는 메일로 보내주세요.',
+    actionLabel: 'Send email',
+    encodedHref: 'bWFpbHRvOm1lQGNoYW5na3l1bi5raW0=',
+    icon: 'i-lucide-mail',
+    badge: 'Email',
+    iconClass: 'bg-sky-500/10 text-sky-600 dark:text-sky-300',
+  },
+  {
+    label: 'Bluesky',
+    value: '@changkyun.kim',
+    description: '짧은 공개 대화나 소셜 업데이트는 Bluesky 프로필에서 이어갈 수 있습니다.',
+    actionLabel: 'Open profile',
+    to: 'https://bsky.app/profile/changkyun.kim',
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    icon: 'i-lucide-cloud',
+    badge: 'Social',
+    iconClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-300',
+  },
+  {
+    label: 'Fediverse',
+    splitValue: {
+      prefix: '@',
+      user: 'me',
+      domainParts: ['changkyun', 'kim'],
+    },
+    description: 'Mastodon 등 ActivityPub 클라이언트에서 검색할 수 있는 actor입니다. 웹 설명은 About 페이지에서 확인하세요.',
+    actionLabel: 'Open about',
+    to: '/about',
+    icon: 'i-lucide-at-sign',
+    badge: 'ActivityPub',
+    iconClass: 'bg-violet-500/10 text-violet-600 dark:text-violet-300',
+  },
+  {
+    label: 'Kakao Open Chat',
+    value: 'Kakao',
+    description: '한국어로 빠르게 연락해야 할 때는 카카오 오픈채팅을 사용할 수 있습니다.',
+    actionLabel: 'Open chat',
+    to: 'https://open.kakao.com/me/changkyunkim',
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    icon: 'i-lucide-message-circle',
+    badge: 'Messenger',
+    iconClass: 'bg-yellow-400/20 text-yellow-700 dark:text-yellow-300',
+  },
+]
+
+const openContactMethod = (method: ContactMethod, event: MouseEvent) => {
+  if (!method.encodedHref) {
+    return
+  }
+
+  event.preventDefault()
+
+  if (import.meta.client) {
+    window.location.href = window.atob(method.encodedHref)
+  }
+}
 </script>
 
 <template>
   <UPage>
-    <main>
+    <main class="pb-16">
       <section
         class="h-48 w-full bg-cover bg-center bg-no-repeat sm:h-56 md:h-64 lg:h-72 xl:h-80"
         v-bind="coverBind"
@@ -27,35 +112,66 @@ const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover3.jpg
       />
       <section class="mt-10">
         <div class="container mx-auto px-6 sm:px-8">
-          <h2 class="text-2xl font-semibold">Contact</h2>
-          <ul class="mt-4 space-y-3 text-sm">
-        <li>
-          me<span></span>@<span></span>changkyun.kim
-        </li>
-        <li>
-          <UButton variant="link" to="https://bsky.app/profile/changkyun.kim" target="_blank" class="p-0">
-            @changkyun.kim
-          </UButton>
-        </li>
-        <li>
-          <UButton variant="link" to="https://changkyun.kim/@me" target="_blank" class="p-0">
-            @me@changkyun.kim
-          </UButton>
-        </li>
-        <li>
-          <UButton variant="link" to="https://open.kakao.com/me/changkyunkim" target="_blank" class="p-0">
-            <svg class="inline fill-current w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 191.94">
-              <g>
-                <polygon points="76.01 89.49 87.99 89.49 87.99 89.49 82 72.47 76.01 89.49" />
-                <path
-                  d="M104,0C46.56,0,0,36.71,0,82c0,29.28,19.47,55,48.75,69.48-1.59,5.49-10.24,35.34-10.58,37.69,0,0-.21,1.76.93,2.43a3.14,3.14,0,0,0,2.48.15c3.28-.46,38-24.81,44-29A131.56,131.56,0,0,0,104,164c57.44,0,104-36.71,104-82S161.44,0,104,0ZM52.53,69.27c-.13,11.6.1,23.8-.09,35.22-.06,3.65-2.16,4.74-5,5.78a1.88,1.88,0,0,1-1,.07c-3.25-.64-5.84-1.8-5.92-5.84-.23-11.41.07-23.63-.09-35.23-2.75-.11-6.67.11-9.22,0-3.54-.23-6-2.48-5.85-5.83s1.94-5.76,5.91-5.82c9.38-.14,21-.14,30.38,0,4,.06,5.78,2.48,5.9,5.82s-2.3,5.6-5.83,5.83C59.2,69.38,55.29,69.16,52.53,69.27Zm50.4,40.45a9.24,9.24,0,0,1-3.82.83c-2.5,0-4.41-1-5-2.65l-3-7.78H72.85l-3,7.78c-.58,1.63-2.49,2.65-5,2.65a9.16,9.16,0,0,1-3.81-.83c-1.66-.76-3.25-2.86-1.43-8.52L74,63.42a9,9,0,0,1,8-5.92,9.07,9.07,0,0,1,8,5.93l14.34,37.76C106.17,106.86,104.58,109,102.93,109.72Zm30.32,0H114a5.64,5.64,0,0,1-5.75-5.5V63.5a6.13,6.13,0,0,1,12.25,0V98.75h12.75a5.51,5.51,0,1,1,0,11Zm47-4.52A6,6,0,0,1,169.49,108L155.42,89.37l-2.08,2.08v13.09a6,6,0,0,1-12,0v-41a6,6,0,0,1,12,0V76.4l16.74-16.74a4.64,4.64,0,0,1,3.33-1.34,6.08,6.08,0,0,1,5.9,5.58A4.7,4.7,0,0,1,178,67.55L164.3,81.22l14.77,19.57A6,6,0,0,1,180.22,105.23Z"
-                />
-              </g>
-            </svg>
-            Kakao
-          </UButton>
-        </li>
-          </ul>
+          <div class="mx-auto max-w-3xl">
+            <h1 class="text-2xl font-semibold tracking-tight text-gray-950 dark:text-white">Contact</h1>
+            <p class="mt-3 max-w-2xl text-[15px] leading-7 text-gray-600 dark:text-gray-300">
+              아래 방법으로 연락할 수 있습니다. 메일, 소셜 프로필, Fediverse actor, 메신저를 구분해 두었으니
+              상황에 맞는 채널을 선택해 주세요.
+            </p>
+
+            <div class="mt-8 grid gap-4 sm:grid-cols-2">
+              <ULink
+                v-for="method in contactMethods"
+                :key="method.label"
+                raw
+                :to="method.encodedHref ? '#' : method.to"
+                :target="method.encodedHref ? undefined : method.target"
+                :rel="method.encodedHref ? undefined : method.rel"
+                @click="openContactMethod(method, $event)"
+                class="group flex h-full min-w-0 flex-col gap-4 rounded-lg border border-gray-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-primary-400 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-primary-500"
+              >
+                <div class="flex min-w-0 items-start gap-4">
+                  <span
+                    class="flex size-11 shrink-0 items-center justify-center rounded-full"
+                    :class="method.iconClass"
+                  >
+                    <UIcon :name="method.icon" class="size-5" />
+                  </span>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h2 class="text-base font-semibold text-gray-950 dark:text-white">{{ method.label }}</h2>
+                      <UBadge color="neutral" variant="subtle" size="sm">{{ method.badge }}</UBadge>
+                    </div>
+                    <p
+                      v-if="method.splitValue"
+                      class="mt-1 break-words text-sm font-medium text-primary-600 dark:text-primary-400"
+                    >
+                      <template v-if="method.splitValue.prefix">
+                        <span>{{ method.splitValue.prefix }}</span><span aria-hidden="true" />
+                      </template>
+                      <span>{{ method.splitValue.user }}</span><span aria-hidden="true" />@<span aria-hidden="true" />
+                      <span>{{ method.splitValue.domainParts.join('.') }}</span>
+                    </p>
+                    <p v-else class="mt-1 break-words text-sm font-medium text-primary-600 dark:text-primary-400">
+                      {{ method.value }}
+                    </p>
+                  </div>
+                </div>
+
+                <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">{{ method.description }}</p>
+
+                <span
+                  class="mt-auto inline-flex items-center gap-1 text-sm font-medium text-primary-600 dark:text-primary-400"
+                >
+                  {{ method.actionLabel }}
+                  <UIcon
+                    name="i-lucide-arrow-right"
+                    class="size-4 transition-transform group-hover:translate-x-0.5"
+                  />
+                </span>
+              </ULink>
+            </div>
+          </div>
         </div>
       </section>
     </main>
