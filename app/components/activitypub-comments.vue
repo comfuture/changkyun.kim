@@ -27,6 +27,25 @@ const { data, pending } = await useAsyncData(
 )
 
 const comments = computed(() => data.value?.comments ?? [])
+const copied = ref(false)
+let copiedResetTimer: ReturnType<typeof setTimeout> | undefined
+
+const copyActivityUrl = async () => {
+  if (!import.meta.client || !props.activityUrl) {
+    return
+  }
+
+  await navigator.clipboard.writeText(props.activityUrl)
+  copied.value = true
+  clearTimeout(copiedResetTimer)
+  copiedResetTimer = setTimeout(() => {
+    copied.value = false
+  }, 2000)
+}
+
+onBeforeUnmount(() => {
+  clearTimeout(copiedResetTimer)
+})
 </script>
 
 <template>
@@ -47,9 +66,20 @@ const comments = computed(() => data.value?.comments ?? [])
         <p>
           Mastodon 같은 ActivityPub 클라이언트 검색창에 아래 글 주소를 붙여 넣고, 검색 결과에서 이 글을 연 뒤 답글을 작성하면 이곳에 댓글로 표시됩니다.
         </p>
-        <p class="mt-3 break-all font-mono text-xs text-gray-600 dark:text-gray-400">
-          {{ activityUrl }}
-        </p>
+        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <p class="min-w-0 flex-1 break-all rounded-md bg-white px-3 py-2 font-mono text-xs text-gray-600 dark:bg-gray-950/60 dark:text-gray-400">
+            {{ activityUrl }}
+          </p>
+          <UButton
+            size="xs"
+            color="neutral"
+            variant="outline"
+            :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'"
+            :label="copied ? '복사됨' : 'URL 복사'"
+            :aria-label="copied ? 'URL이 복사되었습니다' : '댓글용 URL 복사'"
+            @click="copyActivityUrl"
+          />
+        </div>
       </div>
     </div>
 
