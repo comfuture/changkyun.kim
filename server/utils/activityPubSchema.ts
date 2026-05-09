@@ -1,5 +1,16 @@
 let schemaPromise: Promise<void> | null = null
 
+async function ensureActivityPubCommentsColumns(db: ReturnType<typeof useDatabase>) {
+  const { rows } = await db.sql`PRAGMA table_info(activitypub_comments);`
+  const columns = new Set((rows ?? []).map((row) => (row as { name?: string }).name).filter(Boolean))
+
+  if (!columns.has("reply_target_id")) {
+    await db.sql`ALTER TABLE activitypub_comments ADD COLUMN reply_target_id TEXT;`
+  }
+
+  await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_comments_reply_target ON activitypub_comments(reply_target_id);`
+}
+
 async function runActivityPubSchema() {
   const db = useDatabase()
 
@@ -77,6 +88,7 @@ async function runActivityPubSchema() {
     content_text TEXT NOT NULL,
     content_html TEXT,
     url TEXT,
+    reply_target_id TEXT,
     published_at TEXT NOT NULL,
     received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -86,6 +98,7 @@ async function runActivityPubSchema() {
   await db.sql`CREATE UNIQUE INDEX IF NOT EXISTS ix_activitypub_comments_object_id ON activitypub_comments(object_id);`
   await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_comments_article_status ON activitypub_comments(article_path, status, published_at);`
   await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_comments_actor ON activitypub_comments(actor_id);`
+  await ensureActivityPubCommentsColumns(db)
 
   await db.sql`CREATE TABLE IF NOT EXISTS activitypub_reactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

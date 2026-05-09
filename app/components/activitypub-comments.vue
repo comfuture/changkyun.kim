@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import ActivityPubCommentItem from './activitypub-comment-item.vue'
+
 type Comment = {
   id: number
   objectId: string
@@ -7,8 +9,13 @@ type Comment = {
   actorIconUrl: string | null
   contentText: string
   url: string
+  replyTargetId: string | null
   publishedAt: string | null
   receivedAt: string
+}
+
+type CommentNode = Comment & {
+  replies: CommentNode[]
 }
 
 const props = defineProps<{
@@ -27,6 +34,33 @@ const { data, pending } = await useAsyncData(
 )
 
 const comments = computed(() => data.value?.comments ?? [])
+const threadedComments = computed<CommentNode[]>(() => {
+  const nodes = new Map<string, CommentNode>()
+  const roots: CommentNode[] = []
+
+  for (const comment of comments.value) {
+    nodes.set(comment.objectId, {
+      ...comment,
+      replies: [],
+    })
+  }
+
+  for (const comment of comments.value) {
+    const node = nodes.get(comment.objectId)
+    if (!node) {
+      continue
+    }
+
+    const parent = comment.replyTargetId ? nodes.get(comment.replyTargetId) : null
+    if (parent && parent.objectId !== node.objectId) {
+      parent.replies.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+
+  return roots
+})
 const copied = ref(false)
 let copiedResetTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -87,50 +121,12 @@ onBeforeUnmount(() => {
       댓글을 불러오는 중입니다.
     </div>
 
-    <div v-else-if="comments.length" class="space-y-4">
-      <article
-        v-for="comment in comments"
+    <div v-else-if="threadedComments.length" class="space-y-4">
+      <ActivityPubCommentItem
+        v-for="comment in threadedComments"
         :key="comment.objectId"
-        class="rounded-lg border border-gray-200 p-4 dark:border-gray-800"
-      >
-        <div class="flex gap-3">
-          <NuxtLink
-            :to="comment.actorUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="mt-0.5 shrink-0"
-          >
-            <UAvatar
-              :src="comment.actorIconUrl || undefined"
-              :alt="comment.actorName"
-              size="md"
-            />
-          </NuxtLink>
-          <div class="min-w-0 flex-1 space-y-2">
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              <NuxtLink
-                :to="comment.actorUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="font-medium text-gray-900 hover:underline dark:text-gray-100"
-              >
-                {{ comment.actorName }}
-              </NuxtLink>
-              <NuxtLink
-                :to="comment.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-xs text-gray-500 hover:underline"
-              >
-                <ui-datetime :datetime="comment.publishedAt || comment.receivedAt" />
-              </NuxtLink>
-            </div>
-            <p class="whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700 dark:text-gray-200">
-              {{ comment.contentText }}
-            </p>
-          </div>
-        </div>
-      </article>
+        :comment="comment"
+      />
     </div>
 
     <p v-else class="text-sm text-gray-500">

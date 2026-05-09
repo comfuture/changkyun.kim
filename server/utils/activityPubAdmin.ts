@@ -4,6 +4,7 @@ import { Temporal } from "@js-temporal/polyfill"
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
 import { ACTOR_IDENTIFIER, SITE_ORIGIN } from "./fedifyContent"
 import { ensureActivityPubSchema } from "./activityPubSchema"
+import { persistLocalReplyComment } from "./fedifyComments"
 
 export type AdminFollowItem = {
   id: number
@@ -250,16 +251,21 @@ export async function replyActivityPubCommentById(
   id: number,
   replyText: string,
   event?: unknown,
-): Promise<{ actorId: string; commentObjectId: string }> {
+): Promise<{ actorId: string; commentObjectId: string; replyObjectId: string }> {
   await ensureActivityPubSchema()
   const db = getDatabase()
-  const { rows } = await db.sql`SELECT actor_id, object_id
+  const { rows } = await db.sql`SELECT actor_id, object_id, article_id, article_path
     FROM activitypub_comments
     WHERE id = ${id}
       AND status = 'visible'
     LIMIT 1`
-  const row = rows?.[0] as { actor_id?: string; object_id?: string } | undefined
-  if (!row?.actor_id || !row.object_id) {
+  const row = rows?.[0] as {
+    actor_id?: string
+    object_id?: string
+    article_id?: string
+    article_path?: string
+  } | undefined
+  if (!row?.actor_id || !row.object_id || !row.article_id || !row.article_path) {
     throw new Error("Comment not found")
   }
 
@@ -273,24 +279,27 @@ export async function replyActivityPubCommentById(
     throw new Error("Comment actor not found")
   }
 
+  const publishedAt = Temporal.Now.instant()
+  const replyId = new URL(`#reply-${crypto.randomUUID()}`, actorUri)
+  const createId = new URL(`#create-reply-${crypto.randomUUID()}`, actorUri)
   const reply = new Note({
-    id: new URL(`#reply-${crypto.randomUUID()}`, actorUri),
+    id: replyId,
     attribution: actorUri,
     content: replyText,
     mediaType: "text/plain",
     replyTarget: target,
     to: targetActor,
     cc: PUBLIC_COLLECTION,
-    published: Temporal.Now.instant(),
+    published: publishedAt,
   })
 
   const create = new Create({
-    id: new URL(`#create-reply-${crypto.randomUUID()}`, actorUri),
+    id: createId,
     actor: actorUri,
     object: reply,
     to: targetActor,
     cc: PUBLIC_COLLECTION,
-    published: Temporal.Now.instant(),
+    published: publishedAt,
   })
 
   await context.sendActivity(
@@ -300,9 +309,23 @@ export async function replyActivityPubCommentById(
     { preferSharedInbox: true },
   )
 
+  await persistLocalReplyComment({
+    objectId: replyId.href,
+    activityId: createId.href,
+    articleId: row.article_id,
+    articlePath: row.article_path,
+    replyTargetId: row.object_id,
+    contentText: replyText,
+    contentHtml: null,
+    url: replyId.href,
+    publishedAt: publishedAt.toString(),
+    payload: JSON.stringify(await create.toJsonLd({ format: "compact" })),
+  })
+
   return {
     actorId: row.actor_id,
     commentObjectId: row.object_id,
+    replyObjectId: replyId.href,
   }
 }
 
