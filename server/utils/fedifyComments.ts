@@ -11,6 +11,7 @@ import {
 import {
   FEDIFY_BLOG_CANONICAL_HOSTNAMES,
   FEDIFY_BLOG_COLLECTION_PREFIX,
+  ACTOR_IDENTIFIER,
   fetchFedifyContentEntry,
   normalizeArticlePath,
   SITE_ORIGIN,
@@ -28,6 +29,7 @@ export type ActivityPubComment = {
   actorIconUrl: string | null
   contentText: string
   url: string
+  replyTargetId: string | null
   publishedAt: string | null
   receivedAt: string
 }
@@ -43,6 +45,7 @@ type CommentRow = {
   actor_icon_url?: string | null
   content_text: string
   url?: string | null
+  reply_target_id?: string | null
   published_at?: string | null
   received_at: string
 }
@@ -219,6 +222,29 @@ function normalizeCommentTarget(target: URL): { articleId: string; articlePath: 
   }
 }
 
+async function resolveCommentTarget(target: URL): Promise<{ articleId: string; articlePath: string } | null> {
+  const articleTarget = normalizeCommentTarget(target)
+  if (articleTarget) {
+    return articleTarget
+  }
+
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const { rows } = await db.sql`SELECT article_id, article_path
+    FROM activitypub_comments
+    WHERE object_id = ${target.href}
+    LIMIT 1`
+  const parent = rows?.[0] as { article_id?: string | null; article_path?: string | null } | undefined
+  if (!parent?.article_id || !parent.article_path) {
+    return null
+  }
+
+  return {
+    articleId: parent.article_id,
+    articlePath: parent.article_path,
+  }
+}
+
 function isPublic(note: Note, create: Create): boolean {
   const publicHref = (PUBLIC_COLLECTION as URL).href
   const noteAudience = [...note.toIds, ...note.ccIds].map((url) => url.href)
@@ -277,7 +303,8 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
     return false
   }
 
-  const target = object.replyTargetId ? normalizeCommentTarget(object.replyTargetId) : null
+  const replyTargetId = object.replyTargetId?.href ?? null
+  const target = object.replyTargetId ? await resolveCommentTarget(object.replyTargetId) : null
   if (!target) {
     return false
   }
@@ -316,6 +343,7 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
     content_text,
     content_html,
     url,
+    reply_target_id,
     published_at,
     status,
     payload
@@ -331,6 +359,7 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
     ${contentText},
     ${contentHtml},
     ${commentUrl},
+    ${replyTargetId},
     ${publishedAt},
     'visible',
     ${payload}
@@ -346,12 +375,80 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
     content_text = excluded.content_text,
     content_html = excluded.content_html,
     url = excluded.url,
+    reply_target_id = excluded.reply_target_id,
     published_at = excluded.published_at,
     status = 'visible',
     payload = excluded.payload,
     updated_at = CURRENT_TIMESTAMP`
 
   return true
+}
+
+export async function persistLocalReplyComment(input: {
+  objectId: string
+  activityId: string | null
+  articleId: string
+  articlePath: string
+  replyTargetId: string
+  contentText: string
+  contentHtml?: string | null
+  url?: string | null
+  publishedAt: string
+  payload?: string | null
+}): Promise<void> {
+  await ensureActivityPubSchema()
+  const actorId = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN).href
+  const db = getDatabase()
+
+  await db.sql`INSERT INTO activitypub_comments (
+    object_id,
+    activity_id,
+    article_id,
+    article_path,
+    actor_id,
+    actor_name,
+    actor_url,
+    actor_icon_url,
+    content_text,
+    content_html,
+    url,
+    reply_target_id,
+    published_at,
+    status,
+    payload
+  ) VALUES (
+    ${input.objectId},
+    ${input.activityId},
+    ${input.articleId},
+    ${input.articlePath},
+    ${actorId},
+    'Changkyun Kim',
+    ${new URL("/about", SITE_ORIGIN).href},
+    ${new URL("/image/avatar.jpg", SITE_ORIGIN).href},
+    ${input.contentText},
+    ${input.contentHtml ?? null},
+    ${input.url ?? input.objectId},
+    ${input.replyTargetId},
+    ${input.publishedAt},
+    'visible',
+    ${input.payload ?? null}
+  )
+  ON CONFLICT(object_id) DO UPDATE SET
+    activity_id = excluded.activity_id,
+    article_id = excluded.article_id,
+    article_path = excluded.article_path,
+    actor_id = excluded.actor_id,
+    actor_name = excluded.actor_name,
+    actor_url = excluded.actor_url,
+    actor_icon_url = excluded.actor_icon_url,
+    content_text = excluded.content_text,
+    content_html = excluded.content_html,
+    url = excluded.url,
+    reply_target_id = excluded.reply_target_id,
+    published_at = excluded.published_at,
+    status = 'visible',
+    payload = excluded.payload,
+    updated_at = CURRENT_TIMESTAMP`
 }
 
 export async function markCommentDeletedFromDelete(ctx: { documentLoader: any; contextLoader: any }, del: Delete): Promise<boolean> {
@@ -399,6 +496,7 @@ export async function listActivityPubComments(articlePath: string): Promise<Acti
       actor_icon_url,
       content_text,
       url,
+      reply_target_id,
       published_at,
       received_at
     FROM activitypub_comments
@@ -417,6 +515,7 @@ export async function listActivityPubComments(articlePath: string): Promise<Acti
     actorIconUrl: row.actor_icon_url || null,
     contentText: row.content_text,
     url: row.url || row.object_id,
+    replyTargetId: row.reply_target_id || null,
     publishedAt: row.published_at || null,
     receivedAt: row.received_at,
   }))

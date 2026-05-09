@@ -78,6 +78,7 @@ export default defineEventHandler(async (event) => {
       id,
       actorId: result.actorId,
       commentObjectId: result.commentObjectId,
+      replyObjectId: result.replyObjectId,
     }
   }
 
