@@ -30,9 +30,14 @@ const navItems = [
       </template>
     </UHeader>
     <NuxtPage />
-    <UFooter>
+    <UFooter
+      :ui="{
+        container: 'justify-center',
+        left: 'justify-center text-center',
+      }"
+    >
       <template #left>
-        <p class="text-sm text-muted">Copyright © 2022 Changkyun Kim</p>
+        <p class="text-sm text-muted">Copyright © 2026 Changkyun Kim</p>
       </template>
     </UFooter>
   </div>
