@@ -429,12 +429,17 @@ async function contentChecksumIsCurrent(db: D1Database, collection: "blog" | "ap
 
 async function importContentDump(db: D1Database, collection: "blog" | "app", lines: string[]): Promise<void> {
   const checksumId = `checksum_${collection}`
+  const tableName = collection === "blog" ? "_content_blog" : "_content_app"
   const deleteChecksum = () => db.prepare("DELETE FROM _content_info WHERE id = ?")
     .bind(checksumId)
     .run()
     .catch(() => undefined)
+  const deleteContentRows = () => db.prepare(`DELETE FROM ${tableName}`)
+    .run()
+    .catch(() => undefined)
 
   await deleteChecksum()
+  await deleteContentRows()
 
   try {
     const statements: D1PreparedStatement[] = []
