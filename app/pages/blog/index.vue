@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const { path } = useRoute()
+const route = useRoute()
+const pageSize = 10
+
 useSeoMeta({
   title: 'Blog | Changkyun Kim',
   description: 'blog | Changkyun Kim',
@@ -10,13 +12,28 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
-const { data } = await useAsyncData(path, () => {
+const { data } = await useAsyncData('blogArticles', () => {
   return queryCollection('blog')
-    .select('id', 'path', 'title', 'createdAt')
+    .select('id', 'path', 'title', 'description', 'createdAt', 'coverImage')
     .order('createdAt', 'DESC')
-    .limit(10)
     .all()
 })
+
+const requestedPage = computed(() => {
+  const page = Number(route.query.page)
+  return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
+})
+
+const totalArticles = computed(() => data.value?.length || 0)
+const totalPages = computed(() => Math.max(1, Math.ceil(totalArticles.value / pageSize)))
+const currentPage = computed(() => Math.min(requestedPage.value, totalPages.value))
+const pageArticles = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return data.value?.slice(start, start + pageSize) || []
+})
+const featuredArticle = computed(() => currentPage.value === 1 ? pageArticles.value[0] : undefined)
+const listArticles = computed(() => currentPage.value === 1 ? pageArticles.value.slice(1) : pageArticles.value)
+const pageTo = (page: number) => page <= 1 ? '/blog/' : `/blog/?page=${page}`
 
 if (import.meta.prerender) {
   const [allEntries, tagEntries] = await Promise.all([
@@ -68,14 +85,27 @@ const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/article-co
       <section class="mt-10">
         <div class="container mx-auto px-6 sm:px-8">
           <h1 class="text-2xl font-semibold">Articles</h1>
-          <ul class="mt-4 space-y-2" v-if="data">
-            <li v-for="item in data" :key="item.id" class="flex items-center justify-between">
-              <UButton :to="item.path" variant="link" class="p-0 text-left">
-                {{ item.title }}
-              </UButton>
-              <span class="text-xs text-gray-500">{{ item.createdAt }}</span>
-            </li>
-          </ul>
+          <div v-if="featuredArticle" class="mt-5">
+            <ArticleCard :article="featuredArticle" variant="list-featured" eager />
+          </div>
+          <div v-if="listArticles.length" class="mt-5 space-y-3">
+            <ArticleCard
+              v-for="item in listArticles"
+              :key="item.id"
+              :article="item"
+              variant="list"
+            />
+          </div>
+          <UPagination
+            v-if="totalArticles > pageSize"
+            class="mt-8 justify-center"
+            :page="currentPage"
+            :items-per-page="pageSize"
+            :total="totalArticles"
+            :to="pageTo"
+            show-edges
+            size="sm"
+          />
         </div>
       </section>
     </main>
