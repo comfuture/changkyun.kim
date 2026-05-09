@@ -1,11 +1,23 @@
 let schemaPromise: Promise<void> | null = null
 
+function isDuplicateColumnError(error: unknown, column: string): boolean {
+  const message = error instanceof Error ? error.message : String(error)
+  return message.toLowerCase().includes("duplicate column name")
+    && message.toLowerCase().includes(column.toLowerCase())
+}
+
 async function ensureActivityPubCommentsColumns(db: ReturnType<typeof useDatabase>) {
   const { rows } = await db.sql`PRAGMA table_info(activitypub_comments);`
   const columns = new Set((rows ?? []).map((row) => (row as { name?: string }).name).filter(Boolean))
 
   if (!columns.has("reply_target_id")) {
-    await db.sql`ALTER TABLE activitypub_comments ADD COLUMN reply_target_id TEXT;`
+    try {
+      await db.sql`ALTER TABLE activitypub_comments ADD COLUMN reply_target_id TEXT;`
+    } catch (error) {
+      if (!isDuplicateColumnError(error, "reply_target_id")) {
+        throw error
+      }
+    }
   }
 
   await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_comments_reply_target ON activitypub_comments(reply_target_id);`
