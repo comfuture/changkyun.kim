@@ -450,7 +450,10 @@ async function importContentDump(db: D1Database, collection: "blog" | "app", lin
       await db.batch(statements)
     }
 
-    await db.prepare("INSERT INTO _content_info (id, version, ready) VALUES (?, ?, 1)")
+    await db.prepare(`INSERT INTO _content_info (id, version, ready) VALUES (?, ?, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        version = excluded.version,
+        ready = excluded.ready`)
       .bind(checksumId, checksums[collection])
       .run()
   } catch (error) {
