@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "DEV=1 nuxt dev",
+    "admin": "pnpm --filter changkyun-admin run start",
     "build": "nuxt build",
     "start": "nuxt start",
     "generate": "GENERATE=1 nuxi generate"
@@ -34,6 +35,7 @@
     "@fedify/testing": "2.2.0",
     "@iconify-json/lucide": "^1.2.105",
     "@types/negotiator": "^0.6.4",
+    "@types/node": "^25.6.2",
     "glob": "^13.0.6",
     "postcss": "^8.5.14",
     "sharp": "^0.34.5",

@@ -1,0 +1,16 @@
+{
+  "name": "changkyun-admin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local-only ActivityPub moderation TUI",
+  "type": "module",
+  "bin": {
+    "activitypub-admin": "./src/index.mjs"
+  },
+  "scripts": {
+    "start": "node ./src/index.mjs"
+  },
+  "dependencies": {
+    "blessed": "^0.1.81"
+  }
+}
