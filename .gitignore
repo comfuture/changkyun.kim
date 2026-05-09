@@ -28,6 +28,9 @@ node_modules/
 # dotenv environment variables file
 .env
 
+# ActivityPub admin private key material
+activitypub-admin.key
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 
