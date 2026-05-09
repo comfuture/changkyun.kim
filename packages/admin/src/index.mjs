@@ -57,6 +57,10 @@ function parseArgs(argv) {
     privateKeyFile: process.env.ACTIVITYPUB_ADMIN_PRIVATE_KEY_FILE || "",
     keyId: process.env.ACTIVITYPUB_ADMIN_KEY_ID || DEFAULT_ADMIN_KEY_ID,
     includeDeleted: process.env.ACTIVITYPUB_ADMIN_INCLUDE_DELETED === "1",
+    command: null,
+    args: [],
+    json: false,
+    text: "",
   }
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -87,7 +91,22 @@ function parseArgs(argv) {
     }
     if (arg === "--include-deleted") {
       options.includeDeleted = true
+      continue
     }
+    if (arg === "--json") {
+      options.json = true
+      continue
+    }
+    if (arg === "--text") {
+      options.text = argv[i + 1] || ""
+      i += 1
+      continue
+    }
+    if (!options.command) {
+      options.command = arg
+      continue
+    }
+    options.args.push(arg)
   }
 
   return options
@@ -99,6 +118,12 @@ activitypub-admin
 
 usage:
   pnpm admin
+  pnpm admin list [followers|comments|reactions] [--json]
+  pnpm admin reply <comment-id> --text <text>
+  pnpm admin react-comment <comment-id> [emoji]
+  pnpm admin delete-comment <comment-id>
+  pnpm admin delete-reaction <reaction-id>
+  pnpm admin unfollow <follower-id>
 
 options: 
   --base-url <url>      API base URL (default: https://changkyun.kim)
@@ -106,6 +131,7 @@ options:
   --private-key-file <p>private key PEM 파일 경로 (env: ACTIVITYPUB_ADMIN_PRIVATE_KEY_FILE)
   --key-id <id>        KeyId (default: https://changkyun.kim/@me#main-key, env: ACTIVITYPUB_ADMIN_KEY_ID)
   --include-deleted     삭제된 댓글도 대시보드에 표시
+  --json                명령형 출력에서 JSON 사용
   -h, --help            도움말
 
 조작:
@@ -374,6 +400,102 @@ async function requestAdminAction(baseUrl, signConfig, action, id, payload = {})
   return response.json().catch(() => ({}))
 }
 
+function normalizeSection(value) {
+  if (!value || value === "all") {
+    return null
+  }
+  const section = String(value).toLowerCase()
+  if (["follower", "followers", "follow"].includes(section)) {
+    return "followers"
+  }
+  if (["comment", "comments"].includes(section)) {
+    return "comments"
+  }
+  if (["reaction", "reactions", "like", "likes"].includes(section)) {
+    return "reactions"
+  }
+  throw new Error(`Unknown section: ${value}`)
+}
+
+function parseRequiredId(value, label) {
+  const id = Number.parseInt(String(value || ""), 10)
+  if (!Number.isFinite(id)) {
+    throw new Error(`${label} id가 필요합니다.`)
+  }
+  return id
+}
+
+function writeJson(value) {
+  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`)
+}
+
+function writeList(data, section) {
+  const sections = section ? [section] : SECTION_ORDER
+  for (const current of sections) {
+    const rows = data[current] || []
+    process.stdout.write(`# ${SECTIONS[current].label} (${rows.length})\n`)
+    if (rows.length === 0) {
+      process.stdout.write("항목이 없습니다.\n\n")
+      continue
+    }
+    for (const item of rows) {
+      process.stdout.write(`${item.id}\t${formatRow(current, item)}\n`)
+    }
+    process.stdout.write("\n")
+  }
+}
+
+async function runCommand(options, signConfig) {
+  const command = options.command
+  if (command === "list" || command === "ls" || command === "dashboard") {
+    const section = normalizeSection(options.args[0])
+    const data = await requestAdminData(options.baseUrl, signConfig, options.includeDeleted)
+    if (options.json) {
+      writeJson(section ? data[section] || [] : data)
+      return
+    }
+    writeList(data, section)
+    return
+  }
+
+  if (command === "reply") {
+    const id = parseRequiredId(options.args[0], "comment")
+    const reply = (options.text || options.args.slice(1).join(" ")).trim()
+    if (!reply) {
+      throw new Error("댓글 답글 내용은 --text 또는 인자로 전달해야 합니다.")
+    }
+    writeJson(await requestAdminAction(options.baseUrl, signConfig, "comment.reply", id, { reply }))
+    return
+  }
+
+  if (command === "react-comment") {
+    const id = parseRequiredId(options.args[0], "comment")
+    const reaction = (options.text || options.args[1] || "❤️").trim()
+    writeJson(await requestAdminAction(options.baseUrl, signConfig, "comment.react", id, { reaction }))
+    return
+  }
+
+  if (command === "delete-comment") {
+    const id = parseRequiredId(options.args[0], "comment")
+    writeJson(await requestAdminAction(options.baseUrl, signConfig, "comment.delete", id))
+    return
+  }
+
+  if (command === "delete-reaction") {
+    const id = parseRequiredId(options.args[0], "reaction")
+    writeJson(await requestAdminAction(options.baseUrl, signConfig, "reaction.delete", id))
+    return
+  }
+
+  if (command === "unfollow") {
+    const id = parseRequiredId(options.args[0], "follower")
+    writeJson(await requestAdminAction(options.baseUrl, signConfig, "follower.unfollow", id))
+    return
+  }
+
+  throw new Error(`Unknown admin command: ${command}`)
+}
+
 function createDashboardUi() {
   const screen = blessed.screen({
     smartCSR: true,
@@ -523,6 +645,11 @@ async function bootstrap() {
   const signConfig = {
     keyId: options.keyId,
     privateKey,
+  }
+
+  if (options.command) {
+    await runCommand(options, signConfig)
+    return
   }
 
   const ui = createDashboardUi()
