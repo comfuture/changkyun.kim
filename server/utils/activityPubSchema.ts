@@ -1,34 +1,5 @@
 let schemaPromise: Promise<void> | null = null
 
-function isDuplicateColumnError(error: unknown): boolean {
-  return error instanceof Error && /duplicate column name/i.test(error.message)
-}
-
-async function addReactionActorProfileColumns() {
-  const db = useDatabase()
-  try {
-    await db.sql`ALTER TABLE activitypub_reactions ADD COLUMN actor_name TEXT;`
-  } catch (error) {
-    if (!isDuplicateColumnError(error)) {
-      throw error
-    }
-  }
-  try {
-    await db.sql`ALTER TABLE activitypub_reactions ADD COLUMN actor_url TEXT;`
-  } catch (error) {
-    if (!isDuplicateColumnError(error)) {
-      throw error
-    }
-  }
-  try {
-    await db.sql`ALTER TABLE activitypub_reactions ADD COLUMN actor_icon_url TEXT;`
-  } catch (error) {
-    if (!isDuplicateColumnError(error)) {
-      throw error
-    }
-  }
-}
-
 async function runActivityPubSchema() {
   const db = useDatabase()
 
@@ -137,7 +108,6 @@ async function runActivityPubSchema() {
   await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_reactions_article_reaction ON activitypub_reactions(article_path, reaction);`
   await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_reactions_actor ON activitypub_reactions(actor_id);`
   await db.sql`CREATE INDEX IF NOT EXISTS ix_activitypub_reactions_activity_id ON activitypub_reactions(activity_id);`
-  await addReactionActorProfileColumns()
 
   await db.sql`CREATE TABLE IF NOT EXISTS activitypub_feed_actors (
     actor_id TEXT PRIMARY KEY,

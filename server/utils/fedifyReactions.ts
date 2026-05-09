@@ -29,19 +29,17 @@ export type ActivityPubReactionActor = {
   actorIconUrl: string | null
 }
 
-type ReactionRow = {
+type ReactionCountRow = {
   reaction: string
   count: number | bigint | string
-  actors?: string | null
 }
 
 type ReactionActorRow = {
+  reaction: string
   actor_id: string
   actor_name?: string | null
   actor_url?: string | null
   actor_icon_url?: string | null
-  published_at: string
-  id: number
 }
 
 type ReactionActivity = Like | EmojiReact
@@ -87,20 +85,12 @@ function countValue(raw: unknown): number {
   return 0
 }
 
-function parseActorRows(raw: string | null | undefined): ActivityPubReactionActor[] {
-  if (!raw) {
-    return []
-  }
-  try {
-    const actors = JSON.parse(raw) as ReactionActorRow[]
-    return actors.map((actor) => ({
-      actorId: actor.actor_id,
-      actorName: actor.actor_name || actor.actor_id,
-      actorUrl: actor.actor_url || actor.actor_id,
-      actorIconUrl: actor.actor_icon_url || null,
-    }))
-  } catch {
-    return []
+function mapActorRow(actor: ReactionActorRow): ActivityPubReactionActor {
+  return {
+    actorId: actor.actor_id,
+    actorName: actor.actor_name || actor.actor_id,
+    actorUrl: actor.actor_url || actor.actor_id,
+    actorIconUrl: actor.actor_icon_url || null,
   }
 }
 
@@ -340,29 +330,44 @@ export async function listActivityPubReactions(articlePath: string): Promise<Act
 
   await ensureActivityPubSchema()
   const db = getDatabase()
-  const { rows } = await db.sql`SELECT
+  const { rows: countRows } = await db.sql`SELECT
       reaction,
-      COUNT(*) AS count,
-      json_group_array(json_object(
-        'actor_id', actor_id,
-        'actor_name', actor_name,
-        'actor_url', actor_url,
-        'actor_icon_url', actor_icon_url,
-        'published_at', published_at,
-        'id', id
-      )) AS actors
+      COUNT(*) AS count
+    FROM activitypub_reactions
+    WHERE article_path = ${normalizedPath}
+    GROUP BY reaction
+    ORDER BY count DESC`
+
+  const { rows: actorRows } = await db.sql`SELECT
+      reaction,
+      actor_id,
+      actor_name,
+      actor_url,
+      actor_icon_url
     FROM (
-      SELECT id, actor_id, actor_name, actor_url, actor_icon_url, reaction, published_at
+      SELECT
+        reaction,
+        actor_id,
+        actor_name,
+        actor_url,
+        actor_icon_url,
+        ROW_NUMBER() OVER (PARTITION BY reaction ORDER BY published_at DESC, id DESC) AS reaction_rank
       FROM activitypub_reactions
       WHERE article_path = ${normalizedPath}
-      ORDER BY published_at DESC, id DESC
     )
-    GROUP BY reaction
-    ORDER BY count DESC, MIN(id) ASC`
+    WHERE reaction_rank <= 50
+    ORDER BY reaction, reaction_rank ASC`
 
-  return ((rows ?? []) as ReactionRow[]).map((row) => ({
+  const actorsByReaction = new Map<string, ActivityPubReactionActor[]>()
+  for (const row of (actorRows ?? []) as ReactionActorRow[]) {
+    const actors = actorsByReaction.get(row.reaction) ?? []
+    actors.push(mapActorRow(row))
+    actorsByReaction.set(row.reaction, actors)
+  }
+
+  return ((countRows ?? []) as ReactionCountRow[]).map((row) => ({
     reaction: row.reaction,
     count: countValue(row.count),
-    actors: parseActorRows(row.actors),
+    actors: actorsByReaction.get(row.reaction) ?? [],
   }))
 }
