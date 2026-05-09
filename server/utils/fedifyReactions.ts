@@ -1,7 +1,10 @@
 import {
   EmojiReact,
+  Image,
   isActor,
   Like,
+  Link,
+  type Actor,
 } from "@fedify/vocab"
 
 import {
@@ -16,11 +19,29 @@ import { ensureActivityPubSchema } from "./activityPubSchema"
 export type ActivityPubReaction = {
   reaction: string
   count: number
+  actors: ActivityPubReactionActor[]
+}
+
+export type ActivityPubReactionActor = {
+  actorId: string
+  actorName: string
+  actorUrl: string
+  actorIconUrl: string | null
 }
 
 type ReactionRow = {
   reaction: string
   count: number | bigint | string
+  actors?: string | null
+}
+
+type ReactionActorRow = {
+  actor_id: string
+  actor_name?: string | null
+  actor_url?: string | null
+  actor_icon_url?: string | null
+  published_at: string
+  id: number
 }
 
 type ReactionActivity = Like | EmojiReact
@@ -64,6 +85,23 @@ function countValue(raw: unknown): number {
     return Number.parseInt(raw, 10) || 0
   }
   return 0
+}
+
+function parseActorRows(raw: string | null | undefined): ActivityPubReactionActor[] {
+  if (!raw) {
+    return []
+  }
+  try {
+    const actors = JSON.parse(raw) as ReactionActorRow[]
+    return actors.map((actor) => ({
+      actorId: actor.actor_id,
+      actorName: actor.actor_name || actor.actor_id,
+      actorUrl: actor.actor_url || actor.actor_id,
+      actorIconUrl: actor.actor_icon_url || null,
+    }))
+  } catch {
+    return []
+  }
 }
 
 function normalizeReactionValue(value: string): string | null {
@@ -120,13 +158,53 @@ async function resolveReactionTarget(ctx: { documentLoader: any; contextLoader: 
   return object?.id ? normalizeReactionTarget(object.id) : null
 }
 
-async function resolveReactionActor(ctx: { documentLoader: any; contextLoader: any }, reaction: ReactionActivity): Promise<string | null> {
+function firstUrl(value: URL | Link | null): string | null {
+  if (!value) {
+    return null
+  }
+  if (value instanceof URL) {
+    return value.href
+  }
+  const link = value as Link
+  return link.href?.href ?? link.id?.href ?? null
+}
+
+function firstImageUrl(image: Image | URL | null): string | null {
+  if (!image) {
+    return null
+  }
+  if (image instanceof URL) {
+    return image.href
+  }
+  return firstUrl(image.url)
+}
+
+async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: any }, actor: Actor): Promise<ActivityPubReactionActor | null> {
+  if (!actor.id) {
+    return null
+  }
+  const icon = await actor.getIcon({
+    documentLoader: ctx.documentLoader,
+    contextLoader: ctx.contextLoader,
+    suppressError: true,
+  })
+  return {
+    actorId: actor.id.href,
+    actorName: stringifyLanguageValue(actor.name)
+      || stringifyLanguageValue(actor.preferredUsername)
+      || actor.id.hostname,
+    actorUrl: firstUrl(actor.url) ?? actor.id.href,
+    actorIconUrl: firstImageUrl(icon),
+  }
+}
+
+async function resolveReactionActor(ctx: { documentLoader: any; contextLoader: any }, reaction: ReactionActivity): Promise<ActivityPubReactionActor | null> {
   const actor = await reaction.getActor({
     documentLoader: ctx.documentLoader,
     contextLoader: ctx.contextLoader,
     suppressError: true,
   })
-  return isActor(actor) && actor.id ? actor.id.href : null
+  return isActor(actor) ? await resolveActorProfile(ctx, actor) : null
 }
 
 function getReactionValue(reaction: ReactionActivity): string | null {
@@ -152,9 +230,9 @@ export async function persistReactionFromActivity(
     return false
   }
 
-  const actorId = await resolveReactionActor(ctx, reaction)
+  const actor = await resolveReactionActor(ctx, reaction)
   const reactionValue = getReactionValue(reaction)
-  if (!actorId || !reactionValue) {
+  if (!actor || !reactionValue) {
     return false
   }
 
@@ -170,6 +248,9 @@ export async function persistReactionFromActivity(
     article_id,
     article_path,
     actor_id,
+    actor_name,
+    actor_url,
+    actor_icon_url,
     reaction,
     reaction_type,
     object_id,
@@ -179,7 +260,10 @@ export async function persistReactionFromActivity(
     ${activityId},
     ${target.articleId},
     ${target.articlePath},
-    ${actorId},
+    ${actor.actorId},
+    ${actor.actorName},
+    ${actor.actorUrl},
+    ${actor.actorIconUrl},
     ${reactionValue},
     ${reactionType},
     ${target.objectId},
@@ -189,6 +273,9 @@ export async function persistReactionFromActivity(
   ON CONFLICT(article_path, actor_id) DO UPDATE SET
     activity_id = excluded.activity_id,
     article_id = excluded.article_id,
+    actor_name = excluded.actor_name,
+    actor_url = excluded.actor_url,
+    actor_icon_url = excluded.actor_icon_url,
     reaction = excluded.reaction,
     reaction_type = excluded.reaction_type,
     object_id = excluded.object_id,
@@ -253,14 +340,29 @@ export async function listActivityPubReactions(articlePath: string): Promise<Act
 
   await ensureActivityPubSchema()
   const db = getDatabase()
-  const { rows } = await db.sql`SELECT reaction, COUNT(*) AS count
-    FROM activitypub_reactions
-    WHERE article_path = ${normalizedPath}
+  const { rows } = await db.sql`SELECT
+      reaction,
+      COUNT(*) AS count,
+      json_group_array(json_object(
+        'actor_id', actor_id,
+        'actor_name', actor_name,
+        'actor_url', actor_url,
+        'actor_icon_url', actor_icon_url,
+        'published_at', published_at,
+        'id', id
+      )) AS actors
+    FROM (
+      SELECT id, actor_id, actor_name, actor_url, actor_icon_url, reaction, published_at
+      FROM activitypub_reactions
+      WHERE article_path = ${normalizedPath}
+      ORDER BY published_at DESC, id DESC
+    )
     GROUP BY reaction
     ORDER BY count DESC, MIN(id) ASC`
 
   return ((rows ?? []) as ReactionRow[]).map((row) => ({
     reaction: row.reaction,
     count: countValue(row.count),
+    actors: parseActorRows(row.actors),
   }))
 }
