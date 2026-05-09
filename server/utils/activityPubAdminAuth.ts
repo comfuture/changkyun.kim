@@ -209,7 +209,6 @@ function buildSigningString(method: string, path: string, headers: string[], val
 
 function resolveSignedHeaderValues(
   event: H3Event,
-  requestUrl: URL,
   headerNames: string[],
 ): Record<string, string> {
   const rawHeaders = getRequestHeaders(event)
@@ -226,10 +225,6 @@ function resolveSignedHeaderValues(
   const values: Record<string, string> = {}
   for (const headerName of headerNames) {
     if (headerName === "(request-target)") {
-      continue
-    }
-    if (headerName === "host") {
-      values.host = requestUrl.host
       continue
     }
     const headerValue = normalized.get(headerName)
@@ -298,7 +293,7 @@ export async function verifyActivityPubAdminRequestSignature(event: H3Event, bod
       return false
     }
 
-    const values = resolveSignedHeaderValues(event, requestUrl, headersToSign)
+    const values = resolveSignedHeaderValues(event, headersToSign)
     const signedText = buildSigningString(method, path, headersToSign, {
       ...values,
       "(request-target)": `${method.toLowerCase()} ${path}`,
