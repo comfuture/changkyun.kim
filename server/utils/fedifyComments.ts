@@ -6,9 +6,11 @@ import {
   Link,
   Note,
   PUBLIC_COLLECTION,
+  type Actor,
 } from "@fedify/vocab"
 
 import {
+  ACTOR_IDENTIFIER,
   FEDIFY_BLOG_CANONICAL_HOSTNAMES,
   FEDIFY_BLOG_COLLECTION_PREFIX,
   fetchFedifyContentEntry,
@@ -49,6 +51,12 @@ type CommentRow = {
 
 const SITE_HOST = new URL(SITE_ORIGIN).host.toLowerCase()
 const BLOG_HOSTS = new Set(Array.from(FEDIFY_BLOG_CANONICAL_HOSTNAMES, (host) => host.toLowerCase()))
+
+type FedifyDocumentContext = {
+  documentLoader: any
+  contextLoader: any
+  getDocumentLoader?: (identity: { identifier: string }) => any
+}
 
 function getDatabase() {
   return useDatabase()
@@ -226,20 +234,57 @@ function isPublic(note: Note, create: Create): boolean {
   return noteAudience.includes(publicHref) || createAudience.includes(publicHref)
 }
 
-async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: any }, create: Create, note: Note): Promise<{
-  actorId: string
-  actorName: string
-  actorUrl: string
-  actorIconUrl: string | null
+async function getLocalActorDocumentLoader(ctx: FedifyDocumentContext): Promise<any | null> {
+  if (typeof ctx.getDocumentLoader !== "function") {
+    return null
+  }
+  try {
+    return await ctx.getDocumentLoader({ identifier: ACTOR_IDENTIFIER })
+  } catch {
+    return null
+  }
+}
+
+async function getCreateActor(ctx: FedifyDocumentContext, create: Create): Promise<{
+  actor: Actor
+  documentLoader: any
 } | null> {
   const actor = await create.getActor({
     documentLoader: ctx.documentLoader,
     contextLoader: ctx.contextLoader,
     suppressError: true,
   })
-  if (!isActor(actor) || !actor.id) {
+  if (isActor(actor) && actor.id) {
+    return { actor, documentLoader: ctx.documentLoader }
+  }
+
+  const documentLoader = await getLocalActorDocumentLoader(ctx)
+  if (!documentLoader || documentLoader === ctx.documentLoader) {
     return null
   }
+
+  const authenticatedActor = await create.getActor({
+    documentLoader,
+    contextLoader: ctx.contextLoader,
+    suppressError: true,
+  })
+  if (!isActor(authenticatedActor) || !authenticatedActor.id) {
+    return null
+  }
+  return { actor: authenticatedActor, documentLoader }
+}
+
+async function resolveActorProfile(ctx: FedifyDocumentContext, create: Create, note: Note): Promise<{
+  actorId: string
+  actorName: string
+  actorUrl: string
+  actorIconUrl: string | null
+} | null> {
+  const actorResult = await getCreateActor(ctx, create)
+  if (!actorResult) {
+    return null
+  }
+  const { actor, documentLoader } = actorResult
 
   const noteActorId = note.attributionId?.href
   if (noteActorId && noteActorId !== actor.id.href) {
@@ -251,7 +296,7 @@ async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: an
     || actor.id.hostname
   const actorUrl = firstUrl(actor.url) ?? actor.id.href
   const icon = await actor.getIcon({
-    documentLoader: ctx.documentLoader,
+    documentLoader,
     contextLoader: ctx.contextLoader,
     suppressError: true,
   })
@@ -264,7 +309,7 @@ async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: an
   }
 }
 
-export async function persistCommentFromCreate(ctx: { documentLoader: any; contextLoader: any }, create: Create): Promise<boolean> {
+export async function persistCommentFromCreate(ctx: FedifyDocumentContext, create: Create): Promise<boolean> {
   const object = await create.getObject({
     documentLoader: ctx.documentLoader,
     contextLoader: ctx.contextLoader,
@@ -354,7 +399,7 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
   return true
 }
 
-export async function markCommentDeletedFromDelete(ctx: { documentLoader: any; contextLoader: any }, del: Delete): Promise<boolean> {
+export async function markCommentDeletedFromDelete(ctx: FedifyDocumentContext, del: Delete): Promise<boolean> {
   const actor = await del.getActor({
     documentLoader: ctx.documentLoader,
     contextLoader: ctx.contextLoader,
