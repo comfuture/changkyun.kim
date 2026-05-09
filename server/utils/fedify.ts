@@ -587,6 +587,7 @@ builder
 
 builder
   .setInboxListeners("/@{identifier}/inbox", "/inbox")
+  .setSharedKeyDispatcher(async () => ({ identifier: ACTOR_IDENTIFIER }))
   .on(Follow, async (ctx, follow) => {
     const actor = await follow.getActor(ctx)
     if (!isActor(actor) || !actor.id) {
