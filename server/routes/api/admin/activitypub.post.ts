@@ -5,6 +5,7 @@ import {
   hideActivityPubCommentById,
   removeFollowerById,
   deleteActivityPubReactionById,
+  reactActivityPubCommentById,
   replyActivityPubCommentById,
 } from "../../../utils/activityPubAdmin"
 import { unauthorizedError, verifyActivityPubAdminRequestSignature } from "../../../utils/activityPubAdminAuth"
@@ -13,6 +14,7 @@ type AdminActionBody = {
   action?: string
   id?: number | string
   reply?: string
+  reaction?: string
 }
 
 function parseBody(rawBody: string | false | undefined): AdminActionBody {
@@ -76,6 +78,20 @@ export default defineEventHandler(async (event) => {
       id,
       actorId: result.actorId,
       commentObjectId: result.commentObjectId,
+    }
+  }
+
+  if (action === "comment.react") {
+    const reaction = typeof body?.reaction === "string" ? body.reaction.trim() : "❤️"
+    const result = await reactActivityPubCommentById(id, reaction || "❤️", event)
+    return {
+      ok: true,
+      action,
+      id,
+      actorId: result.actorId,
+      commentObjectId: result.commentObjectId,
+      reaction: result.reaction,
+      reactionType: result.reactionType,
     }
   }
 

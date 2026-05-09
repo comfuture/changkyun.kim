@@ -1,4 +1,4 @@
-import { Create, isActor, Note, PUBLIC_COLLECTION } from "@fedify/vocab"
+import { Create, EmojiReact, isActor, Like, Note, PUBLIC_COLLECTION } from "@fedify/vocab"
 import { Temporal } from "@js-temporal/polyfill"
 
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
@@ -303,6 +303,68 @@ export async function replyActivityPubCommentById(
   return {
     actorId: row.actor_id,
     commentObjectId: row.object_id,
+  }
+}
+
+export async function reactActivityPubCommentById(
+  id: number,
+  reactionText = "❤️",
+  event?: unknown,
+): Promise<{ actorId: string; commentObjectId: string; reaction: string; reactionType: "Like" | "EmojiReact" }> {
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const { rows } = await db.sql`SELECT actor_id, object_id
+    FROM activitypub_comments
+    WHERE id = ${id}
+      AND status = 'visible'
+    LIMIT 1`
+  const row = rows?.[0] as { actor_id?: string; object_id?: string } | undefined
+  if (!row?.actor_id || !row.object_id) {
+    throw new Error("Comment not found")
+  }
+
+  const reaction = reactionText.replace(/\s+/g, " ").trim() || "❤️"
+  const env = getDashboardEnv(event)
+  const context = await createFedifyContext(env as Parameters<typeof createFedifyContext>[0])
+  const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
+  const targetActor = new URL(row.actor_id)
+  const target = new URL(row.object_id)
+  const recipient = await context.lookupObject(targetActor)
+  if (!isActor(recipient) || !recipient.id) {
+    throw new Error("Comment actor not found")
+  }
+
+  const activity = reaction === "❤️"
+    ? new Like({
+      id: new URL(`#like-comment-${crypto.randomUUID()}`, actorUri),
+      actor: actorUri,
+      object: target,
+      to: targetActor,
+      cc: PUBLIC_COLLECTION,
+      published: Temporal.Now.instant(),
+    })
+    : new EmojiReact({
+      id: new URL(`#react-comment-${crypto.randomUUID()}`, actorUri),
+      actor: actorUri,
+      object: target,
+      content: reaction,
+      to: targetActor,
+      cc: PUBLIC_COLLECTION,
+      published: Temporal.Now.instant(),
+    })
+
+  await context.sendActivity(
+    { identifier: ACTOR_IDENTIFIER },
+    recipient,
+    activity,
+    { preferSharedInbox: true },
+  )
+
+  return {
+    actorId: row.actor_id,
+    commentObjectId: row.object_id,
+    reaction,
+    reactionType: reaction === "❤️" ? "Like" : "EmojiReact",
   }
 }
 
