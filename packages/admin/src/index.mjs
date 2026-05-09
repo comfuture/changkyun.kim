@@ -186,6 +186,7 @@ usage:
   pnpm admin react-comment <comment-id> [emoji]
   pnpm admin delete-comment <comment-id>
   pnpm admin delete-reaction <reaction-id>
+  pnpm admin follow <follower-id>
   pnpm admin unfollow <follower-id>
 
 options: 
@@ -547,6 +548,12 @@ async function runCommand(options, signConfig) {
   if (command === "delete-reaction") {
     const id = parseRequiredId(options.args[0], "reaction")
     writeJson(await requestAdminAction(options.baseUrl, signConfig, "reaction.delete", id))
+    return
+  }
+
+  if (command === "follow") {
+    const id = parseRequiredId(options.args[0], "follower")
+    writeJson(await requestAdminAction(options.baseUrl, signConfig, "follower.follow", id))
     return
   }
 

@@ -18,6 +18,7 @@ Supported workflows:
 - Delete user-approved spam comments or reactions
 - Reply to a specific comment with text provided by the user
 - React to a specific comment with an emoji provided by the user
+- Follow a specific follower when requested
 - Unfollow a specific follower when requested
 
 This skill is an operator helper. Do not invent replies, reactions, or moderation actions. Always show the relevant items first and ask for or use the user's explicit instruction before sending a mutation.
@@ -34,6 +35,7 @@ pnpm --silent admin reply <comment-id> --text "<text from user>"
 pnpm --silent admin react-comment <comment-id> "<emoji from user>"
 pnpm --silent admin delete-comment <comment-id>
 pnpm --silent admin delete-reaction <reaction-id>
+pnpm --silent admin follow <follower-id>
 pnpm --silent admin unfollow <follower-id>
 ```
 
@@ -64,6 +66,7 @@ ACTIVITYPUB_ADMIN_BASE_URL=http://localhost:3000 pnpm --silent admin list commen
    - run `pnpm --silent admin react-comment <comment-id> "<emoji>"`
 7. For followers:
    - list first
+   - run `pnpm --silent admin follow <follower-id>` only after explicit instruction
    - run `pnpm --silent admin unfollow <follower-id>` only after explicit instruction
 8. Report executed commands and results concisely.
 
@@ -71,6 +74,7 @@ ACTIVITYPUB_ADMIN_BASE_URL=http://localhost:3000 pnpm --silent admin list commen
 
 - Never generate an automatic public reply on behalf of the user.
 - Never delete a comment or reaction from a vague spam suspicion alone.
+- Never follow based only on a profile name or actor URL if the exact listed ID is ambiguous.
 - Never unfollow based only on a profile name or actor URL if the exact listed ID is ambiguous.
 - Do not print private key material, `.env` contents, or raw secret values.
 - Prefer JSON list commands for inspection so IDs are precise.

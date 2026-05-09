@@ -56,6 +56,7 @@ pnpm --silent admin reply <comment-id> --text <text>
 pnpm --silent admin react-comment <comment-id> [emoji]
 pnpm --silent admin delete-comment <comment-id>
 pnpm --silent admin delete-reaction <reaction-id>
+pnpm --silent admin follow <follower-id>
 pnpm --silent admin unfollow <follower-id>
 ```
 

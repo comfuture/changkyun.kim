@@ -1,4 +1,4 @@
-import { Create, EmojiReact, isActor, Like, Note, PUBLIC_COLLECTION } from "@fedify/vocab"
+import { Create, EmojiReact, Follow, isActor, Like, Note, PUBLIC_COLLECTION } from "@fedify/vocab"
 import { Temporal } from "@js-temporal/polyfill"
 
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
@@ -245,6 +245,105 @@ export async function removeFollowerById(id: number): Promise<string | null> {
     WHERE id = ${id}`
 
   return actorId
+}
+
+async function followActivityUri(actorId: string): Promise<URL> {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(actorId))
+  const hash = Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("")
+  return new URL(`/@${ACTOR_IDENTIFIER}/follow/${hash}`, SITE_ORIGIN)
+}
+
+async function recordFollowingRequested(actorId: string, follow: Follow): Promise<void> {
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const payload = JSON.stringify(await follow.toJsonLd({ format: "compact" }))
+  const activityId = follow.id?.href ?? (await followActivityUri(actorId)).href
+
+  await db.sql`INSERT INTO following (actor_id, activity_id, activity_payload, status)
+    VALUES (${actorId}, ${activityId}, ${payload}, 'requested')
+    ON CONFLICT(actor_id) DO UPDATE SET
+      activity_id = excluded.activity_id,
+      activity_payload = excluded.activity_payload,
+      status = 'requested',
+      updated_at = CURRENT_TIMESTAMP`
+}
+
+async function removeFollowingRequest(actorId: string, activityId: string): Promise<void> {
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  await db.sql`DELETE FROM following
+    WHERE actor_id = ${actorId}
+      AND activity_id = ${activityId}
+      AND status = 'requested'`
+}
+
+export async function followFollowerById(
+  id: number,
+  event?: unknown,
+): Promise<{ actorId: string; followActivityId: string | null; status: "accepted" | "requested"; alreadyFollowing: boolean }> {
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const followerRows = await db.sql`SELECT actor_id
+    FROM followers
+    WHERE id = ${id}
+      AND status IN ('accepted', 'requested')
+    LIMIT 1`
+  const actorId = (followerRows.rows?.[0] as { actor_id?: string | null } | undefined)?.actor_id ?? null
+  if (!actorId) {
+    throw new Error("Follower not found")
+  }
+
+  const existingRows = await db.sql`SELECT activity_id, status
+    FROM following
+    WHERE actor_id = ${actorId}
+      AND status IN ('accepted', 'requested')
+    LIMIT 1`
+  const existing = existingRows.rows?.[0] as { activity_id?: string | null; status?: string | null } | undefined
+  if (existing?.status === "accepted" || existing?.status === "requested") {
+    return {
+      actorId,
+      followActivityId: existing.activity_id ?? null,
+      status: existing.status,
+      alreadyFollowing: true,
+    }
+  }
+
+  const env = getDashboardEnv(event)
+  const context = await createFedifyContext(env as Parameters<typeof createFedifyContext>[0])
+  const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
+  const targetActor = new URL(actorId)
+  const recipient = await context.lookupObject(targetActor)
+  if (!isActor(recipient) || !recipient.id) {
+    throw new Error("Follower actor not found")
+  }
+
+  const followId = await followActivityUri(actorId)
+  const follow = new Follow({
+    id: followId,
+    actor: actorUri,
+    object: targetActor,
+    to: targetActor,
+  })
+
+  try {
+    await recordFollowingRequested(actorId, follow)
+    await context.sendActivity(
+      { identifier: ACTOR_IDENTIFIER },
+      recipient,
+      follow,
+      { preferSharedInbox: true },
+    )
+  } catch (error) {
+    await removeFollowingRequest(actorId, followId.href).catch(() => undefined)
+    throw error
+  }
+
+  return {
+    actorId,
+    followActivityId: followId.href,
+    status: "requested",
+    alreadyFollowing: false,
+  }
 }
 
 export async function replyActivityPubCommentById(

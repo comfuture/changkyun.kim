@@ -3,6 +3,7 @@ import { createError } from "h3"
 
 import {
   hideActivityPubCommentById,
+  followFollowerById,
   removeFollowerById,
   deleteActivityPubReactionById,
   reactActivityPubCommentById,
@@ -112,6 +113,19 @@ export default defineEventHandler(async (event) => {
       action,
       id,
       actorId,
+    }
+  }
+
+  if (action === "follower.follow") {
+    const result = await followFollowerById(id, event)
+    return {
+      ok: true,
+      action,
+      id,
+      actorId: result.actorId,
+      followActivityId: result.followActivityId,
+      status: result.status,
+      alreadyFollowing: result.alreadyFollowing,
     }
   }
 
