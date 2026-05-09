@@ -727,6 +727,23 @@ async function bootstrap() {
 
   updateSectionLabel(ui.sectionLabel, state)
 
+  function renderCurrentSection(message) {
+    const listData = state[state.section]
+    if (listData.length === 0) {
+      state.selectedIndex = -1
+      ui.list.setItems(["항목이 없습니다."])
+    } else {
+      ui.list.setItems(listData.map((item) => formatRow(state.section, item)))
+      state.selectedIndex = Math.max(0, Math.min(state.selectedIndex, listData.length - 1))
+      ui.list.select(state.selectedIndex)
+    }
+
+    updateDetail(ui.detail, state.section, getSelectedItem(state, state.section, state.selectedIndex))
+    updateSectionLabel(ui.sectionLabel, state)
+    updateStatus(ui.status, message || `${SECTIONS[state.section].label} ${listData.length}개`, false)
+    ui.screen.render()
+  }
+
   async function refresh() {
     try {
       updateStatus(ui.status, `데이터 새로고침 중... (${options.baseUrl})`, false)
@@ -744,20 +761,7 @@ async function bootstrap() {
         }
       }
 
-      const listData = state[state.section]
-      if (listData.length === 0) {
-        state.selectedIndex = -1
-        ui.list.setItems(["항목이 없습니다."])
-      } else {
-        ui.list.setItems(listData.map((item) => formatRow(state.section, item)))
-        state.selectedIndex = Math.max(0, Math.min(state.selectedIndex, listData.length - 1))
-        ui.list.select(state.selectedIndex)
-      }
-
-      updateDetail(ui.detail, state.section, getSelectedItem(state, state.section, state.selectedIndex))
-      updateSectionLabel(ui.sectionLabel, state)
-      updateStatus(ui.status, `${SECTIONS[state.section].label} ${listData.length}개`, false)
-      ui.screen.render()
+      renderCurrentSection()
     } catch (error) {
       updateStatus(ui.status, String(error?.message || error), true)
       ui.screen.render()
@@ -771,7 +775,7 @@ async function bootstrap() {
     state.section = section
     state.selectedIndex = 0
     state.userSelectedSection = true
-    void refresh()
+    renderCurrentSection()
   }
 
   function applySelection(index) {
