@@ -64,6 +64,7 @@ type LocalReplyObjectRow = {
   reply_target_id?: string | null
   published_at?: string | null
   target_actor_id?: string | null
+  payload?: string | null
 }
 
 type LocalReplyActivityRow = {
@@ -634,6 +635,7 @@ async function loadLocalReplyObjectRow(replyId: string): Promise<LocalReplyObjec
       reply.content_html,
       reply.reply_target_id,
       reply.published_at,
+      reply.payload,
       parent.actor_id AS target_actor_id
     FROM activitypub_comments reply
     LEFT JOIN activitypub_comments parent
@@ -691,7 +693,44 @@ function buildLocalReplyNote(row: LocalReplyObjectRow): Note | null {
   })
 }
 
-function buildLocalReplyNoteFromActivity(row: LocalReplyActivityRow): Note | null {
+async function parseLocalReplyCreateFromPayload(row: {
+  activity_id?: string | null
+  object?: string | null
+  payload?: string | null
+}): Promise<Create | null> {
+  const payload = parsePayloadObject(row.payload)
+  if (!payload) {
+    return null
+  }
+
+  try {
+    const create = await Create.fromJsonLd(payload)
+    const activityId = parseUrl(row.activity_id)
+    const objectId = parseUrl(row.object)
+    if (activityId && create.id?.href !== activityId.href) {
+      return null
+    }
+    if (objectId && create.objectId?.href !== objectId.href) {
+      return null
+    }
+    if (!create.actorIds.some((actorId) => actorId.href === ACTOR_URI.href)) {
+      return null
+    }
+    return create
+  } catch {
+    return null
+  }
+}
+
+async function buildLocalReplyNoteFromActivity(row: LocalReplyActivityRow): Promise<Note | null> {
+  const create = await parseLocalReplyCreateFromPayload(row)
+  if (create) {
+    const object = await create.getObject({ suppressError: true })
+    if (object instanceof Note) {
+      return object
+    }
+  }
+
   const payload = parsePayloadObject(row.payload)
   const object = payload?.object
   if (!object || typeof object !== "object" || Array.isArray(object)) {
@@ -731,15 +770,36 @@ function buildLocalReplyNoteFromActivity(row: LocalReplyActivityRow): Note | nul
 export async function loadLocalReplyNote(replyId: string): Promise<Note | null> {
   const row = await loadLocalReplyObjectRow(replyId)
   if (row) {
+    if (row.payload) {
+      const note = await buildLocalReplyNoteFromActivity({
+        activity_id: row.activity_id ?? null,
+        object: row.object_id,
+        payload: row.payload,
+      })
+      if (note) {
+        return note
+      }
+    }
     return buildLocalReplyNote(row)
   }
   const activityRow = await loadLocalReplyActivityRow(replyId)
-  return activityRow ? buildLocalReplyNoteFromActivity(activityRow) : null
+  return activityRow ? await buildLocalReplyNoteFromActivity(activityRow) : null
 }
 
 export async function loadLocalReplyCreate(replyId: string): Promise<Create | null> {
   const row = await loadLocalReplyObjectRow(replyId)
   if (row) {
+    if (row.payload) {
+      const create = await parseLocalReplyCreateFromPayload({
+        activity_id: row.activity_id ?? null,
+        object: row.object_id,
+        payload: row.payload,
+      })
+      if (create) {
+        return create
+      }
+    }
+
     const note = buildLocalReplyNote(row)
     const activityId = parseUrl(row.activity_id) ?? parseUrl(localReplyActivityHref(replyId))
     if (!note || !activityId) {
@@ -762,7 +822,12 @@ export async function loadLocalReplyCreate(replyId: string): Promise<Create | nu
   if (!activityRow) {
     return null
   }
-  const note = buildLocalReplyNoteFromActivity(activityRow)
+  const create = await parseLocalReplyCreateFromPayload(activityRow)
+  if (create) {
+    return create
+  }
+
+  const note = await buildLocalReplyNoteFromActivity(activityRow)
   const payload = parsePayloadObject(activityRow.payload)
   const activityId = parseUrl(activityRow.activity_id)
   if (!note || !payload || !activityId) {
