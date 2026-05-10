@@ -135,6 +135,18 @@ export async function runDashboard(options: CliOptions, signConfig: SignConfig):
 
   let isApplyingSelection = false
 
+  function replaceListItems(items: string[]): void {
+    if (typeof ui.list.clearItems === "function") {
+      ui.list.clearItems()
+    }
+    if (typeof ui.list.setScroll === "function") {
+      ui.list.setScroll(0)
+    }
+    ui.list.childBase = 0
+    ui.list.childOffset = 0
+    ui.list.setItems(items)
+  }
+
   function bindListItemMouseSelection(): void {
     ui.list.items.forEach((item: any, index: number) => {
       if (item._adminSelectionClickBound) {
@@ -151,9 +163,9 @@ export async function runDashboard(options: CliOptions, signConfig: SignConfig):
     const listData = state[state.section]
     if (listData.length === 0) {
       state.selectedIndex = -1
-      ui.list.setItems(["항목이 없습니다."])
+      replaceListItems(["항목이 없습니다."])
     } else {
-      ui.list.setItems(listData.map((item) => formatRow(state.section, item)))
+      replaceListItems(listData.map((item) => formatRow(state.section, item)))
       bindListItemMouseSelection()
       state.selectedIndex = Math.max(0, Math.min(state.selectedIndex, listData.length - 1))
       ui.list.select(state.selectedIndex)
@@ -193,7 +205,7 @@ export async function runDashboard(options: CliOptions, signConfig: SignConfig):
   }
 
   async function promptSearchQuery(): Promise<void> {
-    const query = await openLinePrompt(ui.screen, "검색어", state.searchQuery)
+    const query = await openLinePrompt(ui.screen, "검색어", "")
     if (!query) {
       updateStatus(ui.status, state, "검색이 취소되었습니다.")
       return
@@ -206,6 +218,7 @@ export async function runDashboard(options: CliOptions, signConfig: SignConfig):
     state.section = "search"
     state.userSelectedSection = true
     state.searchQuery = query
+    state.search = []
     state.selectedIndex = 0
     state.isLoading = true
     renderCurrentSection(`검색 중... ${query}`)
@@ -223,12 +236,12 @@ export async function runDashboard(options: CliOptions, signConfig: SignConfig):
   }
 
   function activateSearchSection(): void {
-    if (state.section !== "search") {
-      state.section = "search"
-      state.selectedIndex = state.search.length > 0 ? Math.max(0, Math.min(state.selectedIndex, state.search.length - 1)) : -1
-      state.userSelectedSection = true
-      renderCurrentSection(state.searchQuery ? `최근 검색: ${state.searchQuery}` : "검색어를 입력하세요.")
-    }
+    state.section = "search"
+    state.search = []
+    state.searchQuery = ""
+    state.selectedIndex = -1
+    state.userSelectedSection = true
+    renderCurrentSection("검색어를 입력하세요.")
     void promptSearchQuery()
   }
 
