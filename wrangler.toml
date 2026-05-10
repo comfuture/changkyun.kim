@@ -35,3 +35,7 @@ max_retries = 5
 [[kv_namespaces]]
 binding = "FEDIFY_KV"
 id = "98f85a0cf61b4288a08ba18f6e961786"
+
+[observability.logs]
+enabled = false
+invocation_logs = true
