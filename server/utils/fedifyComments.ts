@@ -7,6 +7,7 @@ import {
   Note,
   PUBLIC_COLLECTION,
 } from "@fedify/vocab"
+import { Temporal } from "@js-temporal/polyfill"
 
 import {
   FEDIFY_BLOG_CANONICAL_HOSTNAMES,
@@ -52,9 +53,75 @@ type CommentRow = {
 
 const SITE_HOST = new URL(SITE_ORIGIN).host.toLowerCase()
 const BLOG_HOSTS = new Set(Array.from(FEDIFY_BLOG_CANONICAL_HOSTNAMES, (host) => host.toLowerCase()))
+const ACTOR_URI = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
+const LOCAL_REPLY_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+type LocalReplyObjectRow = {
+  object_id: string
+  activity_id?: string | null
+  content_text: string
+  content_html?: string | null
+  reply_target_id?: string | null
+  published_at?: string | null
+  target_actor_id?: string | null
+}
 
 function getDatabase() {
   return useDatabase()
+}
+
+function normalizeLocalReplyId(value: string): string | null {
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(value)
+  } catch {
+    return null
+  }
+  return LOCAL_REPLY_ID_PATTERN.test(decoded) ? decoded : null
+}
+
+function localReplyObjectHref(replyId: string): string | null {
+  const normalized = normalizeLocalReplyId(replyId)
+  return normalized ? new URL(`/@${ACTOR_IDENTIFIER}/replies/${normalized}`, SITE_ORIGIN).href : null
+}
+
+function localReplyActivityHref(replyId: string): string | null {
+  const normalized = normalizeLocalReplyId(replyId)
+  return normalized ? new URL(`/activitypub/replies/${normalized}/activity`, SITE_ORIGIN).href : null
+}
+
+export function createLocalReplyPermalinks(replyId = crypto.randomUUID()): { objectId: URL; activityId: URL } {
+  const objectHref = localReplyObjectHref(replyId)
+  const activityHref = localReplyActivityHref(replyId)
+  if (!objectHref || !activityHref) {
+    throw new Error("Invalid local reply id")
+  }
+  return {
+    objectId: new URL(objectHref),
+    activityId: new URL(activityHref),
+  }
+}
+
+function parseUrl(value?: string | null): URL | null {
+  if (!value) {
+    return null
+  }
+  try {
+    return new URL(value)
+  } catch {
+    return null
+  }
+}
+
+function parseInstant(value?: string | null): Temporal.Instant | null {
+  if (!value) {
+    return null
+  }
+  try {
+    return Temporal.Instant.from(value)
+  } catch {
+    return null
+  }
 }
 
 function stringifyLanguageValue(value: unknown): string {
@@ -449,6 +516,86 @@ export async function persistLocalReplyComment(input: {
     status = 'visible',
     payload = excluded.payload,
     updated_at = CURRENT_TIMESTAMP`
+}
+
+async function loadLocalReplyObjectRow(replyId: string): Promise<LocalReplyObjectRow | null> {
+  const objectHref = localReplyObjectHref(replyId)
+  if (!objectHref) {
+    return null
+  }
+
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const { rows } = await db.sql`SELECT
+      reply.object_id,
+      reply.activity_id,
+      reply.content_text,
+      reply.content_html,
+      reply.reply_target_id,
+      reply.published_at,
+      parent.actor_id AS target_actor_id
+    FROM activitypub_comments reply
+    LEFT JOIN activitypub_comments parent
+      ON parent.object_id = reply.reply_target_id
+    WHERE reply.object_id = ${objectHref}
+      AND reply.actor_id = ${ACTOR_URI.href}
+      AND reply.status = 'visible'
+    LIMIT 1`
+
+  const row = rows?.[0] as LocalReplyObjectRow | undefined
+  return row?.object_id && row.content_text ? row : null
+}
+
+function buildLocalReplyNote(row: LocalReplyObjectRow): Note | null {
+  const objectId = parseUrl(row.object_id)
+  const replyTarget = parseUrl(row.reply_target_id)
+  if (!objectId || !replyTarget) {
+    return null
+  }
+
+  const targetActor = parseUrl(row.target_actor_id)
+  const published = parseInstant(row.published_at)
+  const content = row.content_html || row.content_text
+
+  return new Note({
+    id: objectId,
+    attribution: ACTOR_URI,
+    content,
+    mediaType: row.content_html ? "text/html" : "text/plain",
+    replyTarget,
+    ...(targetActor ? { to: targetActor } : {}),
+    cc: PUBLIC_COLLECTION,
+    ...(published ? { published } : {}),
+  })
+}
+
+export async function loadLocalReplyNote(replyId: string): Promise<Note | null> {
+  const row = await loadLocalReplyObjectRow(replyId)
+  return row ? buildLocalReplyNote(row) : null
+}
+
+export async function loadLocalReplyCreate(replyId: string): Promise<Create | null> {
+  const row = await loadLocalReplyObjectRow(replyId)
+  if (!row) {
+    return null
+  }
+
+  const note = buildLocalReplyNote(row)
+  const activityId = parseUrl(row.activity_id) ?? parseUrl(localReplyActivityHref(replyId))
+  if (!note || !activityId) {
+    return null
+  }
+
+  const targetActor = parseUrl(row.target_actor_id)
+  const published = parseInstant(row.published_at)
+  return new Create({
+    id: activityId,
+    actor: ACTOR_URI,
+    object: note,
+    ...(targetActor ? { to: targetActor } : {}),
+    cc: PUBLIC_COLLECTION,
+    ...(published ? { published } : {}),
+  })
 }
 
 export async function markCommentDeletedFromDelete(ctx: { documentLoader: any; contextLoader: any }, del: Delete): Promise<boolean> {

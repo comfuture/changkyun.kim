@@ -21,6 +21,7 @@ import {
   Image,
   isActor,
   Like,
+  Note,
   Person,
   PUBLIC_COLLECTION,
   Undo,
@@ -38,6 +39,8 @@ import {
 } from "./fedifyContent"
 import packageJson from "../../package.json"
 import {
+  loadLocalReplyCreate,
+  loadLocalReplyNote,
   markCommentDeletedFromDelete,
   persistCommentFromCreate,
 } from "./fedifyComments"
@@ -515,11 +518,18 @@ builder
   })
 
 builder.setObjectDispatcher(Create, "/{collection}/{+path}/activity", async (_ctx, values) => {
-  const collection = values.collection === "blog" || values.collection === "app" ? values.collection : null
+  const collectionValue = String(values.collection ?? "")
+  const path = String(values.path ?? "").replace(/^\/+/, "")
+  const replyPrefix = "replies/"
+  if (collectionValue === "activitypub" && path.startsWith(replyPrefix)) {
+    return await loadLocalReplyCreate(path.slice(replyPrefix.length))
+  }
+
+  const collection = collectionValue === "blog" || collectionValue === "app" ? collectionValue : null
   if (!collection) {
     return null
   }
-  const entry = await fetchFedifyContentEntry(collection, `/${collection}/${values.path}`)
+  const entry = await fetchFedifyContentEntry(collection, `/${collection}/${path}`)
   return entry ? await buildCreateFromEntry(entry) : null
 })
 
@@ -530,6 +540,13 @@ builder.setObjectDispatcher(Article, "/{collection}/{+path}", async (_ctx, value
   }
   const entry = await fetchFedifyContentEntry(collection, `/${collection}/${values.path}`)
   return entry ? await buildArticleFromEntry(entry) : null
+})
+
+builder.setObjectDispatcher(Note, "/@{identifier}/replies/{id}", async (_ctx, values) => {
+  if (values.identifier !== ACTOR_IDENTIFIER || !values.id) {
+    return null
+  }
+  return await loadLocalReplyNote(String(values.id))
 })
 
 builder.setObjectDispatcher(Follow, "/@{identifier}/follow/{hash}", async (ctx, values) => {

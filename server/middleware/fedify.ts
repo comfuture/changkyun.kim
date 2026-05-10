@@ -85,8 +85,20 @@ function acceptsActivityPub(acceptHeader?: string | null): boolean {
     || (normalized.includes("json") && normalized.includes("profile=") && normalized.includes("activitystreams"))
 }
 
+function isPublicActivityPubDocumentRequest(method: string, pathname: string): boolean {
+  return (method === "GET" || method === "HEAD")
+    && (
+      pathname === "/@me"
+      || pathname.startsWith("/@me/replies/")
+      || (pathname.startsWith("/activitypub/replies/") && pathname.endsWith("/activity"))
+    )
+}
+
 function isFederationRequest(method: string, pathname: string, accept?: string | null): boolean {
   if ((pathname === "/inbox" || pathname === "/@me/inbox") && method === "POST") {
+    return true
+  }
+  if (isPublicActivityPubDocumentRequest(method, pathname)) {
     return true
   }
   if (pathname === "/@me" || pathname.startsWith("/@me/")) {
@@ -574,6 +586,7 @@ export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)
   const fedifyUrl = toFedifyUrl(url)
   const accept = getHeader(event, "accept")
+  const forceActivityPubDocument = isPublicActivityPubDocumentRequest(event.method, fedifyUrl.pathname)
   const isFederation = isFederationRequest(event.method, fedifyUrl.pathname, accept)
   const syncTarget = resolveContentSyncTarget(url.pathname)
     ?? (isFederation ? resolveContentSyncTarget(fedifyUrl.pathname) : null)
@@ -593,6 +606,9 @@ export default defineEventHandler(async (event) => {
 
   const headers = new Headers(event.headers)
   headers.set("host", fedifyUrl.host)
+  if (forceActivityPubDocument) {
+    headers.set("accept", "application/activity+json")
+  }
 
   const body = event.method === "GET" || event.method === "HEAD"
     ? undefined
