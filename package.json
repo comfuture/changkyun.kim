@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "DEV=1 nuxt dev",
-    "admin": "pnpm --filter changkyun-admin run start",
+    "admin": "node ./packages/admin/bin/activitypub-admin.mjs",
     "build": "nuxt build",
     "start": "nuxt start",
     "generate": "GENERATE=1 nuxi generate"
