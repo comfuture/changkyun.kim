@@ -4,7 +4,13 @@ import { Temporal } from "@js-temporal/polyfill"
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
 import { ACTOR_IDENTIFIER, SITE_ORIGIN } from "./fedifyContent"
 import { ensureActivityPubSchema } from "./activityPubSchema"
-import { createLocalReplyPermalinks, persistLocalReplyActivity, persistLocalReplyComment } from "./fedifyComments"
+import {
+  createLocalReplyPermalinks,
+  discardLocalReplyActivity,
+  discardLocalReplyComment,
+  persistLocalReplyActivity,
+  persistLocalReplyComment,
+} from "./fedifyComments"
 
 export type AdminFollowItem = {
   id: number
@@ -562,13 +568,6 @@ export async function replyActivityPubCommentById(
     published: publishedAt,
   })
 
-  await context.sendActivity(
-    { identifier: ACTOR_IDENTIFIER },
-    recipient,
-    create,
-    { preferSharedInbox: true },
-  )
-
   await persistLocalReplyComment({
     objectId: replyId.href,
     activityId: createId.href,
@@ -581,6 +580,20 @@ export async function replyActivityPubCommentById(
     publishedAt: publishedAt.toString(),
     payload: JSON.stringify(await create.toJsonLd({ format: "compact" })),
   })
+
+  try {
+    await context.sendActivity(
+      { identifier: ACTOR_IDENTIFIER },
+      recipient,
+      create,
+      { preferSharedInbox: true },
+    )
+  } catch (error) {
+    await discardLocalReplyComment(replyId.href).catch((cleanupError) => {
+      console.warn("Failed to discard undelivered local reply comment.", cleanupError)
+    })
+    throw error
+  }
 
   return {
     actorId: row.actor_id,
@@ -1087,14 +1100,21 @@ export async function replyRemoteActivityPubObject(
     published: publishedAt,
   })
 
-  await target.context.sendActivity(
-    { identifier: ACTOR_IDENTIFIER },
-    target.actor,
-    create,
-    { preferSharedInbox: true },
-  )
-
   await persistLocalReplyActivity(create)
+
+  try {
+    await target.context.sendActivity(
+      { identifier: ACTOR_IDENTIFIER },
+      target.actor,
+      create,
+      { preferSharedInbox: true },
+    )
+  } catch (error) {
+    await discardLocalReplyActivity(createId.href).catch((cleanupError) => {
+      console.warn("Failed to discard undelivered local reply activity.", cleanupError)
+    })
+    throw error
+  }
 
   return {
     actorId: target.actorId,

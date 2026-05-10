@@ -566,6 +566,14 @@ export async function persistLocalReplyComment(input: {
     updated_at = CURRENT_TIMESTAMP`
 }
 
+export async function discardLocalReplyComment(objectId: string): Promise<void> {
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  await db.sql`DELETE FROM activitypub_comments
+    WHERE object_id = ${objectId}
+      AND actor_id = ${ACTOR_URI.href}`
+}
+
 export async function persistLocalReplyActivity(create: Create): Promise<void> {
   const activityId = create.id?.href
   const objectId = create.objectId?.href
@@ -599,6 +607,16 @@ export async function persistLocalReplyActivity(create: Create): Promise<void> {
     payload = excluded.payload,
     direction = 'outbox',
     updated_at = CURRENT_TIMESTAMP`
+}
+
+export async function discardLocalReplyActivity(activityId: string): Promise<void> {
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  await db.sql`DELETE FROM activity
+    WHERE activity_id = ${activityId}
+      AND actor_id = ${ACTOR_URI.href}
+      AND type = 'Create'
+      AND direction = 'outbox'`
 }
 
 async function loadLocalReplyObjectRow(replyId: string): Promise<LocalReplyObjectRow | null> {
