@@ -876,6 +876,48 @@ async function bootstrap() {
 
   updateSectionLabel(ui.sectionLabel, state)
 
+  let isApplyingSelection = false
+
+  function getListIndexAtMouse(list, data) {
+    if (!data || typeof data.x !== "number" || typeof data.y !== "number") {
+      return null
+    }
+
+    for (let index = 0; index < list.items.length; index += 1) {
+      const item = list.items[index]
+      const itemCoords = item?.lpos || item?._getCoords?.()
+      if (
+        itemCoords
+        && data.x >= itemCoords.xi
+        && data.x < itemCoords.xl
+        && data.y >= itemCoords.yi
+        && data.y < itemCoords.yl
+      ) {
+        return index
+      }
+    }
+
+    const coords = list.lpos || list._getCoords?.()
+    if (!coords || data.x < coords.xi || data.x >= coords.xl || data.y < coords.yi || data.y >= coords.yl) {
+      return null
+    }
+
+    const row = Math.floor(data.y - coords.yi - (list.itop || 0) + (list.childBase || 0))
+    return row >= 0 && row < list.items.length ? row : null
+  }
+
+  function bindListItemMouseSelection() {
+    ui.list.items.forEach((item, index) => {
+      if (item._adminSelectionClickBound) {
+        return
+      }
+      item._adminSelectionClickBound = true
+      item.on("click", () => {
+        applySelection(index, { syncList: true })
+      })
+    })
+  }
+
   function renderCurrentSection(message) {
     const listData = state[state.section]
     if (listData.length === 0) {
@@ -883,6 +925,7 @@ async function bootstrap() {
       ui.list.setItems(["항목이 없습니다."])
     } else {
       ui.list.setItems(listData.map((item) => formatRow(state.section, item)))
+      bindListItemMouseSelection()
       state.selectedIndex = Math.max(0, Math.min(state.selectedIndex, listData.length - 1))
       ui.list.select(state.selectedIndex)
     }
@@ -930,20 +973,32 @@ async function bootstrap() {
     renderCurrentSection()
   }
 
-  function applySelection(index) {
-    const listData = state[state.section]
-    if (listData.length === 0) {
-      state.selectedIndex = -1
-      updateDetail(ui.detail, state.section, null)
-      updateStatus(ui.status, state)
-      ui.screen.render()
+  function applySelection(index, { syncList = false } = {}) {
+    if (isApplyingSelection) {
       return
     }
 
-    state.selectedIndex = Math.max(0, Math.min(index, listData.length - 1))
-    updateDetail(ui.detail, state.section, getSelectedItem(state, state.section, state.selectedIndex))
-    updateStatus(ui.status, state)
-    ui.screen.render()
+    isApplyingSelection = true
+    try {
+      const listData = state[state.section]
+      if (listData.length === 0) {
+        state.selectedIndex = -1
+        updateDetail(ui.detail, state.section, null)
+        updateStatus(ui.status, state)
+        ui.screen.render()
+        return
+      }
+
+      state.selectedIndex = Math.max(0, Math.min(index, listData.length - 1))
+      if (syncList && ui.list.selected !== state.selectedIndex) {
+        ui.list.select(state.selectedIndex)
+      }
+      updateDetail(ui.detail, state.section, getSelectedItem(state, state.section, state.selectedIndex))
+      updateStatus(ui.status, state)
+      ui.screen.render()
+    } finally {
+      isApplyingSelection = false
+    }
   }
 
   async function handleAction(action) {
@@ -1026,6 +1081,13 @@ async function bootstrap() {
 
   ui.list.on("select", (_, index) => {
     applySelection(index)
+  })
+
+  ui.list.on("click", (data) => {
+    const index = getListIndexAtMouse(ui.list, data)
+    if (index != null) {
+      applySelection(index, { syncList: true })
+    }
   })
 
   ui.screen.key(["1"], () => switchSection(SECTION_ORDER[0]))
