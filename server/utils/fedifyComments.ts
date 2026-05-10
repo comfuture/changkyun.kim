@@ -66,6 +66,12 @@ type LocalReplyObjectRow = {
   target_actor_id?: string | null
 }
 
+type LocalReplyActivityRow = {
+  activity_id: string
+  object?: string | null
+  payload?: string | null
+}
+
 function getDatabase() {
   return useDatabase()
 }
@@ -119,6 +125,48 @@ function parseInstant(value?: string | null): Temporal.Instant | null {
   }
   try {
     return Temporal.Instant.from(value)
+  } catch {
+    return null
+  }
+}
+
+function firstPayloadUrl(value: unknown): URL | null {
+  if (!value) {
+    return null
+  }
+  if (typeof value === "string") {
+    return parseUrl(value)
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = firstPayloadUrl(item)
+      if (url) {
+        return url
+      }
+    }
+    return null
+  }
+  if (typeof value === "object") {
+    const candidate = value as { id?: unknown; href?: unknown }
+    if (typeof candidate.id === "string") {
+      return parseUrl(candidate.id)
+    }
+    if (typeof candidate.href === "string") {
+      return parseUrl(candidate.href)
+    }
+  }
+  return null
+}
+
+function parsePayloadObject(value?: string | null): Record<string, unknown> | null {
+  if (!value) {
+    return null
+  }
+  try {
+    const parsed = JSON.parse(value)
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : null
   } catch {
     return null
   }
@@ -518,6 +566,41 @@ export async function persistLocalReplyComment(input: {
     updated_at = CURRENT_TIMESTAMP`
 }
 
+export async function persistLocalReplyActivity(create: Create): Promise<void> {
+  const activityId = create.id?.href
+  const objectId = create.objectId?.href
+  if (!activityId || !objectId) {
+    throw new Error("Cannot persist local reply activity without id and object id.")
+  }
+
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const payload = JSON.stringify(await create.toJsonLd({ format: "compact" }))
+
+  await db.sql`INSERT INTO activity (
+    activity_id,
+    actor_id,
+    type,
+    object,
+    payload,
+    direction
+  ) VALUES (
+    ${activityId},
+    ${ACTOR_URI.href},
+    'Create',
+    ${objectId},
+    ${payload},
+    'outbox'
+  )
+  ON CONFLICT(activity_id) DO UPDATE SET
+    actor_id = excluded.actor_id,
+    type = excluded.type,
+    object = excluded.object,
+    payload = excluded.payload,
+    direction = 'outbox',
+    updated_at = CURRENT_TIMESTAMP`
+}
+
 async function loadLocalReplyObjectRow(replyId: string): Promise<LocalReplyObjectRow | null> {
   const objectHref = localReplyObjectHref(replyId)
   if (!objectHref) {
@@ -546,6 +629,27 @@ async function loadLocalReplyObjectRow(replyId: string): Promise<LocalReplyObjec
   return row?.object_id && row.content_text ? row : null
 }
 
+async function loadLocalReplyActivityRow(replyId: string): Promise<LocalReplyActivityRow | null> {
+  const objectHref = localReplyObjectHref(replyId)
+  const activityHref = localReplyActivityHref(replyId)
+  if (!objectHref || !activityHref) {
+    return null
+  }
+
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const { rows } = await db.sql`SELECT activity_id, object, payload
+    FROM activity
+    WHERE activity_id = ${activityHref}
+      AND object = ${objectHref}
+      AND actor_id = ${ACTOR_URI.href}
+      AND type = 'Create'
+      AND direction = 'outbox'
+    LIMIT 1`
+  const row = rows?.[0] as LocalReplyActivityRow | undefined
+  return row?.activity_id && row.payload ? row : null
+}
+
 function buildLocalReplyNote(row: LocalReplyObjectRow): Note | null {
   const objectId = parseUrl(row.object_id)
   const replyTarget = parseUrl(row.reply_target_id)
@@ -569,25 +673,85 @@ function buildLocalReplyNote(row: LocalReplyObjectRow): Note | null {
   })
 }
 
+function buildLocalReplyNoteFromActivity(row: LocalReplyActivityRow): Note | null {
+  const payload = parsePayloadObject(row.payload)
+  const object = payload?.object
+  if (!object || typeof object !== "object" || Array.isArray(object)) {
+    return null
+  }
+
+  const note = object as Record<string, unknown>
+  const objectId = firstPayloadUrl(note.id)
+  const replyTarget = firstPayloadUrl(note.inReplyTo)
+  const content = stringifyLanguageValue(note.content)
+  if (!objectId || !replyTarget || !content) {
+    return null
+  }
+
+  const targetActor = firstPayloadUrl(note.to) ?? firstPayloadUrl(payload.to)
+  const published = parseInstant(
+    typeof note.published === "string"
+      ? note.published
+      : typeof payload.published === "string"
+        ? payload.published
+        : null,
+  )
+  const mediaType = typeof note.mediaType === "string" ? note.mediaType : "text/plain"
+
+  return new Note({
+    id: objectId,
+    attribution: ACTOR_URI,
+    content,
+    mediaType,
+    replyTarget,
+    ...(targetActor ? { to: targetActor } : {}),
+    cc: PUBLIC_COLLECTION,
+    ...(published ? { published } : {}),
+  })
+}
+
 export async function loadLocalReplyNote(replyId: string): Promise<Note | null> {
   const row = await loadLocalReplyObjectRow(replyId)
-  return row ? buildLocalReplyNote(row) : null
+  if (row) {
+    return buildLocalReplyNote(row)
+  }
+  const activityRow = await loadLocalReplyActivityRow(replyId)
+  return activityRow ? buildLocalReplyNoteFromActivity(activityRow) : null
 }
 
 export async function loadLocalReplyCreate(replyId: string): Promise<Create | null> {
   const row = await loadLocalReplyObjectRow(replyId)
-  if (!row) {
-    return null
+  if (row) {
+    const note = buildLocalReplyNote(row)
+    const activityId = parseUrl(row.activity_id) ?? parseUrl(localReplyActivityHref(replyId))
+    if (!note || !activityId) {
+      return null
+    }
+
+    const targetActor = parseUrl(row.target_actor_id)
+    const published = parseInstant(row.published_at)
+    return new Create({
+      id: activityId,
+      actor: ACTOR_URI,
+      object: note,
+      ...(targetActor ? { to: targetActor } : {}),
+      cc: PUBLIC_COLLECTION,
+      ...(published ? { published } : {}),
+    })
   }
 
-  const note = buildLocalReplyNote(row)
-  const activityId = parseUrl(row.activity_id) ?? parseUrl(localReplyActivityHref(replyId))
-  if (!note || !activityId) {
+  const activityRow = await loadLocalReplyActivityRow(replyId)
+  if (!activityRow) {
     return null
   }
-
-  const targetActor = parseUrl(row.target_actor_id)
-  const published = parseInstant(row.published_at)
+  const note = buildLocalReplyNoteFromActivity(activityRow)
+  const payload = parsePayloadObject(activityRow.payload)
+  const activityId = parseUrl(activityRow.activity_id)
+  if (!note || !payload || !activityId) {
+    return null
+  }
+  const targetActor = firstPayloadUrl(payload.to)
+  const published = parseInstant(typeof payload.published === "string" ? payload.published : null)
   return new Create({
     id: activityId,
     actor: ACTOR_URI,
