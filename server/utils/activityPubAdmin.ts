@@ -4,7 +4,7 @@ import { Temporal } from "@js-temporal/polyfill"
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
 import { ACTOR_IDENTIFIER, SITE_ORIGIN } from "./fedifyContent"
 import { ensureActivityPubSchema } from "./activityPubSchema"
-import { createLocalReplyPermalinks, persistLocalReplyComment } from "./fedifyComments"
+import { createLocalReplyPermalinks, persistLocalReplyActivity, persistLocalReplyComment } from "./fedifyComments"
 
 export type AdminFollowItem = {
   id: number
@@ -1067,8 +1067,7 @@ export async function replyRemoteActivityPubObject(
   const targetActorUri = normalizeRemoteUrl(target.actorId, "Search target actor id")
   const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
   const publishedAt = Temporal.Now.instant()
-  const replyId = new URL(`#reply-${crypto.randomUUID()}`, actorUri)
-  const createId = new URL(`#create-reply-${crypto.randomUUID()}`, actorUri)
+  const { objectId: replyId, activityId: createId } = createLocalReplyPermalinks()
   const replyNote = new Note({
     id: replyId,
     attribution: actorUri,
@@ -1094,6 +1093,8 @@ export async function replyRemoteActivityPubObject(
     create,
     { preferSharedInbox: true },
   )
+
+  await persistLocalReplyActivity(create)
 
   return {
     actorId: target.actorId,
