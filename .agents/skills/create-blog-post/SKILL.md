@@ -16,6 +16,7 @@ Create a high-quality blog post file in this repository using Nuxt Content Markd
    - publication intent: `publish`, `draft`, or content-only update
 2. Set language:
    - write in Korean by default
+   - use Korean polite style (`존댓말`) by default
    - switch language only when explicitly requested
 3. Create path from date and slug:
    - directory: `content/blog/<YYYY-MM>/`
@@ -71,9 +72,11 @@ Then write the article body in Markdown that is compatible with Nuxt Content MDC
 - Use `references/writing-style.md` for formatting, Korean-first diction, and source placement.
 - Use `references/humanize-ai-writing.md` for pattern-level cleanup based on the Wikipedia AI-writing signs and the Humanizer workflow, adapted to Korean blog writing.
 - Prefer natural, concrete Korean wording unless the user requests another tone.
+- Use polite Korean endings by default (`-습니다`, `-했습니다`, `-됩니다`, `-합니다`) without making the prose stiff.
 - Avoid stale AI writing patterns and over-formal boilerplate phrasing.
 - Do not stop at deleting bad phrases. Replace them with sourced specifics, real constraints, explicit tradeoffs, or a grounded author voice when the post format allows it.
 - Keep the intended voice and meaning intact. Humanizing means rewriting for clarity and credibility, not inventing personal anecdotes or unsourced opinions.
+- When no stronger tone is requested, use `content/blog/2026-05/08-activitypub-fediverse-site.md` as a local voice model: polite, plain, experience-led writing with ordinary sentence headings and only as much technical detail as the story needs.
 
 ## Remove AI Writing Signals
 
@@ -95,8 +98,9 @@ Then write the article body in Markdown that is compatible with Nuxt Content MDC
   - Incorrect: `![alt](/public/blog/...)`
 
 If image is required:
-- download from external source when appropriate, or
-- generate with the `nano-banana` skill when available.
+- first consider generating it with Codex's built-in image generation capability (`imagegen` / Imagen2) when the requested image can be created directly.
+- download from an external source when an existing real-world image, screenshot, logo, product photo, or specifically sourced visual is more appropriate.
+- fall back to another available image-generation workflow such as `nano-banana` only when built-in image generation is unavailable or inadequate for the requested asset.
 
 Prefer a wide image for `coverImage` when possible.
 
@@ -117,7 +121,9 @@ Only apply git actions when the user explicitly requests publication mode.
 - Verify file path follows date + slug pattern.
 - Verify frontmatter exists and parses.
 - Verify Korean default language is respected.
+- Verify the post uses Korean polite style unless the user explicitly requested another tone.
 - Verify all image links omit `/public`.
+- Verify Markdown links follow `references/writing-style.md`: natural inline links are allowed, but source dumps and citation-only links stay readable.
 - Verify article satisfies provided source materials and guide prompt.
 - Verify the opening and ending are specific to the topic, not reusable AI templates.
 - Verify vague praise, vague authority, and unsupported significance claims were removed or grounded in evidence.

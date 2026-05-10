@@ -13,9 +13,10 @@ The original sources are mostly English-focused. This guide adapts the patterns 
 
 1. Quick process
 2. Core rules
-3. Pattern catalog for Korean blog writing
-4. Add voice without inventing facts
-5. Final checklist
+3. Default blog voice model
+4. Pattern catalog for Korean blog writing
+5. Add voice without inventing facts
+6. Final checklist
 
 ## 1. Quick Process
 
@@ -35,12 +36,39 @@ Run this pass after the draft exists.
 - Prefer direct Korean verbs and nouns over translated abstractions.
 - Use simple constructions when they are enough. Do not inflate a sentence to sound more "complete."
 - A blog post may sound authored, but it should still stay grounded in the actual materials.
+- Use Korean polite style by default unless the user explicitly asks otherwise. Polite style should still sound plain and direct, not ceremonial.
 
-## 3. Pattern Catalog For Korean Blog Writing
+## 3. Default Blog Voice Model
+
+When no stronger user-provided tone exists, use the May 2026 Fediverse post (`content/blog/2026-05/08-activitypub-fediverse-site.md`) as the local voice model.
+
+Use this shape:
+
+- Start from what changed or what the author tried, not from a broad industry trend.
+- Keep the article experience-led: what the author wanted, what they tried first, where the work became larger than expected, what they chose next, and what changed after that.
+- Use first person when it clarifies ownership: `제 사이트`, `제가 하려던 일`, `저는 ... 싶지는 않았습니다`.
+- Prefer ordinary sentence headings such as `댓글과 반응은 Fediverse 계정으로 남깁니다` over slogan-like headings.
+- Use fewer sections when the flow is already clear. Let adjacent ideas sit in the same section when they are part of one experience.
+- Explain technical terms briefly, then return to the author’s decision or operating experience.
+- End with the present state, limitation, or next thing to watch. Do not force a grand conclusion.
+
+Prefer:
+
+```md
+하고 싶었던 일은 단순했습니다. 블로그 글을 올렸을 때 각자 원래 쓰던 계정으로 답글을 달 수 있게 만들고 싶었습니다.
+```
+
+Avoid:
+
+```md
+이번 글에서는 개인 웹사이트와 분산형 소셜 네트워크의 결합이 갖는 의미를 살펴보겠습니다.
+```
+
+## 4. Pattern Catalog For Korean Blog Writing
 
 The categories below merge the Wikipedia and Humanizer signals into patterns that show up often in Korean drafts.
 
-### 3.1 Inflated significance and trend framing
+### 4.1 Inflated significance and trend framing
 
 Watch for:
 
@@ -63,10 +91,10 @@ Avoid:
 Prefer:
 
 ```md
-이 변경으로 배포 시간이 14분에서 6분으로 줄었다. 팀이 체감하는 변화는 여기서 시작된다.
+이 변경으로 배포 시간이 14분에서 6분으로 줄었습니다. 팀이 체감하는 변화는 여기서 시작됐습니다.
 ```
 
-### 3.2 Promotional or advertisement-like wording
+### 4.2 Promotional or advertisement-like wording
 
 Watch for:
 
@@ -91,10 +119,10 @@ Avoid:
 Prefer:
 
 ```md
-이번 업데이트에는 일괄 처리, 키보드 단축키, 오프라인 편집이 추가됐다.
+이번 업데이트에는 일괄 처리, 키보드 단축키, 오프라인 편집이 추가됐습니다.
 ```
 
-### 3.3 Vague attributions and anonymous authority
+### 4.3 Vague attributions and anonymous authority
 
 Watch for:
 
@@ -117,10 +145,10 @@ Avoid:
 Prefer:
 
 ```md
-Cloudflare는 2026년 2월 문서에서 이 방식을 권장했고, 우리 팀도 같은 이유로 캐시 무효화 횟수를 줄였다.
+Cloudflare는 2026년 2월 문서에서 이 방식을 권장했고, 저도 같은 이유로 캐시 무효화 횟수를 줄였습니다.
 ```
 
-### 3.4 Connector chains and abstract process verbs
+### 4.4 Connector chains and abstract process verbs
 
 Watch for:
 
@@ -146,10 +174,10 @@ Avoid:
 Prefer:
 
 ```md
-이 구조를 쓰면 배포 권한을 서비스별로 나눌 수 있다. 그래서 운영 실수 범위가 줄고, 새 서비스도 같은 규칙으로 붙일 수 있다.
+이 구조를 쓰면 배포 권한을 서비스별로 나눌 수 있습니다. 그래서 운영 실수 범위가 줄고, 새 서비스도 같은 규칙으로 붙일 수 있습니다.
 ```
 
-### 3.5 AI vocabulary clusters
+### 4.5 AI vocabulary clusters
 
 Watch for repeated clusters such as:
 
@@ -179,10 +207,10 @@ Avoid:
 Prefer:
 
 ```md
-이 프로젝트에서 확인한 건 두 가지다. 프롬프트를 길게 쓰는 것보다 평가 기준을 먼저 고정하는 편이 결과가 더 안정적이었다.
+이 프로젝트에서 확인한 건 두 가지였습니다. 프롬프트를 길게 쓰는 것보다 평가 기준을 먼저 고정하는 편이 결과가 더 안정적이었습니다.
 ```
 
-### 3.6 Forced contrast patterns
+### 4.6 Forced contrast patterns
 
 Watch for:
 
@@ -204,10 +232,10 @@ Avoid:
 Prefer:
 
 ```md
-이 도구를 도입한 뒤 빌드 대기 시간이 짧아졌다. 그 결과 리뷰가 같은 날 끝나는 경우가 많아졌다.
+이 도구를 도입한 뒤 빌드 대기 시간이 짧아졌습니다. 그 결과 리뷰가 같은 날 끝나는 경우가 많아졌습니다.
 ```
 
-### 3.7 Rule of three and list-shaped thinking
+### 4.7 Rule of three and list-shaped thinking
 
 Watch for:
 
@@ -228,10 +256,10 @@ Avoid:
 Prefer:
 
 ```md
-가장 먼저 체감한 변화는 속도였다. 안정성은 한 달 정도 운영하면서 확인됐고, 확장성은 서비스 두 개를 더 붙였을 때 의미가 있었다.
+가장 먼저 체감한 변화는 속도였습니다. 안정성은 한 달 정도 운영하면서 확인됐고, 확장성은 서비스 두 개를 더 붙였을 때 의미가 있었습니다.
 ```
 
-### 3.8 Generic challenge or future-outlook sections
+### 4.8 Generic challenge or future-outlook sections
 
 Watch for headings or paragraphs like:
 
@@ -253,10 +281,10 @@ Avoid:
 Prefer:
 
 ```md
-남은 문제는 두 가지다. 배치 작업은 여전히 실패 원인을 찾기 어렵고, 모바일 편집 화면은 아직 느리다.
+남은 문제는 두 가지입니다. 배치 작업은 여전히 실패 원인을 찾기 어렵고, 모바일 편집 화면은 아직 느립니다.
 ```
 
-### 3.9 Chatbot residue and assistant tone
+### 4.9 Chatbot residue and assistant tone
 
 Watch for:
 
@@ -280,10 +308,10 @@ Avoid:
 Prefer:
 
 ```md
-문제는 단순했다. 검색은 빨랐지만, 결과를 믿기 어려웠다.
+문제는 단순했습니다. 검색은 빨랐지만, 결과를 믿기 어려웠습니다.
 ```
 
-### 3.10 Generic positive conclusions
+### 4.10 Generic positive conclusions
 
 Watch for:
 
@@ -305,10 +333,10 @@ Avoid:
 Prefer:
 
 ```md
-이번 실험으로 바로 바뀌는 건 없다. 다만 어떤 조건에서 실패하는지는 꽤 선명하게 보였다.
+이번 실험으로 바로 바뀌는 건 없습니다. 다만 어떤 조건에서 실패하는지는 꽤 선명하게 보였습니다.
 ```
 
-### 3.11 Over-clean but soulless writing
+### 4.11 Over-clean but soulless writing
 
 Watch for:
 
@@ -329,10 +357,10 @@ Avoid:
 Prefer:
 
 ```md
-결과는 솔직히 예상보다 거칠었다. 잘 되는 조건은 분명했지만, 조금만 입력이 흔들려도 성능이 무너졌다. 그래서 이걸 바로 운영에 넣기는 어렵다고 봤다.
+결과는 솔직히 예상보다 거칠었습니다. 잘 되는 조건은 분명했지만, 조금만 입력이 흔들려도 성능이 무너졌습니다. 그래서 이걸 바로 운영에 넣기는 어렵다고 봤습니다.
 ```
 
-### 3.12 Formatting tells that often read as AI output
+### 4.12 Formatting tells that often read as AI output
 
 Watch for:
 
@@ -360,27 +388,27 @@ Prefer:
 ```md
 ## 새 워크플로에서 먼저 달라진 점
 
-배포는 빨라졌고, 오류는 줄었다. 다만 팀 규모가 커졌을 때도 같은 구조가 유지되는지는 더 봐야 한다.
+배포는 빨라졌고, 오류는 줄었습니다. 다만 팀 규모가 커졌을 때도 같은 구조가 유지되는지는 더 봐야 합니다.
 ```
 
-## 4. Add Voice Without Inventing Facts
+## 5. Add Voice Without Inventing Facts
 
 When the draft is accurate but flat, use these adjustments.
 
 - Have a point of view when the format allows it.
-  Example: "이 접근이 항상 맞는 건 아니다. 그래도 팀 문서에는 잘 맞았다."
+  Example: "이 접근이 항상 맞는 건 아닙니다. 그래도 팀 문서에는 잘 맞았습니다."
 - Admit uncertainty where it is real.
-  Example: "아직 장기 운영 데이터는 부족하다. 그래서 비용 절감 효과는 더 지켜봐야 한다."
+  Example: "아직 장기 운영 데이터는 부족합니다. 그래서 비용 절감 효과는 더 지켜봐야 합니다."
 - Use limited first person when it clarifies ownership.
-  Example: "내가 가장 오래 붙잡고 있던 문제는 캐시 무효화 타이밍이었다."
+  Example: "제가 가장 오래 붙잡고 있던 문제는 캐시 무효화 타이밍이었습니다."
 - Vary sentence rhythm.
   Example: short sentence after a dense paragraph can reset pace.
 - Prefer concrete feelings over generic evaluation.
-  Example: "인상적이었다" instead of "놀라웠다" is still weak. Better: "로그를 처음 열었을 때 실패 원인이 한 줄로 드러난 점이 좋았다."
+  Example: "인상적이었습니다" instead of "놀라웠습니다" is still weak. Better: "로그를 처음 열었을 때 실패 원인이 한 줄로 드러난 점이 좋았습니다."
 
 Do not force personality into neutral documentation. This skill is for blog posts, so moderate voice is allowed. It still has to sound like a person who actually read the source material.
 
-## 5. Final Checklist
+## 6. Final Checklist
 
 Before you finish, verify all of the following:
 
@@ -393,4 +421,5 @@ Before you finish, verify all of the following:
 - Promotional adjectives were replaced with features, metrics, or observed outcomes.
 - Sentence length varies enough to sound read-aloud natural.
 - The article keeps a Korean-first voice rather than translated English rhythm.
+- The article uses polite Korean style unless the user explicitly requested another tone.
 - No chatbot residue remains in the article body.

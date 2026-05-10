@@ -5,20 +5,23 @@ Use this guide whenever you draft or revise blog body content.
 ## 1) Markdown Link Style
 
 - Do not overuse inline Markdown link syntax such as `[text](https://...)`.
-- Mention the source in prose first, then place the raw URL on the next line or at the sentence end.
+- Allow inline Markdown links for external or internal links when the anchor text is part of a naturally readable sentence.
+- For citation-only source references, mention the source in prose first, then place the raw URL on the next line or at the sentence end.
 - Keep links readable and sparse.
 
 Preferred:
 
 ```md
-아래 내용은 Cloudflare 공식 문서를 참고했다.
+아래 내용은 Cloudflare 공식 문서를 참고했습니다.
 https://developers.cloudflare.com/workers/
+
+ActivityPub을 붙인 뒤에는 [댓글 안내 UI](/blog/2026-05/08-activitypub-fediverse-site)를 다시 손봤습니다.
 ```
 
 Avoid:
 
 ```md
-[Cloudflare 공식 문서](https://developers.cloudflare.com/workers/)
+출처는 [여기](https://developers.cloudflare.com/workers/)와 [여기](/about)와 [여기](https://example.com)입니다.
 ```
 
 ## 2) Emphasis And Multibyte Text Safety
@@ -30,7 +33,7 @@ Avoid:
 Preferred:
 
 ```md
-핵심은 **속도** 와 **재현성** 이다.
+핵심은 **속도** 와 **재현성** 입니다.
 ```
 
 Avoid:
@@ -42,13 +45,16 @@ Avoid:
 ## 3) Korean-First Diction (Default)
 
 - Write in Korean unless the user explicitly requests another language.
+- Use polite Korean style by default. Prefer `-습니다`, `-했습니다`, `-됩니다`, and `-합니다` over plain diary endings unless the user requests a different tone.
 - Prefer natural Korean phrasing over literal translation from English.
 - Keep sentence length moderate and direct.
 - Prefer specific nouns and verbs over abstract filler.
 
 Recommended Korean tone:
 
+- polite but not ceremonial
 - concrete, practical, and verifiable
+- experience-led when the post is about something the author built or tried
 - avoid exaggerated claims
 - avoid repetitive transition clichés
 
