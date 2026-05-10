@@ -10,6 +10,11 @@ const emptyContentDumps: Record<ContentCollection, string> = {
   app: '',
 }
 
+const siteName = 'Changkyun Kim'
+const siteDescription = 'Changkyun Kim, 김창균, 金昌均'
+const themeColor = '#ffffff'
+const oneDay = 60 * 60 * 24
+
 function writeContentDumpModule(dumps: Record<ContentCollection, string>) {
   mkdirSync(resolve(process.cwd(), '.data'), { recursive: true })
   const source = `const dumps = ${JSON.stringify(dumps)} as const\nexport default dumps\n`
@@ -103,20 +108,24 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'ko'
       },
-      title: 'Changkyun Kim',
+      title: siteName,
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Changkyun Kim, 김창균, 金昌均' },
-        { name: 'theme-color', content: '#FFF' },
+        { name: 'description', content: siteDescription },
+        { name: 'theme-color', content: themeColor },
         { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-title', content: siteName },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: 'Changkyun Kim, 김창균, 金昌均' },
-        { property: 'og:site_name', content: 'Changkyun Kim' },
+        { property: 'og:title', content: siteDescription },
+        { property: 'og:site_name', content: siteName },
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         { rel: 'shortcut icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200' }
       ]
     },
@@ -151,8 +160,118 @@ export default defineNuxtConfig({
   },
 
   modules: [
-    "@nuxt/content", "@nuxt/ui", "@nuxt/image"
+    "@nuxt/content", "@nuxt/ui", "@nuxt/image", "@vite-pwa/nuxt"
   ],
+
+  pwa: {
+    registerWebManifestInRouteRules: true,
+    includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.png'],
+    manifest: {
+      name: siteDescription,
+      short_name: siteName,
+      description: siteDescription,
+      lang: 'ko-KR',
+      start_url: '/',
+      scope: '/',
+      display: 'standalone',
+      background_color: themeColor,
+      theme_color: themeColor,
+      icons: [
+        {
+          src: '/pwa-64x64.png',
+          sizes: '64x64',
+          type: 'image/png',
+        },
+        {
+          src: '/pwa-192x192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'any',
+        },
+        {
+          src: '/pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any',
+        },
+        {
+          src: '/pwa-maskable-192x192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+        {
+          src: '/pwa-maskable-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+      ],
+    },
+    workbox: {
+      cleanupOutdatedCaches: true,
+      navigateFallback: null,
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'google-font-stylesheets',
+            expiration: {
+              maxEntries: 8,
+              maxAgeSeconds: oneDay * 30,
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'google-font-files',
+            expiration: {
+              maxEntries: 16,
+              maxAgeSeconds: oneDay * 365,
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        {
+          urlPattern: /\/api\/(?:blog\/(?:articles|article|tags)|app\/content)(?:\?.*)?$/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'content-api',
+            networkTimeoutSeconds: 3,
+            expiration: {
+              maxEntries: 64,
+              maxAgeSeconds: oneDay,
+            },
+            cacheableResponse: {
+              statuses: [200],
+            },
+          },
+        },
+        {
+          urlPattern: /\/(?:_ipx|blog|app|image|content)\/.*\.(?:png|jpe?g|webp|gif|avif|svg)(?:\?.*)?$/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'content-images',
+            expiration: {
+              maxEntries: 96,
+              maxAgeSeconds: oneDay * 30,
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+      ],
+    },
+  },
 
   css: [
     "~/assets/css/tailwind.css"
