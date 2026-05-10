@@ -200,7 +200,7 @@ options:
 
 조작:
   [1,2,3] 섹션 전환 | [↑↓/마우스] 항목 선택
-  r: 댓글 답글 | d: 삭제 | u: 팔로워 언팔로우 | R: 새로고침 | q: 종료
+  r: 댓글달기 | d: 삭제 | f: 팔로우하기 | u: 팔로워 제거 | R: 새로고침 | q: 종료
 
 `)
 }
@@ -223,6 +223,68 @@ function formatTime(value) {
 function trimText(value, max) {
   const text = (value || "").replace(/\s+/g, " ").trim()
   return text.length > max ? `${text.slice(0, max - 1)}…` : text
+}
+
+const STATUS_ICONS = {
+  accepted: "✅",
+  deleted: "🗑️",
+  hidden: "🙈",
+  removed: "🚫",
+  requested: "⏳",
+  visible: "👁️",
+}
+
+const STATUS_LABELS = {
+  accepted: "수락",
+  deleted: "삭제",
+  hidden: "숨김",
+  removed: "제거",
+  requested: "요청",
+  visible: "표시",
+}
+
+function getStatusIcon(status) {
+  return STATUS_ICONS[status] || "•"
+}
+
+function formatStatusLabel(status) {
+  if (!status) {
+    return "-"
+  }
+  return `${getStatusIcon(status)} ${STATUS_LABELS[status] || status}`
+}
+
+function formatActorFallback(actorId) {
+  if (!actorId) {
+    return "-"
+  }
+  try {
+    const url = new URL(actorId)
+    const segment = decodeURIComponent(url.pathname.split("/").filter(Boolean).pop() || "")
+    if (segment) {
+      const username = segment.startsWith("@") ? segment : `@${segment}`
+      return `${username}@${url.hostname}`
+    }
+    return url.hostname
+  } catch {
+    return actorId
+  }
+}
+
+function formatActorName(item) {
+  const actorId = String(item?.actorId || "")
+  const actorName = String(item?.actorName || "").trim()
+  if (actorName && actorName !== actorId) {
+    return trimText(actorName, 32)
+  }
+  return trimText(formatActorFallback(actorId), 32)
+}
+
+function formatActorDetail(item) {
+  const name = formatActorName(item)
+  const actorId = item?.actorId || "-"
+  const actorUrl = item?.actorUrl || actorId
+  return `Actor: ${name}\n주소: ${actorId}\n프로필: ${actorUrl}`
 }
 
 function loadPrivateKeyFromFile(filePath) {
@@ -336,20 +398,44 @@ async function createSignedHeaders(endpoint, method, payload, keyId, key) {
 
 function formatRow(section, item) {
   if (section === "followers") {
-    return `${item.actorId} | ${item.status} | ${formatTime(item.updatedAt)}`
+    const following = item.followingStatus ? ` · 맞팔 ${formatStatusLabel(item.followingStatus)}` : ""
+    return `${getStatusIcon(item.status)} ${formatActorName(item)}${following} | ${formatTime(item.updatedAt)}`
   }
   if (section === "comments") {
-    return `${item.status} ${item.actorId} | ${item.articlePath} | ${trimText(item.contentText, 60)}`
+    return `${getStatusIcon(item.status)} ${formatActorName(item)} | ${item.articlePath} | ${trimText(item.contentText, 60)}`
   }
 
-  return `${item.actorId} | ${item.reaction} | ${item.articlePath}`
+  return `${item.reaction || "⭐"} ${formatActorName(item)} | ${item.articlePath}`
 }
 
-function updateStatus(status, message, isError = false) {
-  status.setContent(`
-${message}
-[1]팔로우 [2]댓글 [3]리액션 | [↑↓] 선택/마우스 | r: 답글 | d: 삭제 | u: 언팔로우 | R: 새로고침 | q: 종료`.trim())
-  status.style.fg = isError ? "red" : "green"
+function formatSelectedActions(state) {
+  const item = getSelectedItem(state, state.section, state.selectedIndex)
+  if (!item) {
+    return "선택 항목 없음"
+  }
+  if (state.section === "followers") {
+    const followLabel = item.followingStatus ? "f: 팔로우 상태 확인" : "f: 팔로우하기"
+    return `${followLabel}  u: 팔로워 제거`
+  }
+  if (state.section === "comments") {
+    return "r: 댓글달기  d: 삭제하기"
+  }
+  return "d: 삭제하기"
+}
+
+function updateStatus(status, state, message, isError = false) {
+  if (typeof message === "string") {
+    state.statusMessage = message
+    state.statusIsError = isError
+  }
+
+  const prefix = state.isLoading ? "⏳" : state.statusIsError ? "⚠️" : "ℹ️"
+  const currentMessage = state.statusMessage || `${SECTIONS[state.section].label} 대기`
+  status.setContent(`${prefix} ${currentMessage}
+[1]팔로우 [2]댓글 [3]리액션  ↑↓/클릭 선택  R: 새로고침  q: 종료  |  ${formatSelectedActions(state)}`)
+  status.style.bg = state.isLoading ? "yellow" : state.statusIsError ? "red" : "black"
+  status.style.fg = state.isLoading ? "black" : "white"
+  status.screen?.render()
 }
 
 function getSectionCount(data, section) {
@@ -375,8 +461,9 @@ function updateDetail(detail, section, item) {
     detail.setContent(`
 유형: 팔로우
 ID: ${item.id}
-Actor: ${item.actorId}
-상태: ${item.status}
+${formatActorDetail(item)}
+상태: ${formatStatusLabel(item.status)}
+맞팔: ${item.followingStatus ? formatStatusLabel(item.followingStatus) : "없음"}
 생성: ${formatTime(item.createdAt)}
 수정: ${formatTime(item.updatedAt)}
     `.trim())
@@ -387,9 +474,9 @@ Actor: ${item.actorId}
     detail.setContent(`
 유형: 댓글
 ID: ${item.id}
-Actor: ${item.actorId}
+${formatActorDetail(item)}
 경로: ${item.articlePath}
-상태: ${item.status}
+상태: ${formatStatusLabel(item.status)}
 작성시각: ${formatTime(item.publishedAt)}
 내용: ${item.contentText}
 원문객체: ${item.objectId}
@@ -400,7 +487,7 @@ Actor: ${item.actorId}
   detail.setContent(`
 유형: 리액션
 ID: ${item.id}
-Actor: ${item.actorId}
+${formatActorDetail(item)}
 경로: ${item.articlePath}
 리액션: ${item.reaction} (${item.reactionType})
 작성시각: ${formatTime(item.publishedAt)}
@@ -598,7 +685,7 @@ function createDashboardUi() {
     top: 3,
     left: 1,
     width: "68%",
-    bottom: 4,
+    bottom: 2,
     border: "line",
     keys: true,
     mouse: true,
@@ -622,7 +709,7 @@ function createDashboardUi() {
     top: 3,
     left: "68%",
     right: 1,
-    bottom: 4,
+    bottom: 2,
     border: "line",
     label: "상세",
     scrollable: true,
@@ -637,9 +724,8 @@ function createDashboardUi() {
     bottom: 0,
     left: 0,
     right: 0,
-    height: 3,
-    border: { type: "line" },
-    label: "조작",
+    height: 2,
+    style: { fg: "white", bg: "black" },
   })
 
   screen.append(header)
@@ -730,6 +816,9 @@ async function bootstrap() {
     section: "followers",
     selectedIndex: 0,
     userSelectedSection: false,
+    isLoading: false,
+    statusMessage: "",
+    statusIsError: false,
   }
 
   updateSectionLabel(ui.sectionLabel, state)
@@ -747,13 +836,14 @@ async function bootstrap() {
 
     updateDetail(ui.detail, state.section, getSelectedItem(state, state.section, state.selectedIndex))
     updateSectionLabel(ui.sectionLabel, state)
-    updateStatus(ui.status, message || `${SECTIONS[state.section].label} ${listData.length}개`, false)
+    updateStatus(ui.status, state, message || `${SECTIONS[state.section].label} ${listData.length}개`, false)
     ui.screen.render()
   }
 
   async function refresh() {
     try {
-      updateStatus(ui.status, `데이터 새로고침 중... (${options.baseUrl})`, false)
+      state.isLoading = true
+      updateStatus(ui.status, state, `데이터 새로고침 중... (${options.baseUrl})`, false)
       ui.screen.render()
       const payload = await requestAdminData(options.baseUrl, signConfig, options.includeDeleted)
       state.followers = payload.followers || []
@@ -768,9 +858,11 @@ async function bootstrap() {
         }
       }
 
+      state.isLoading = false
       renderCurrentSection()
     } catch (error) {
-      updateStatus(ui.status, String(error?.message || error), true)
+      state.isLoading = false
+      updateStatus(ui.status, state, String(error?.message || error), true)
       ui.screen.render()
     }
   }
@@ -794,57 +886,73 @@ async function bootstrap() {
   async function handleAction(action) {
     const item = getSelectedItem(state, state.section, state.selectedIndex)
     if (!item) {
-      updateStatus(ui.status, "선택된 항목이 없습니다.", true)
+      updateStatus(ui.status, state, "선택된 항목이 없습니다.", true)
       return
     }
 
     if (action === "reply") {
       if (state.section !== "comments") {
-        updateStatus(ui.status, "댓글 섹션에서만 대댓글을 작성할 수 있습니다.", true)
+        updateStatus(ui.status, state, "댓글 섹션에서만 대댓글을 작성할 수 있습니다.", true)
         return
       }
       const value = await openTextPrompt(ui.screen, "대댓글")
       if (!value) {
-        updateStatus(ui.status, "답글이 취소되었습니다.")
+        updateStatus(ui.status, state, "답글이 취소되었습니다.")
         return
       }
       try {
         await requestAdminAction(options.baseUrl, signConfig, "comment.reply", item.id, { reply: value })
-        updateStatus(ui.status, `댓글 ID:${item.id} 대댓글 전송 완료`)
+        updateStatus(ui.status, state, `댓글 ID:${item.id} 대댓글 전송 완료`)
         await refresh()
       } catch (error) {
-        updateStatus(ui.status, String(error?.message || error), true)
+        updateStatus(ui.status, state, String(error?.message || error), true)
       }
       return
     }
 
     if (action === "delete") {
       if (state.section === "followers") {
-        updateStatus(ui.status, "팔로워는 언팔로우(u)로 처리하세요.", true)
+        updateStatus(ui.status, state, "팔로워는 언팔로우(u)로 처리하세요.", true)
         return
       }
       const actionName = state.section === "comments" ? "comment.delete" : "reaction.delete"
       try {
         await requestAdminAction(options.baseUrl, signConfig, actionName, item.id)
-        updateStatus(ui.status, `항목 ID:${item.id} 삭제 처리`)
+        updateStatus(ui.status, state, `항목 ID:${item.id} 삭제 처리`)
         await refresh()
       } catch (error) {
-        updateStatus(ui.status, String(error?.message || error), true)
+        updateStatus(ui.status, state, String(error?.message || error), true)
+      }
+      return
+    }
+
+    if (action === "follow") {
+      if (state.section !== "followers") {
+        updateStatus(ui.status, state, "팔로우 섹션에서만 팔로우하세요.", true)
+        return
+      }
+      try {
+        const result = await requestAdminAction(options.baseUrl, signConfig, "follower.follow", item.id)
+        const suffix = result?.alreadyFollowing ? "이미 팔로우 중" : "팔로우 요청 완료"
+        updateStatus(ui.status, state, `팔로워 ID:${item.id} ${suffix}`)
+        await refresh()
+      } catch (error) {
+        updateStatus(ui.status, state, String(error?.message || error), true)
       }
       return
     }
 
     if (action === "unfollow") {
       if (state.section !== "followers") {
-        updateStatus(ui.status, "팔로우 섹션에서만 언팔로우하세요.", true)
+        updateStatus(ui.status, state, "팔로우 섹션에서만 언팔로우하세요.", true)
         return
       }
       try {
         await requestAdminAction(options.baseUrl, signConfig, "follower.unfollow", item.id)
-        updateStatus(ui.status, `팔로워 ID:${item.id} 언팔로우 처리`)
+        updateStatus(ui.status, state, `팔로워 ID:${item.id} 언팔로우 처리`)
         await refresh()
       } catch (error) {
-        updateStatus(ui.status, String(error?.message || error), true)
+        updateStatus(ui.status, state, String(error?.message || error), true)
       }
     }
   }
@@ -861,6 +969,9 @@ async function bootstrap() {
   })
   ui.screen.key(["d", "D", "x", "X"], () => {
     void handleAction("delete")
+  })
+  ui.screen.key(["f", "F"], () => {
+    void handleAction("follow")
   })
   ui.screen.key(["u", "U"], () => {
     void handleAction("unfollow")

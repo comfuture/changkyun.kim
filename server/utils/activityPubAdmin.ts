@@ -9,8 +9,11 @@ import { persistLocalReplyComment } from "./fedifyComments"
 export type AdminFollowItem = {
   id: number
   actorId: string
+  actorName: string
+  actorUrl: string
   activityId: string | null
   status: string
+  followingStatus: "accepted" | "requested" | null
   createdAt: string
   updatedAt: string
 }
@@ -57,8 +60,11 @@ type CommentRow = {
 type FollowRow = {
   id: number
   actor_id: string
+  actor_name?: string | null
+  actor_url?: string | null
   activity_id: string | null
   status: string
+  following_status?: string | null
   created_at: string
   updated_at: string
 }
@@ -111,21 +117,34 @@ export async function listActivityPubFollowersForAdmin(): Promise<AdminFollowIte
   await ensureActivityPubSchema()
   const db = getDatabase()
   const { rows } = await db.sql`SELECT
-    id,
-    actor_id,
-    activity_id,
-    status,
-    created_at,
-    updated_at
+    followers.id,
+    followers.actor_id,
+    activitypub_feed_actors.actor_name,
+    activitypub_feed_actors.actor_url,
+    followers.activity_id,
+    followers.status,
+    following.status AS following_status,
+    followers.created_at,
+    followers.updated_at
   FROM followers
-    WHERE status IN ('accepted', 'requested')
-  ORDER BY updated_at DESC, id DESC`
+  LEFT JOIN activitypub_feed_actors
+    ON activitypub_feed_actors.actor_id = followers.actor_id
+  LEFT JOIN following
+    ON following.actor_id = followers.actor_id
+    AND following.status IN ('accepted', 'requested')
+  WHERE followers.status IN ('accepted', 'requested')
+  ORDER BY followers.updated_at DESC, followers.id DESC`
 
   return ((rows ?? []) as FollowRow[]).map((row) => ({
     id: row.id,
     actorId: row.actor_id,
+    actorName: row.actor_name || row.actor_id,
+    actorUrl: row.actor_url || row.actor_id,
     activityId: row.activity_id ?? null,
     status: row.status,
+    followingStatus: row.following_status === "accepted" || row.following_status === "requested"
+      ? row.following_status
+      : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }))
