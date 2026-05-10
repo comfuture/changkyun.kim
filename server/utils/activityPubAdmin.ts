@@ -1,4 +1,4 @@
-import { Create, EmojiReact, Follow, isActor, Like, Note, PUBLIC_COLLECTION } from "@fedify/vocab"
+import { Article, Create, EmojiReact, Follow, Image, isActor, Like, Link, Note, PUBLIC_COLLECTION, type Actor } from "@fedify/vocab"
 import { Temporal } from "@js-temporal/polyfill"
 
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
@@ -42,6 +42,21 @@ export type AdminReactionItem = {
   objectId: string
   publishedAt: string
   receivedAt: string
+}
+
+export type AdminSearchItem = {
+  id: string
+  type: "actor" | "article" | "note" | "unknown"
+  objectId: string
+  url: string
+  actorId: string | null
+  actorName: string
+  actorUrl: string | null
+  title: string | null
+  summary: string | null
+  contentText: string
+  publishedAt: string | null
+  actions: string[]
 }
 
 type CommentRow = {
@@ -110,6 +125,123 @@ function getDashboardEnv(env?: unknown) {
   }
   return {
     ...(typeof process !== "undefined" && process?.env ? process.env : {}),
+  }
+}
+
+function stringifyLanguageValue(value: unknown): string {
+  if (!value) {
+    return ""
+  }
+  if (typeof value === "string") {
+    return value
+  }
+  if (typeof value === "object") {
+    const candidate = value as { value?: unknown; toString?: () => string }
+    if (typeof candidate.value === "string") {
+      return candidate.value
+    }
+    if (typeof candidate.toString === "function") {
+      const text = candidate.toString()
+      return text === "[object Object]" ? "" : text
+    }
+  }
+  return ""
+}
+
+function decodeHtmlEntities(value: string): string {
+  const named: Record<string, string> = {
+    amp: "&",
+    apos: "'",
+    gt: ">",
+    hellip: "...",
+    ldquo: "\"",
+    lt: "<",
+    lsquo: "'",
+    mdash: "-",
+    middot: ".",
+    nbsp: " ",
+    ndash: "-",
+    quot: "\"",
+    rdquo: "\"",
+    rsquo: "'",
+  }
+  return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
+    const normalized = entity.toLowerCase()
+    if (normalized.startsWith("#x")) {
+      const codePoint = Number.parseInt(normalized.slice(2), 16)
+      return Number.isInteger(codePoint) ? String.fromCodePoint(codePoint) : match
+    }
+    if (normalized.startsWith("#")) {
+      const codePoint = Number.parseInt(normalized.slice(1), 10)
+      return Number.isInteger(codePoint) ? String.fromCodePoint(codePoint) : match
+    }
+    return named[normalized] ?? match
+  })
+}
+
+function htmlToText(value: string): string {
+  return decodeHtmlEntities(
+    value
+      .replace(/<\s*br\s*\/?>/gi, "\n")
+      .replace(/<\s*\/p\s*>/gi, "\n\n")
+      .replace(/<[^>]*>/g, "")
+      .replace(/\r\n?/g, "\n")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim(),
+  )
+}
+
+function firstUrl(value: URL | Link | null): string | null {
+  if (!value) {
+    return null
+  }
+  if (value instanceof URL) {
+    return value.href
+  }
+  return value.href?.href ?? value.id?.href ?? null
+}
+
+function firstImageUrl(image: Image | URL | null): string | null {
+  if (!image) {
+    return null
+  }
+  if (image instanceof URL) {
+    return image.href
+  }
+  return firstUrl(image.url)
+}
+
+function toPublishedAt(value: unknown): string | null {
+  const text = value?.toString?.()
+  if (!text) {
+    return null
+  }
+  const parsed = Date.parse(text)
+  return Number.isNaN(parsed) ? text : new Date(parsed).toISOString()
+}
+
+async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: any }, actor: Actor): Promise<{
+  actorId: string
+  actorName: string
+  actorUrl: string
+  actorIconUrl: string | null
+} | null> {
+  if (!actor.id) {
+    return null
+  }
+  const icon = await actor.getIcon({
+    documentLoader: ctx.documentLoader,
+    contextLoader: ctx.contextLoader,
+    suppressError: true,
+  })
+  return {
+    actorId: actor.id.href,
+    actorName: stringifyLanguageValue(actor.name)
+      || stringifyLanguageValue(actor.preferredUsername)
+      || actor.id.hostname,
+    actorUrl: firstUrl(actor.url) ?? actor.id.href,
+    actorIconUrl: firstImageUrl(icon),
   }
 }
 
@@ -296,6 +428,70 @@ async function removeFollowingRequest(actorId: string, activityId: string): Prom
       AND status = 'requested'`
 }
 
+export async function followActorForAdmin(
+  actorId: string,
+  event?: unknown,
+): Promise<{ actorId: string; followActivityId: string | null; status: "accepted" | "requested"; alreadyFollowing: boolean }> {
+  const normalizedActorId = actorId.trim()
+  if (!normalizedActorId) {
+    throw new Error("Actor id is required")
+  }
+
+  await ensureActivityPubSchema()
+  const db = getDatabase()
+  const existingRows = await db.sql`SELECT activity_id, status
+    FROM following
+    WHERE actor_id = ${normalizedActorId}
+      AND status IN ('accepted', 'requested')
+    LIMIT 1`
+  const existing = existingRows.rows?.[0] as { activity_id?: string | null; status?: string | null } | undefined
+  if (existing?.status === "accepted" || existing?.status === "requested") {
+    return {
+      actorId: normalizedActorId,
+      followActivityId: existing.activity_id ?? null,
+      status: existing.status,
+      alreadyFollowing: true,
+    }
+  }
+
+  const env = getDashboardEnv(event)
+  const context = await createFedifyContext(env as Parameters<typeof createFedifyContext>[0])
+  const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
+  const targetActor = new URL(normalizedActorId)
+  const recipient = await context.lookupObject(targetActor)
+  if (!isActor(recipient) || !recipient.id) {
+    throw new Error("Actor not found")
+  }
+
+  const followId = await followActivityUri(normalizedActorId)
+  const follow = new Follow({
+    id: followId,
+    actor: actorUri,
+    object: targetActor,
+    to: targetActor,
+  })
+
+  try {
+    await recordFollowingRequested(normalizedActorId, follow)
+    await context.sendActivity(
+      { identifier: ACTOR_IDENTIFIER },
+      recipient,
+      follow,
+      { preferSharedInbox: true },
+    )
+  } catch (error) {
+    await removeFollowingRequest(normalizedActorId, followId.href).catch(() => undefined)
+    throw error
+  }
+
+  return {
+    actorId: normalizedActorId,
+    followActivityId: followId.href,
+    status: "requested",
+    alreadyFollowing: false,
+  }
+}
+
 export async function followFollowerById(
   id: number,
   event?: unknown,
@@ -312,57 +508,7 @@ export async function followFollowerById(
     throw new Error("Follower not found")
   }
 
-  const existingRows = await db.sql`SELECT activity_id, status
-    FROM following
-    WHERE actor_id = ${actorId}
-      AND status IN ('accepted', 'requested')
-    LIMIT 1`
-  const existing = existingRows.rows?.[0] as { activity_id?: string | null; status?: string | null } | undefined
-  if (existing?.status === "accepted" || existing?.status === "requested") {
-    return {
-      actorId,
-      followActivityId: existing.activity_id ?? null,
-      status: existing.status,
-      alreadyFollowing: true,
-    }
-  }
-
-  const env = getDashboardEnv(event)
-  const context = await createFedifyContext(env as Parameters<typeof createFedifyContext>[0])
-  const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
-  const targetActor = new URL(actorId)
-  const recipient = await context.lookupObject(targetActor)
-  if (!isActor(recipient) || !recipient.id) {
-    throw new Error("Follower actor not found")
-  }
-
-  const followId = await followActivityUri(actorId)
-  const follow = new Follow({
-    id: followId,
-    actor: actorUri,
-    object: targetActor,
-    to: targetActor,
-  })
-
-  try {
-    await recordFollowingRequested(actorId, follow)
-    await context.sendActivity(
-      { identifier: ACTOR_IDENTIFIER },
-      recipient,
-      follow,
-      { preferSharedInbox: true },
-    )
-  } catch (error) {
-    await removeFollowingRequest(actorId, followId.href).catch(() => undefined)
-    throw error
-  }
-
-  return {
-    actorId,
-    followActivityId: followId.href,
-    status: "requested",
-    alreadyFollowing: false,
-  }
+  return await followActorForAdmin(actorId, event)
 }
 
 export async function replyActivityPubCommentById(
@@ -504,6 +650,270 @@ export async function reactActivityPubCommentById(
   return {
     actorId: row.actor_id,
     commentObjectId: row.object_id,
+    reaction,
+    reactionType: reaction === "❤️" ? "Like" : "EmojiReact",
+  }
+}
+
+function normalizeSearchTarget(value: string): string | URL {
+  const query = value.trim()
+  try {
+    return new URL(query)
+  } catch {
+    return query
+  }
+}
+
+async function resolveRemoteObjectForAdmin(targetId: string, event?: unknown): Promise<{
+  object: Note | Article
+  objectId: string
+  actorId: string
+  actor: Actor
+  context: Awaited<ReturnType<typeof createFedifyContext>>
+}> {
+  const env = getDashboardEnv(event)
+  const context = await createFedifyContext(env as Parameters<typeof createFedifyContext>[0])
+  const target = normalizeSearchTarget(targetId)
+  const resolved = await context.lookupObject(target)
+  let object: unknown = resolved
+  let actor: unknown = null
+
+  if (resolved instanceof Create) {
+    actor = await resolved.getActor({
+      documentLoader: context.documentLoader,
+      contextLoader: context.contextLoader,
+      suppressError: true,
+    })
+    object = await resolved.getObject({
+      documentLoader: context.documentLoader,
+      contextLoader: context.contextLoader,
+      suppressError: true,
+    })
+  }
+
+  if (!(object instanceof Note) && !(object instanceof Article)) {
+    throw new Error("Search target is not a Note or Article")
+  }
+  if (!object.id) {
+    throw new Error("Search target has no object id")
+  }
+
+  const actorId = object.attributionId?.href ?? (isActor(actor) ? actor.id?.href : null)
+  if (!actorId) {
+    throw new Error("Search target actor not found")
+  }
+
+  const recipient = isActor(actor) && actor.id?.href === actorId
+    ? actor
+    : await context.lookupObject(new URL(actorId))
+  if (!isActor(recipient) || !recipient.id) {
+    throw new Error("Search target actor not found")
+  }
+
+  return {
+    object,
+    objectId: object.id.href,
+    actorId,
+    actor: recipient,
+    context,
+  }
+}
+
+function createSearchObjectItem(
+  object: Note | Article,
+  actorProfile: { actorId: string; actorName: string; actorUrl: string } | null,
+): AdminSearchItem | null {
+  if (!object.id) {
+    return null
+  }
+
+  const type = object instanceof Article ? "article" : "note"
+  const title = stringifyLanguageValue(object.name) || null
+  const summary = stringifyLanguageValue(object.summary) || null
+  const contentHtml = stringifyLanguageValue(object.content)
+  const contentText = htmlToText(contentHtml) || summary || title || firstUrl(object.url) || object.id.href
+  return {
+    id: `${type}:${object.id.href}`,
+    type,
+    objectId: object.id.href,
+    url: firstUrl(object.url) ?? object.id.href,
+    actorId: actorProfile?.actorId ?? object.attributionId?.href ?? null,
+    actorName: actorProfile?.actorName ?? object.attributionId?.href ?? "unknown",
+    actorUrl: actorProfile?.actorUrl ?? object.attributionId?.href ?? null,
+    title,
+    summary,
+    contentText,
+    publishedAt: toPublishedAt(object.published),
+    actions: ["reply", "like", "react"],
+  }
+}
+
+export async function searchActivityPubForAdmin(query: string, event?: unknown): Promise<AdminSearchItem[]> {
+  const normalizedQuery = query.trim()
+  if (!normalizedQuery) {
+    throw new Error("Search query is required")
+  }
+
+  const env = getDashboardEnv(event)
+  const context = await createFedifyContext(env as Parameters<typeof createFedifyContext>[0])
+  const resolved = await context.lookupObject(normalizeSearchTarget(normalizedQuery))
+  const results: AdminSearchItem[] = []
+
+  if (isActor(resolved) && resolved.id) {
+    const profile = await resolveActorProfile(context, resolved)
+    if (profile) {
+      results.push({
+        id: `actor:${profile.actorId}`,
+        type: "actor",
+        objectId: profile.actorId,
+        url: profile.actorUrl,
+        actorId: profile.actorId,
+        actorName: profile.actorName,
+        actorUrl: profile.actorUrl,
+        title: profile.actorName,
+        summary: null,
+        contentText: profile.actorId,
+        publishedAt: null,
+        actions: ["follow"],
+      })
+    }
+    return results
+  }
+
+  let object: unknown = resolved
+  let actor: unknown = null
+  if (resolved instanceof Create) {
+    actor = await resolved.getActor({
+      documentLoader: context.documentLoader,
+      contextLoader: context.contextLoader,
+      suppressError: true,
+    })
+    object = await resolved.getObject({
+      documentLoader: context.documentLoader,
+      contextLoader: context.contextLoader,
+      suppressError: true,
+    })
+  }
+
+  if (object instanceof Note || object instanceof Article) {
+    const actorId = object.attributionId?.href ?? (isActor(actor) ? actor.id?.href : null)
+    const resolvedActor = actorId
+      ? isActor(actor) && actor.id?.href === actorId
+        ? actor
+        : await context.lookupObject(new URL(actorId)).catch(() => null)
+      : null
+    const profile = isActor(resolvedActor) ? await resolveActorProfile(context, resolvedActor) : null
+    const item = createSearchObjectItem(object, profile)
+    if (item) {
+      results.push(item)
+    }
+  }
+
+  if (results.length === 0) {
+    results.push({
+      id: `unknown:${normalizedQuery}`,
+      type: "unknown",
+      objectId: normalizedQuery,
+      url: normalizedQuery,
+      actorId: null,
+      actorName: "unknown",
+      actorUrl: null,
+      title: null,
+      summary: null,
+      contentText: "지원 가능한 ActivityPub 액터, Article, Note를 찾지 못했습니다.",
+      publishedAt: null,
+      actions: [],
+    })
+  }
+
+  return results
+}
+
+export async function replyRemoteActivityPubObject(
+  targetId: string,
+  replyText: string,
+  event?: unknown,
+): Promise<{ actorId: string; objectId: string; replyObjectId: string }> {
+  const reply = replyText.trim()
+  if (!reply) {
+    throw new Error("Reply text is required")
+  }
+
+  const target = await resolveRemoteObjectForAdmin(targetId, event)
+  const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
+  const publishedAt = Temporal.Now.instant()
+  const replyId = new URL(`#reply-${crypto.randomUUID()}`, actorUri)
+  const createId = new URL(`#create-reply-${crypto.randomUUID()}`, actorUri)
+  const replyNote = new Note({
+    id: replyId,
+    attribution: actorUri,
+    content: reply,
+    mediaType: "text/plain",
+    replyTarget: new URL(target.objectId),
+    to: new URL(target.actorId),
+    cc: PUBLIC_COLLECTION,
+    published: publishedAt,
+  })
+  const create = new Create({
+    id: createId,
+    actor: actorUri,
+    object: replyNote,
+    to: new URL(target.actorId),
+    cc: PUBLIC_COLLECTION,
+    published: publishedAt,
+  })
+
+  await target.context.sendActivity(
+    { identifier: ACTOR_IDENTIFIER },
+    target.actor,
+    create,
+    { preferSharedInbox: true },
+  )
+
+  return {
+    actorId: target.actorId,
+    objectId: target.objectId,
+    replyObjectId: replyId.href,
+  }
+}
+
+export async function reactRemoteActivityPubObject(
+  targetId: string,
+  reactionText = "❤️",
+  event?: unknown,
+): Promise<{ actorId: string; objectId: string; reaction: string; reactionType: "Like" | "EmojiReact" }> {
+  const target = await resolveRemoteObjectForAdmin(targetId, event)
+  const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
+  const reaction = reactionText.replace(/\s+/g, " ").trim() || "❤️"
+  const activity = reaction === "❤️"
+    ? new Like({
+      id: new URL(`#like-remote-${crypto.randomUUID()}`, actorUri),
+      actor: actorUri,
+      object: new URL(target.objectId),
+      to: new URL(target.actorId),
+      cc: PUBLIC_COLLECTION,
+      published: Temporal.Now.instant(),
+    })
+    : new EmojiReact({
+      id: new URL(`#react-remote-${crypto.randomUUID()}`, actorUri),
+      actor: actorUri,
+      object: new URL(target.objectId),
+      content: reaction,
+      to: new URL(target.actorId),
+      cc: PUBLIC_COLLECTION,
+      published: Temporal.Now.instant(),
+    })
+
+  await target.context.sendActivity(
+    { identifier: ACTOR_IDENTIFIER },
+    target.actor,
+    activity,
+    { preferSharedInbox: true },
+  )
+
+  return {
+    actorId: target.actorId,
+    objectId: target.objectId,
     reaction,
     reactionType: reaction === "❤️" ? "Like" : "EmojiReact",
   }
