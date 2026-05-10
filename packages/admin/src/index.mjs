@@ -878,8 +878,18 @@ async function bootstrap() {
   }
 
   function applySelection(index) {
-    state.selectedIndex = index
-    updateDetail(ui.detail, state.section, getSelectedItem(state, state.section, index))
+    const listData = state[state.section]
+    if (listData.length === 0) {
+      state.selectedIndex = -1
+      updateDetail(ui.detail, state.section, null)
+      updateStatus(ui.status, state)
+      ui.screen.render()
+      return
+    }
+
+    state.selectedIndex = Math.max(0, Math.min(index, listData.length - 1))
+    updateDetail(ui.detail, state.section, getSelectedItem(state, state.section, state.selectedIndex))
+    updateStatus(ui.status, state)
     ui.screen.render()
   }
 
@@ -956,6 +966,10 @@ async function bootstrap() {
       }
     }
   }
+
+  ui.list.on("select item", (_, index) => {
+    applySelection(index)
+  })
 
   ui.list.on("select", (_, index) => {
     applySelection(index)
