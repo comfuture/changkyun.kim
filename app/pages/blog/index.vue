@@ -15,12 +15,7 @@ useSiteOgImageMeta({
   alt: 'Blog | Changkyun Kim',
 })
 
-const { data } = await useAsyncData('blogArticles', () => {
-  return queryCollection('blog')
-    .select('id', 'path', 'title', 'description', 'createdAt', 'coverImage')
-    .order('createdAt', 'DESC')
-    .all()
-})
+const { data } = await useAsyncData('blogArticles', () => $fetch('/api/blog/articles'))
 
 const requestedPage = computed(() => {
   const page = Number(route.query.page)
@@ -39,25 +34,15 @@ const listArticles = computed(() => currentPage.value === 1 ? pageArticles.value
 const pageTo = (page: number) => page <= 1 ? '/blog/' : `/blog/?page=${page}`
 
 if (import.meta.prerender) {
-  const [allEntries, tagEntries] = await Promise.all([
-    queryCollection('blog').select('path').all(),
-    queryCollection('blog').select('tags').all(),
+  const [allEntries, tags] = await Promise.all([
+    $fetch('/api/blog/articles'),
+    $fetch('/api/blog/tags'),
   ])
 
   const routes = new Set<string>(['/blog', '/blog/tag'])
   for (const entry of allEntries) {
     if (entry.path) {
       routes.add(entry.path)
-    }
-  }
-
-  const tags = new Set<string>()
-  for (const entry of tagEntries) {
-    if (!entry.tags) {
-      continue
-    }
-    for (const tag of entry.tags) {
-      tags.add(tag)
     }
   }
 

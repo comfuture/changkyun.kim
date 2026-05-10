@@ -4,19 +4,16 @@ import { normalizeRoutePath } from '~/composables/normalizeRoutePath'
 const route = useRoute()
 const contentPath = computed(() => normalizeRoutePath(route.path))
 
-const { data } = await useAsyncData(
+const { data: payload } = await useAsyncData(
   () => `blog-entry:${contentPath.value}`,
-  () => queryCollection('blog').path(contentPath.value).first(),
+  () => $fetch('/api/blog/article', {
+    query: { path: contentPath.value },
+  }),
 )
 
+const data = computed(() => payload.value?.article || null)
+const surround = computed(() => payload.value?.surround || [])
 const resolvedPath = computed(() => normalizeRoutePath(data.value?.path || contentPath.value))
-const { data: surround } = await useAsyncData(() => `blog-surround:${resolvedPath.value}`, () => {
-  return queryCollectionItemSurroundings('blog', resolvedPath.value, {
-    fields: ['title', 'description'],
-  })
-}, {
-  default: () => [],
-})
 const coverImage = computed(() => data.value?.coverImage)
 const activityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}/activity` : null)
 const canonicalActivityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}` : '')

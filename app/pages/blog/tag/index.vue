@@ -12,28 +12,7 @@ useSiteOgImageMeta({
   alt: 'Blog Tags | Changkyun Kim',
 })
 
-// const route = useRoute()
-// const { data: serverData } = await useFetch('/api/blog/tag', {
-//   params: {
-//     tag: route.params.tag,
-//   },
-// })
-const { data: tags } = useAsyncData('tags', async () => {
-  const query = await queryCollection('blog')
-    .select('tags')
-    .all()
-  let set = new Set<string>([])
-  for (const article of query) {
-    if (article.tags) {
-      for (const tag of article.tags) {
-        set.add(tag)
-      }
-    }
-  }
-  let tags = Array.from(set)
-  tags.sort()
-  return tags
-})
+const { data: tags } = useAsyncData('tags', () => $fetch('/api/blog/tags'))
 </script>
 <template>
   <UPage>

@@ -6,7 +6,9 @@ const contentPath = computed(() => normalizeRoutePath(route.path))
 
 const { data, error } = await useAsyncData(
   () => `app-entry:${contentPath.value}`,
-  () => queryCollection('app').path(contentPath.value).first(),
+  () => $fetch('/api/app/content', {
+    query: { path: contentPath.value },
+  }),
 )
 
 const coverImage = computed(() => data.value?.coverImage)
