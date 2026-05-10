@@ -4,14 +4,19 @@ import { normalizeRoutePath } from '~/composables/normalizeRoutePath'
 const route = useRoute()
 const contentPath = computed(() => normalizeRoutePath(route.path))
 
-const { data: payload } = await useAsyncData(
+const { data: payload, pending } = useAsyncData(
   () => `blog-entry:${contentPath.value}`,
   () => $fetch('/api/blog/article', {
     query: { path: contentPath.value },
   }),
+  {
+    lazy: true,
+  },
 )
 
-const data = computed(() => payload.value?.article || null)
+const payloadPath = computed(() => payload.value?.article?.path ? normalizeRoutePath(payload.value.article.path) : '')
+const data = computed(() => payloadPath.value === contentPath.value ? payload.value?.article || null : null)
+const isLoadingArticle = computed(() => pending.value && !data.value)
 const surround = computed(() => payload.value?.surround || [])
 const resolvedPath = computed(() => normalizeRoutePath(data.value?.path || contentPath.value))
 const coverImage = computed(() => data.value?.coverImage)
@@ -23,7 +28,9 @@ const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
 })
 
 useSeoMeta({
-  title: () => data.value?.title ? `${data.value.title} | Changkyun Kim` : 'Document Not Found | Changkyun Kim',
+  title: () => data.value?.title
+    ? `${data.value.title} | Changkyun Kim`
+    : isLoadingArticle.value ? 'Loading | Changkyun Kim' : 'Document Not Found | Changkyun Kim',
   description: () => data.value?.description || 'blog | Changkyun Kim',
   ogTitle: () => data.value?.title || 'Changkyun Kim Blog',
   ogDescription: () => data.value?.description || 'blog | Changkyun Kim',
@@ -71,7 +78,7 @@ useHead(() => ({
             <section class="space-y-4">
               <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
                 <ui-datetime :datetime="data.createdAt" />
-                <div class="flex flex-wrap gap-2" v-if="data.tags">
+                <div v-if="data.tags" class="flex flex-wrap gap-2">
                   <UBadge v-for="tag in data.tags" :key="tag" variant="subtle" color="primary">
                     {{ tag }}
                   </UBadge>
@@ -89,19 +96,38 @@ useHead(() => ({
             >
               <ContentRenderer :value="data" />
             </section>
-            <ActivitypubReactions
-              :path="resolvedPath"
-            />
-            <ActivitypubComments
-              :path="resolvedPath"
-              :activity-url="canonicalActivityUrl"
-            />
+            <ClientOnly>
+              <ActivitypubReactions
+                :path="resolvedPath"
+              />
+              <ActivitypubComments
+                :path="resolvedPath"
+                :activity-url="canonicalActivityUrl"
+              />
+            </ClientOnly>
             <USeparator v-if="surround?.filter(Boolean).length" class="my-8" />
             <UContentSurround v-if="surround?.filter(Boolean).length" :surround="(surround as any)" />
           </UPageBody>
         </UPage>
       </div>
     </section>
+    </div>
+    <div v-else-if="isLoadingArticle" class="container mx-auto px-2 py-10 sm:px-4">
+      <USkeleton class="h-48 w-full rounded-none sm:h-56 md:h-64 lg:h-72 xl:h-80" />
+      <div class="mx-auto mt-10 max-w-4xl space-y-8">
+        <div class="space-y-4">
+          <USkeleton class="h-4 w-40" />
+          <USkeleton class="h-10 w-3/4" />
+          <USkeleton class="h-5 w-1/2" />
+        </div>
+        <div class="space-y-3">
+          <USkeleton class="h-4 w-full" />
+          <USkeleton class="h-4 w-11/12" />
+          <USkeleton class="h-4 w-5/6" />
+          <USkeleton class="h-4 w-full" />
+          <USkeleton class="h-4 w-2/3" />
+        </div>
+      </div>
     </div>
     <div v-else class="container mx-auto px-6 py-16 text-sm text-gray-500 sm:px-8">
       Document Not Found

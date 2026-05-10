@@ -16,13 +16,15 @@ const props = defineProps<{
   path: string
 }>()
 
-const { data } = await useAsyncData(
+const { data } = useAsyncData(
   () => `activitypub-reactions:${props.path}`,
   () => $fetch<{ reactions: Reaction[] }>('/api/activitypub/reactions', {
     query: { path: props.path },
   }),
   {
     default: () => ({ reactions: [] }),
+    lazy: true,
+    server: false,
   },
 )
 

@@ -23,13 +23,15 @@ const props = defineProps<{
   activityUrl: string
 }>()
 
-const { data, pending } = await useAsyncData(
+const { data, pending } = useAsyncData(
   () => `activitypub-comments:${props.path}`,
   () => $fetch<{ comments: Comment[] }>('/api/activitypub/comments', {
     query: { path: props.path },
   }),
   {
     default: () => ({ comments: [] }),
+    lazy: true,
+    server: false,
   },
 )
 
