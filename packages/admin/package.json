@@ -12,10 +12,10 @@
     "check": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "blessed": "^0.1.81"
+    "blessed": "^0.1.81",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
-    "tsx": "^4.21.0",
     "typescript": "5.9.3"
   }
 }
