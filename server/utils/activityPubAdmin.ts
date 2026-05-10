@@ -432,10 +432,8 @@ export async function followActorForAdmin(
   actorId: string,
   event?: unknown,
 ): Promise<{ actorId: string; followActivityId: string | null; status: "accepted" | "requested"; alreadyFollowing: boolean }> {
-  const normalizedActorId = actorId.trim()
-  if (!normalizedActorId) {
-    throw new Error("Actor id is required")
-  }
+  const targetActor = normalizeRemoteUrl(actorId, "Actor id")
+  const normalizedActorId = targetActor.href
 
   await ensureActivityPubSchema()
   const db = getDatabase()
@@ -457,7 +455,6 @@ export async function followActorForAdmin(
   const env = getDashboardEnv(event)
   const context = await createFedifyContext(env as Parameters<typeof createFedifyContext>[0])
   const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
-  const targetActor = new URL(normalizedActorId)
   const recipient = await context.lookupObject(targetActor)
   if (!isActor(recipient) || !recipient.id) {
     throw new Error("Actor not found")
@@ -655,8 +652,132 @@ export async function reactActivityPubCommentById(
   }
 }
 
+const SEARCH_URL_PROTOCOLS = new Set(["acct:", "http:", "https:"])
+const REMOTE_URL_PROTOCOLS = new Set(["http:", "https:"])
+const URL_SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*:/i
+
+function hasUrlScheme(value: string): boolean {
+  return URL_SCHEME_PATTERN.test(value)
+}
+
+function stripIpv6Brackets(hostname: string): string {
+  return hostname.startsWith("[") && hostname.endsWith("]")
+    ? hostname.slice(1, -1)
+    : hostname
+}
+
+function parseIpv4Address(hostname: string): [number, number, number, number] | null {
+  const parts = hostname.split(".")
+  if (parts.length !== 4) {
+    return null
+  }
+
+  const parsed = parts.map((part) => {
+    if (!/^\d+$/.test(part)) {
+      return Number.NaN
+    }
+    const value = Number.parseInt(part, 10)
+    return value >= 0 && value <= 255 ? value : Number.NaN
+  })
+  return parsed.every(Number.isInteger)
+    ? parsed as [number, number, number, number]
+    : null
+}
+
+function isBlockedIpv4(hostname: string): boolean {
+  const address = parseIpv4Address(hostname)
+  if (!address) {
+    return false
+  }
+
+  const [first, second] = address
+  return first === 0
+    || first === 10
+    || first === 127
+    || (first === 100 && second >= 64 && second <= 127)
+    || (first === 169 && second === 254)
+    || (first === 172 && second >= 16 && second <= 31)
+    || (first === 192 && second === 168)
+    || (first === 198 && (second === 18 || second === 19))
+    || first >= 224
+}
+
+function isBlockedIpv6(hostname: string): boolean {
+  const host = stripIpv6Brackets(hostname).toLowerCase()
+  if (host === "::" || host === "::1" || host === "0:0:0:0:0:0:0:0" || host === "0:0:0:0:0:0:0:1") {
+    return true
+  }
+
+  if (host.startsWith("::ffff:")) {
+    return isBlockedIpv4(host.slice("::ffff:".length))
+  }
+
+  const firstSegment = Number.parseInt(host.split(":")[0] ?? "", 16)
+  if (!Number.isInteger(firstSegment)) {
+    return false
+  }
+
+  return (firstSegment & 0xfe00) === 0xfc00
+    || (firstSegment & 0xffc0) === 0xfe80
+}
+
+function isBlockedLookupHost(hostname: string): boolean {
+  const host = stripIpv6Brackets(hostname).replace(/\.$/, "").toLowerCase()
+  return host === "localhost"
+    || host.endsWith(".localhost")
+    || host === "local"
+    || host.endsWith(".local")
+    || isBlockedIpv4(host)
+    || isBlockedIpv6(host)
+}
+
+function assertSafeLookupUrl(url: URL): void {
+  if (url.username || url.password) {
+    throw new Error("Lookup URL credentials are not allowed")
+  }
+  if (isBlockedLookupHost(url.hostname)) {
+    throw new Error("Lookup URL host is not allowed")
+  }
+}
+
+function normalizeRemoteUrl(value: string, label: string): URL {
+  const normalized = value.trim()
+  if (!normalized) {
+    throw new Error(`${label} is required`)
+  }
+
+  let url: URL
+  try {
+    url = new URL(normalized)
+  } catch {
+    throw new Error(`${label} must be an http(s) URL`)
+  }
+  if (!REMOTE_URL_PROTOCOLS.has(url.protocol)) {
+    throw new Error(`${label} must be an http(s) URL`)
+  }
+  assertSafeLookupUrl(url)
+  return url
+}
+
 function normalizeSearchTarget(value: string): string | URL {
   const query = value.trim()
+  if (hasUrlScheme(query)) {
+    let url: URL
+    try {
+      url = new URL(query)
+    } catch {
+      throw new Error("Search query URL is invalid")
+    }
+    if (!SEARCH_URL_PROTOCOLS.has(url.protocol)) {
+      throw new Error("Search query supports actor handles, acct:, http:, or https: URLs")
+    }
+    if (REMOTE_URL_PROTOCOLS.has(url.protocol)) {
+      assertSafeLookupUrl(url)
+      return url
+    }
+    return query
+  }
+
   try {
     return new URL(query)
   } catch {
@@ -705,7 +826,7 @@ async function resolveRemoteObjectForAdmin(targetId: string, event?: unknown): P
 
   const recipient = isActor(actor) && actor.id?.href === actorId
     ? actor
-    : await context.lookupObject(new URL(actorId))
+    : await context.lookupObject(normalizeRemoteUrl(actorId, "Search target actor id"))
   if (!isActor(recipient) || !recipient.id) {
     throw new Error("Search target actor not found")
   }
@@ -716,6 +837,18 @@ async function resolveRemoteObjectForAdmin(targetId: string, event?: unknown): P
     actorId,
     actor: recipient,
     context,
+  }
+}
+
+async function lookupRemoteObjectOrNull(
+  context: Awaited<ReturnType<typeof createFedifyContext>>,
+  value: string,
+  label: string,
+) {
+  try {
+    return await context.lookupObject(normalizeRemoteUrl(value, label))
+  } catch {
+    return null
   }
 }
 
@@ -800,7 +933,7 @@ export async function searchActivityPubForAdmin(query: string, event?: unknown):
     const resolvedActor = actorId
       ? isActor(actor) && actor.id?.href === actorId
         ? actor
-        : await context.lookupObject(new URL(actorId)).catch(() => null)
+        : await lookupRemoteObjectOrNull(context, actorId, "Search result actor id")
       : null
     const profile = isActor(resolvedActor) ? await resolveActorProfile(context, resolvedActor) : null
     const item = createSearchObjectItem(object, profile)
@@ -840,6 +973,8 @@ export async function replyRemoteActivityPubObject(
   }
 
   const target = await resolveRemoteObjectForAdmin(targetId, event)
+  const targetObjectUri = normalizeRemoteUrl(target.objectId, "Search target object id")
+  const targetActorUri = normalizeRemoteUrl(target.actorId, "Search target actor id")
   const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
   const publishedAt = Temporal.Now.instant()
   const replyId = new URL(`#reply-${crypto.randomUUID()}`, actorUri)
@@ -849,8 +984,8 @@ export async function replyRemoteActivityPubObject(
     attribution: actorUri,
     content: reply,
     mediaType: "text/plain",
-    replyTarget: new URL(target.objectId),
-    to: new URL(target.actorId),
+    replyTarget: targetObjectUri,
+    to: targetActorUri,
     cc: PUBLIC_COLLECTION,
     published: publishedAt,
   })
@@ -858,7 +993,7 @@ export async function replyRemoteActivityPubObject(
     id: createId,
     actor: actorUri,
     object: replyNote,
-    to: new URL(target.actorId),
+    to: targetActorUri,
     cc: PUBLIC_COLLECTION,
     published: publishedAt,
   })
@@ -883,23 +1018,25 @@ export async function reactRemoteActivityPubObject(
   event?: unknown,
 ): Promise<{ actorId: string; objectId: string; reaction: string; reactionType: "Like" | "EmojiReact" }> {
   const target = await resolveRemoteObjectForAdmin(targetId, event)
+  const targetObjectUri = normalizeRemoteUrl(target.objectId, "Search target object id")
+  const targetActorUri = normalizeRemoteUrl(target.actorId, "Search target actor id")
   const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
   const reaction = reactionText.replace(/\s+/g, " ").trim() || "❤️"
   const activity = reaction === "❤️"
     ? new Like({
       id: new URL(`#like-remote-${crypto.randomUUID()}`, actorUri),
       actor: actorUri,
-      object: new URL(target.objectId),
-      to: new URL(target.actorId),
+      object: targetObjectUri,
+      to: targetActorUri,
       cc: PUBLIC_COLLECTION,
       published: Temporal.Now.instant(),
     })
     : new EmojiReact({
       id: new URL(`#react-remote-${crypto.randomUUID()}`, actorUri),
       actor: actorUri,
-      object: new URL(target.objectId),
+      object: targetObjectUri,
       content: reaction,
-      to: new URL(target.actorId),
+      to: targetActorUri,
       cc: PUBLIC_COLLECTION,
       published: Temporal.Now.instant(),
     })
