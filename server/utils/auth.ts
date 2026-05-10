@@ -83,14 +83,48 @@ type SignatureFields = {
   signature: string;
 };
 
+type DictLike = {
+  get(header: string): string | null;
+};
+
+type RemoteActor = {
+  publicKey?: {
+    publicKeyPem?: string;
+  };
+};
+
+async function fetchActor(actorId: string): Promise<RemoteActor | null> {
+  try {
+    const response = await fetch(actorId, {
+      headers: {
+        accept: 'application/activity+json, application/ld+json',
+      },
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return await response.json() as RemoteActor;
+  } catch {
+    return null;
+  }
+}
+
 function parseSignatureHeader(sig: string): SignatureFields {
-  const result: Record<string, any> = {};
+  const result: Record<string, string> = {};
   sig.split(',').forEach(part => {
-    const [key, value] = part.trim().split('=');
+    const separator = part.indexOf('=');
+    if (separator < 0) return;
+    const key = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+    if (!key) return;
     result[key] = value.replace(/^"|"$/g, '');
   });
-  result.headers = result.headers.split(' ');
-  return result as SignatureFields;
+  return {
+    keyId: result.keyId ?? '',
+    algorithm: result.algorithm ?? '',
+    headers: (result.headers ?? '').split(' ').filter(Boolean),
+    signature: result.signature ?? '',
+  };
 }
 
 /**

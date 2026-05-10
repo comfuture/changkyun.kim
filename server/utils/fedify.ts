@@ -24,6 +24,7 @@ import {
   Note,
   Person,
   PUBLIC_COLLECTION,
+  type Recipient,
   Undo,
   Update,
   type Actor,
@@ -590,7 +591,7 @@ builder
     if (identifier !== ACTOR_IDENTIFIER) {
       return null
     }
-    return { items: await loadFollowers() }
+    return { items: await loadFollowers() as unknown as Recipient[] }
   })
   .setCounter(async () => await countRows("followers"))
 

@@ -160,7 +160,7 @@ export default defineNuxtConfig({
   },
 
   modules: [
-    "@nuxt/content", "@nuxt/ui", "@nuxt/image", "@vite-pwa/nuxt"
+    "@nuxt/content", "@nuxt/ui", "@nuxt/image", "@vite-pwa/nuxt", "@nuxt/eslint"
   ],
 
   pwa: {

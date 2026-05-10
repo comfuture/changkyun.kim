@@ -222,6 +222,10 @@ function parseJsonField(value: unknown): unknown {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
+}
+
 function normalizeTags(value: unknown): string[] {
   const parsed = parseJsonField(value)
   if (!Array.isArray(parsed)) {
@@ -412,7 +416,7 @@ export async function buildArticleFromEntry(entry: FedifyContentEntry): Promise<
   const body = parseJsonField(entry?.body)
   if (typeof body === "string") {
     markdown = body
-  } else if (body?.type === "minimark") {
+  } else if (isRecord(body) && body.type === "minimark") {
     markdown = stringifyMinimarkSafe(body)
     contentHtml = renderMinimarkHtmlSafe(body)
   }

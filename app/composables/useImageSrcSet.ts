@@ -20,7 +20,7 @@ const splitSrcSet = (srcset: string) => {
   let current = ''
   let i = 0
   while (i < srcset.length) {
-    const char = srcset[i]
+    const char = srcset.charAt(i)
     if (char === ',') {
       const next = srcset[i + 1]
       if (next && !/\s/.test(next)) {
@@ -31,7 +31,11 @@ const splitSrcSet = (srcset: string) => {
       if (current.trim()) entries.push(current.trim())
       current = ''
       i += 1
-      while (i < srcset.length && /\s/.test(srcset[i])) i += 1
+      while (i < srcset.length) {
+        const whitespace = srcset.charAt(i)
+        if (!/\s/.test(whitespace)) break
+        i += 1
+      }
       continue
     }
     current += char
@@ -44,7 +48,7 @@ const splitSrcSet = (srcset: string) => {
 const parseSrcSet = (srcset?: string) => {
   if (!srcset) return []
   return splitSrcSet(srcset)
-    .map((entry) => {
+    .map<SrcSetCandidate | null>((entry) => {
       const [url, size] = entry.split(/\s+/)
       if (!url) return null
       if (!size) return { url }

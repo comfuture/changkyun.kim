@@ -16,7 +16,8 @@ function resolveSiteUrl(path: string) {
 }
 
 function resolveImageType(path: string) {
-  if (path.toLowerCase().split('?')[0].endsWith('.png')) {
+  const pathname = path.toLowerCase().split('?')[0] ?? ''
+  if (pathname.endsWith('.png')) {
     return 'image/png'
   }
 

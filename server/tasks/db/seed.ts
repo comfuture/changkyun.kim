@@ -6,7 +6,7 @@ export default defineTask({
     name: 'db:seed',
     description: 'Initialize and insert the database with initial data',
   },
-  async run(event) {
+  async run(_event) {
     await ensureActivityPubSchema()
     const db = useDatabase()
     console.info('Ensured ActivityPub database schema')
@@ -19,7 +19,7 @@ export default defineTask({
         ${privateKey},
         ${publicKey}
       );`
-    } catch (error) {
+    } catch {
       console.info('Actor already exists, skipping insert')
       return { result: true }
     }

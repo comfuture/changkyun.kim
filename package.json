@@ -8,11 +8,16 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "DEV=1 nuxt dev",
+    "dev": "DEV=1 nuxi dev",
     "admin": "node ./packages/admin/bin/activitypub-admin.mjs",
-    "build": "nuxt build",
-    "start": "nuxt start",
-    "generate": "GENERATE=1 nuxi generate"
+    "build": "nuxi build",
+    "start": "nuxi start",
+    "generate": "GENERATE=1 nuxi generate",
+    "prepare": "nuxi prepare",
+    "preview": "nuxi preview",
+    "typecheck": "nuxi typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@fedify/cfworkers": "2.2.0",
@@ -26,6 +31,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@tiptap/y-tiptap": "^3.0.3",
     "@vite-pwa/nuxt": "^1.1.1",
+    "@vueuse/core": "^14.1.0",
     "better-sqlite3": "^12.9.0",
     "hast-util-to-html": "9.0.5",
     "minimark": "1.0.0",
@@ -35,12 +41,15 @@
   "devDependencies": {
     "@fedify/testing": "2.2.0",
     "@iconify-json/lucide": "^1.2.105",
+    "@nuxt/eslint": "^1.15.2",
     "@types/negotiator": "^0.6.4",
     "@types/node": "^25.6.2",
+    "eslint": "^10.3.0",
     "glob": "^13.0.6",
     "postcss": "^8.5.14",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.2.4",
+    "typescript": "5.9.3",
     "wrangler": "^4.88.0"
   },
   "resolutions": {

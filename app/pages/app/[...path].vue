@@ -40,7 +40,10 @@ const tocLinks = computed(() => {
 
   if (!flattened.length) return []
 
-  const minDepth = flattened.reduce((min, link) => Math.min(min, link.depth), flattened[0].depth)
+  const firstLink = flattened[0]
+  if (!firstLink) return []
+
+  const minDepth = flattened.reduce((min, link) => Math.min(min, link.depth), firstLink.depth)
   const targetDepth = minDepth === 1 ? 2 : minDepth
 
   return flattened

@@ -1,5 +1,4 @@
-import { readRawBody } from "h3"
-import { createError } from "h3"
+import { createError, readRawBody } from "h3"
 
 import {
   hideActivityPubCommentById,

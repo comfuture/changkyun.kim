@@ -73,6 +73,12 @@ type LocalReplyActivityRow = {
   payload?: string | null
 }
 
+type LocalReplyActivityPayloadRow = {
+  activity_id?: string | null
+  object?: string | null
+  payload?: string | null
+}
+
 function getDatabase() {
   return useDatabase()
 }
@@ -693,11 +699,7 @@ function buildLocalReplyNote(row: LocalReplyObjectRow): Note | null {
   })
 }
 
-async function parseLocalReplyCreateFromPayload(row: {
-  activity_id?: string | null
-  object?: string | null
-  payload?: string | null
-}): Promise<Create | null> {
+async function parseLocalReplyCreateFromPayload(row: LocalReplyActivityPayloadRow): Promise<Create | null> {
   const payload = parsePayloadObject(row.payload)
   if (!payload) {
     return null
@@ -722,7 +724,7 @@ async function parseLocalReplyCreateFromPayload(row: {
   }
 }
 
-async function buildLocalReplyNoteFromActivity(row: LocalReplyActivityRow): Promise<Note | null> {
+async function buildLocalReplyNoteFromActivity(row: LocalReplyActivityPayloadRow): Promise<Note | null> {
   const create = await parseLocalReplyCreateFromPayload(row)
   if (create) {
     const object = await create.getObject({ suppressError: true })

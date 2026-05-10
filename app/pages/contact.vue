@@ -130,8 +130,8 @@ const openContactMethod = (method: ContactMethod, event: MouseEvent) => {
                 :to="method.encodedHref ? '#' : method.to"
                 :target="method.encodedHref ? undefined : method.target"
                 :rel="method.encodedHref ? undefined : method.rel"
-                @click="openContactMethod(method, $event)"
                 class="group flex h-full min-w-0 flex-col gap-4 rounded-lg border border-gray-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-primary-400 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-primary-500"
+                @click="openContactMethod(method, $event)"
               >
                 <div class="flex min-w-0 items-start gap-4">
                   <span
