@@ -112,6 +112,8 @@ const SECTIONS = {
 }
 
 const SECTION_ORDER = ["followers", "comments", "reactions"]
+const SECTION_TAB_GAP = "   "
+const ACTION_BAR_TAB_GAP = " "
 
 function parseArgs(argv) {
   const options = {
@@ -432,7 +434,7 @@ function updateStatus(status, state, message, isError = false) {
   const prefix = state.isLoading ? "⏳" : state.statusIsError ? "⚠️" : "ℹ️"
   const currentMessage = state.statusMessage || `${SECTIONS[state.section].label} 대기`
   status.setContent(`${prefix} ${currentMessage}
-[1]팔로우 [2]댓글 [3]리액션  ↑↓/클릭 선택  R: 새로고침  q: 종료  |  ${formatSelectedActions(state)}`)
+${formatActionBarSectionTabs(state)}  ↑↓/클릭 선택  R: 새로고침  q: 종료  |  ${formatSelectedActions(state)}`)
   status.style.bg = state.isLoading ? "yellow" : state.statusIsError ? "red" : "black"
   status.style.fg = state.isLoading ? "black" : "white"
   status.screen?.render()
@@ -442,13 +444,27 @@ function getSectionCount(data, section) {
   return Array.isArray(data?.[section]) ? data[section].length : 0
 }
 
+function getSectionTabParts(data, currentSection, { counts = false } = {}) {
+  return SECTION_ORDER.map((section, index) => {
+    const marker = section === currentSection ? ">" : " "
+    const label = `[${index + 1}]${SECTIONS[section].label}`
+    return {
+      section,
+      text: counts ? `${marker} ${label}: ${getSectionCount(data, section)}` : label,
+    }
+  })
+}
+
 function formatSectionCounts(data, currentSection) {
-  return SECTION_ORDER
-    .map((section, index) => {
-      const marker = section === currentSection ? ">" : " "
-      return `${marker} [${index + 1}] ${SECTIONS[section].label}: ${getSectionCount(data, section)}`
-    })
-    .join("   ")
+  return getSectionTabParts(data, currentSection, { counts: true })
+    .map((part) => part.text)
+    .join(SECTION_TAB_GAP)
+}
+
+function formatActionBarSectionTabs(state) {
+  return getSectionTabParts(state, state.section)
+    .map((part) => part.text)
+    .join(ACTION_BAR_TAB_GAP)
 }
 
 function updateDetail(detail, section, item) {
@@ -678,6 +694,7 @@ function createDashboardUi() {
     left: 1,
     right: 1,
     height: 1,
+    mouse: true,
     content: "",
   })
 
@@ -725,6 +742,7 @@ function createDashboardUi() {
     left: 0,
     right: 0,
     height: 2,
+    mouse: true,
     style: { fg: "white", bg: "black" },
   })
 
@@ -748,6 +766,46 @@ function getSelectedItem(data, section, index) {
     return null
   }
   return data?.[section]?.[index] ?? null
+}
+
+function getTerminalTextWidth(element, text) {
+  if (typeof element?.strWidth === "function") {
+    return element.strWidth(text)
+  }
+  return Array.from(text).reduce((sum, char) => sum + (char.charCodeAt(0) > 0xff ? 2 : 1), 0)
+}
+
+function getElementContentPosition(element, data) {
+  if (!data || typeof data.x !== "number" || typeof data.y !== "number") {
+    return null
+  }
+
+  const coords = element?.lpos || element?._getCoords?.()
+  if (!coords) {
+    return null
+  }
+
+  const x = data.x - coords.xi - (element.ileft || 0)
+  const y = data.y - coords.yi - (element.itop || 0)
+  return x >= 0 && y >= 0 ? { x, y } : null
+}
+
+function getClickedSectionFromTabs(element, data, parts, gap, line = 0) {
+  const position = getElementContentPosition(element, data)
+  if (!position || position.y !== line) {
+    return null
+  }
+
+  let start = 0
+  const gapWidth = getTerminalTextWidth(element, gap)
+  for (const part of parts) {
+    const width = getTerminalTextWidth(element, part.text)
+    if (position.x >= start && position.x < start + width) {
+      return part.section
+    }
+    start += width + gapWidth
+  }
+  return null
 }
 
 function openTextPrompt(screen, label) {
@@ -1087,6 +1145,31 @@ async function bootstrap() {
     const index = getListIndexAtMouse(ui.list, data)
     if (index != null) {
       applySelection(index, { syncList: true })
+    }
+  })
+
+  ui.sectionLabel.on("click", (data) => {
+    const section = getClickedSectionFromTabs(
+      ui.sectionLabel,
+      data,
+      getSectionTabParts(state, state.section, { counts: true }),
+      SECTION_TAB_GAP,
+    )
+    if (section) {
+      switchSection(section)
+    }
+  })
+
+  ui.status.on("click", (data) => {
+    const section = getClickedSectionFromTabs(
+      ui.status,
+      data,
+      getSectionTabParts(state, state.section),
+      ACTION_BAR_TAB_GAP,
+      1,
+    )
+    if (section) {
+      switchSection(section)
     }
   })
 
