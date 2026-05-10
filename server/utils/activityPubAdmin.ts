@@ -4,7 +4,7 @@ import { Temporal } from "@js-temporal/polyfill"
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
 import { ACTOR_IDENTIFIER, SITE_ORIGIN } from "./fedifyContent"
 import { ensureActivityPubSchema } from "./activityPubSchema"
-import { persistLocalReplyComment } from "./fedifyComments"
+import { createLocalReplyPermalinks, persistLocalReplyComment } from "./fedifyComments"
 
 export type AdminFollowItem = {
   id: number
@@ -541,8 +541,7 @@ export async function replyActivityPubCommentById(
   }
 
   const publishedAt = Temporal.Now.instant()
-  const replyId = new URL(`#reply-${crypto.randomUUID()}`, actorUri)
-  const createId = new URL(`#create-reply-${crypto.randomUUID()}`, actorUri)
+  const { objectId: replyId, activityId: createId } = createLocalReplyPermalinks()
   const reply = new Note({
     id: replyId,
     attribution: actorUri,
