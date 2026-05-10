@@ -5,12 +5,17 @@
   "description": "Local-only ActivityPub moderation TUI",
   "type": "module",
   "bin": {
-    "activitypub-admin": "./src/index.mjs"
+    "activitypub-admin": "./bin/activitypub-admin.mjs"
   },
   "scripts": {
-    "start": "node ./src/index.mjs"
+    "start": "tsx ./src/index.ts",
+    "check": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "blessed": "^0.1.81"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "typescript": "5.9.3"
   }
 }
