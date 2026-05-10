@@ -63,10 +63,8 @@ export type FedifyContextData = {
 const ACTOR_PATH = `/@${ACTOR_IDENTIFIER}`
 const ACTOR_URI = new URL(ACTOR_PATH, SITE_ORIGIN)
 const SHARED_INBOX_URI = new URL("/inbox", SITE_ORIGIN)
-const OUTBOX_POST_OBJECT_PATTERNS = [
-  new URL("/blog/%", SITE_ORIGIN).href,
-  new URL("/app/%", SITE_ORIGIN).href,
-]
+const OUTBOX_BLOG_POST_OBJECT_PATTERN = new URL("/blog/%", SITE_ORIGIN).href
+const OUTBOX_APP_POST_OBJECT_PATTERN = new URL("/app/%", SITE_ORIGIN).href
 const memoryKv = new MemoryKvStore()
 
 function importPemKey(pem: string, usage: KeyUsage[]): Promise<CryptoKey> {
@@ -192,7 +190,10 @@ async function countLocalPosts(): Promise<number> {
       FROM activity
       WHERE direction = 'outbox'
         AND type = 'Create'
-        AND (object LIKE ${OUTBOX_POST_OBJECT_PATTERNS[0]} OR object LIKE ${OUTBOX_POST_OBJECT_PATTERNS[1]})`
+        AND (
+          object LIKE ${OUTBOX_BLOG_POST_OBJECT_PATTERN}
+          OR object LIKE ${OUTBOX_APP_POST_OBJECT_PATTERN}
+        )`
     return countValue((rows?.[0] as Record<string, unknown> | undefined)?.count)
   } catch {
     console.warn("Failed to count ActivityPub local posts from outbox; using 0.")
