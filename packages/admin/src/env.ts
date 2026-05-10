@@ -94,8 +94,8 @@ function loadEnvFile(filePath: string): void {
 export function loadDefaultEnvFiles(): void {
   const cwd = path.resolve(process.cwd())
   const candidates = [cwd, path.resolve(cwd, ".."), path.resolve(cwd, "..", "..")]
-  for (const name of [".env", ".env.local"]) {
-    for (const dir of candidates) {
+  for (const dir of candidates) {
+    for (const name of [".env.local", ".env"]) {
       loadEnvFile(path.resolve(dir, name))
     }
   }
