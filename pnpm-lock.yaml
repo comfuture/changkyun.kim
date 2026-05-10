@@ -91,10 +91,10 @@ importers:
       blessed:
         specifier: ^0.1.81
         version: 0.1.81
-    devDependencies:
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
+    devDependencies:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
