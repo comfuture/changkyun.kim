@@ -109,9 +109,10 @@ const SECTIONS = {
   followers: { key: "followers", label: "팔로우" },
   comments: { key: "comments", label: "댓글" },
   reactions: { key: "reactions", label: "리액션" },
+  search: { key: "search", label: "검색" },
 }
 
-const SECTION_ORDER = ["followers", "comments", "reactions"]
+const SECTION_ORDER = ["followers", "comments", "reactions", "search"]
 const SECTION_TAB_GAP = "   "
 const ACTION_BAR_TAB_GAP = " "
 
@@ -201,8 +202,8 @@ options:
   -h, --help            도움말
 
 조작:
-  [1,2,3] 섹션 전환 | [↑↓/마우스] 항목 선택
-  r: 댓글달기 | d: 삭제 | f: 팔로우하기 | u: 팔로워 제거 | R: 새로고침 | q: 종료
+  [1,2,3,4] 섹션 전환 | s: 검색어 입력 | [↑↓/마우스] 항목 선택
+  r: 댓글달기 | d: 삭제 | f: 팔로우하기 | u: 팔로워 제거 | l: 좋아요 | e: 이모지 | R: 새로고침 | q: 종료
 
 `)
 }
@@ -287,6 +288,19 @@ function formatActorDetail(item) {
   const actorId = item?.actorId || "-"
   const actorUrl = item?.actorUrl || actorId
   return `Actor: ${name}\n주소: ${actorId}\n프로필: ${actorUrl}`
+}
+
+function formatSearchType(item) {
+  if (item?.type === "actor") {
+    return "👤 액터"
+  }
+  if (item?.type === "article") {
+    return "📝 Article"
+  }
+  if (item?.type === "note") {
+    return "💬 Note"
+  }
+  return "❓ 알 수 없음"
 }
 
 function loadPrivateKeyFromFile(filePath) {
@@ -406,6 +420,10 @@ function formatRow(section, item) {
   if (section === "comments") {
     return `${getStatusIcon(item.status)} ${formatActorName(item)} | ${item.articlePath} | ${trimText(item.contentText, 60)}`
   }
+  if (section === "search") {
+    const title = item.title || item.contentText || item.url || item.objectId
+    return `${formatSearchType(item)} | ${formatActorName(item)} | ${trimText(title, 72)}`
+  }
 
   return `${item.reaction || "⭐"} ${formatActorName(item)} | ${item.articlePath}`
 }
@@ -422,6 +440,15 @@ function formatSelectedActions(state) {
   if (state.section === "comments") {
     return "r: 댓글달기  d: 삭제하기"
   }
+  if (state.section === "search") {
+    if (item.type === "actor") {
+      return "f: 팔로우하기  s: 다시 검색"
+    }
+    if (item.type === "article" || item.type === "note") {
+      return "r: 댓글달기  l: 좋아요  e: 이모지  s: 다시 검색"
+    }
+    return "s: 다시 검색"
+  }
   return "d: 삭제하기"
 }
 
@@ -434,7 +461,7 @@ function updateStatus(status, state, message, isError = false) {
   const prefix = state.isLoading ? "⏳" : state.statusIsError ? "⚠️" : "ℹ️"
   const currentMessage = state.statusMessage || `${SECTIONS[state.section].label} 대기`
   status.setContent(`${prefix} ${currentMessage}
-${formatActionBarSectionTabs(state)}  ↑↓/클릭 선택  R: 새로고침  q: 종료  |  ${formatSelectedActions(state)}`)
+${formatActionBarSectionTabs(state)}  ↑↓/클릭 선택  s: 검색  R: 새로고침  q: 종료  |  ${formatSelectedActions(state)}`)
   status.style.bg = state.isLoading ? "yellow" : state.statusIsError ? "red" : "black"
   status.style.fg = state.isLoading ? "black" : "white"
   status.screen?.render()
@@ -500,6 +527,21 @@ ${formatActorDetail(item)}
     return
   }
 
+  if (section === "search") {
+    detail.setContent(`
+유형: ${formatSearchType(item)}
+ID: ${item.objectId || item.id}
+${formatActorDetail(item)}
+URL: ${item.url || "-"}
+제목: ${item.title || "-"}
+요약: ${item.summary || "-"}
+작성시각: ${formatTime(item.publishedAt)}
+내용: ${item.contentText || "-"}
+가능한 동작: ${(item.actions || []).join(", ") || "없음"}
+    `.trim())
+    return
+  }
+
   detail.setContent(`
 유형: 리액션
 ID: ${item.id}
@@ -544,10 +586,11 @@ async function readErrorMessage(response, fallback) {
   }
 }
 
-async function requestAdminAction(baseUrl, signConfig, action, id, payload = {}) {
+async function requestAdminAction(baseUrl, signConfig, action, id = null, payload = {}) {
   const endpoint = `${normalizeInputUrl(baseUrl)}/api/admin/activitypub`
-  const body = JSON.stringify({ action, id, ...payload })
-  const signing = await createSignedHeaders(endpoint, "POST", { action, id, ...payload }, signConfig.keyId, signConfig.privateKey)
+  const requestBody = id == null ? { action, ...payload } : { action, id, ...payload }
+  const body = JSON.stringify(requestBody)
+  const signing = await createSignedHeaders(endpoint, "POST", requestBody, signConfig.keyId, signConfig.privateKey)
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
@@ -887,6 +930,37 @@ function openTextPrompt(screen, label) {
   })
 }
 
+function openLinePrompt(screen, label, initialValue = "") {
+  return new Promise((resolve) => {
+    const prompt = blessed.prompt({
+      parent: screen,
+      top: "center",
+      left: "center",
+      width: "72%",
+      height: 7,
+      label,
+      border: "line",
+      keys: true,
+      mouse: true,
+      style: {
+        border: { fg: "cyan" },
+        fg: "white",
+        bg: "black",
+      },
+    })
+
+    prompt.input("", initialValue, (err, value) => {
+      screen.remove(prompt)
+      screen.render()
+      if (err || !value || typeof value !== "string" || !value.trim()) {
+        resolve(null)
+        return
+      }
+      resolve(value.trim())
+    })
+  })
+}
+
 async function bootstrap() {
   const options = parseArgs(process.argv.slice(2))
   if (options.help) {
@@ -924,6 +998,8 @@ async function bootstrap() {
     followers: [],
     comments: [],
     reactions: [],
+    search: [],
+    searchQuery: "",
     section: "followers",
     selectedIndex: 0,
     userSelectedSection: false,
@@ -1021,6 +1097,46 @@ async function bootstrap() {
     }
   }
 
+  async function promptSearchQuery() {
+    const query = await openLinePrompt(ui.screen, "검색어", state.searchQuery)
+    if (!query) {
+      updateStatus(ui.status, state, "검색이 취소되었습니다.")
+      return
+    }
+
+    await runSearch(query)
+  }
+
+  async function runSearch(query) {
+    state.section = "search"
+    state.userSelectedSection = true
+    state.searchQuery = query
+    state.selectedIndex = 0
+    state.isLoading = true
+    renderCurrentSection(`검색 중... ${query}`)
+    try {
+      const payload = await requestAdminAction(options.baseUrl, signConfig, "search.query", null, { query })
+      state.search = Array.isArray(payload?.results) ? payload.results : []
+      state.selectedIndex = state.search.length > 0 ? 0 : -1
+      state.isLoading = false
+      renderCurrentSection(`검색 결과 ${state.search.length}개: ${query}`)
+    } catch (error) {
+      state.isLoading = false
+      updateStatus(ui.status, state, String(error?.message || error), true)
+      ui.screen.render()
+    }
+  }
+
+  function activateSearchSection() {
+    if (state.section !== "search") {
+      state.section = "search"
+      state.selectedIndex = state.search.length > 0 ? Math.max(0, Math.min(state.selectedIndex, state.search.length - 1)) : -1
+      state.userSelectedSection = true
+      renderCurrentSection(state.searchQuery ? `최근 검색: ${state.searchQuery}` : "검색어를 입력하세요.")
+    }
+    void promptSearchQuery()
+  }
+
   function switchSection(section) {
     if (state.section === section) {
       return
@@ -1029,6 +1145,14 @@ async function bootstrap() {
     state.selectedIndex = 0
     state.userSelectedSection = true
     renderCurrentSection()
+  }
+
+  function selectSection(section) {
+    if (section === "search") {
+      activateSearchSection()
+      return
+    }
+    switchSection(section)
   }
 
   function applySelection(index, { syncList = false } = {}) {
@@ -1067,6 +1191,28 @@ async function bootstrap() {
     }
 
     if (action === "reply") {
+      if (state.section === "search") {
+        if (item.type !== "article" && item.type !== "note") {
+          updateStatus(ui.status, state, "Article/Note 검색 결과에만 댓글을 작성할 수 있습니다.", true)
+          return
+        }
+        const value = await openTextPrompt(ui.screen, "댓글")
+        if (!value) {
+          updateStatus(ui.status, state, "댓글 작성이 취소되었습니다.")
+          return
+        }
+        try {
+          await requestAdminAction(options.baseUrl, signConfig, "search.object.reply", null, {
+            targetId: item.objectId,
+            reply: value,
+          })
+          updateStatus(ui.status, state, `${formatSearchType(item)} 댓글 전송 완료`)
+        } catch (error) {
+          updateStatus(ui.status, state, String(error?.message || error), true)
+        }
+        return
+      }
+
       if (state.section !== "comments") {
         updateStatus(ui.status, state, "댓글 섹션에서만 대댓글을 작성할 수 있습니다.", true)
         return
@@ -1103,6 +1249,23 @@ async function bootstrap() {
     }
 
     if (action === "follow") {
+      if (state.section === "search") {
+        if (item.type !== "actor" || !item.actorId) {
+          updateStatus(ui.status, state, "액터 검색 결과만 팔로우할 수 있습니다.", true)
+          return
+        }
+        try {
+          const result = await requestAdminAction(options.baseUrl, signConfig, "search.actor.follow", null, {
+            actorId: item.actorId,
+          })
+          const suffix = result?.alreadyFollowing ? "이미 팔로우 중" : "팔로우 요청 완료"
+          updateStatus(ui.status, state, `${formatActorName(item)} ${suffix}`)
+        } catch (error) {
+          updateStatus(ui.status, state, String(error?.message || error), true)
+        }
+        return
+      }
+
       if (state.section !== "followers") {
         updateStatus(ui.status, state, "팔로우 섹션에서만 팔로우하세요.", true)
         return
@@ -1127,6 +1290,44 @@ async function bootstrap() {
         await requestAdminAction(options.baseUrl, signConfig, "follower.unfollow", item.id)
         updateStatus(ui.status, state, `팔로워 ID:${item.id} 언팔로우 처리`)
         await refresh()
+      } catch (error) {
+        updateStatus(ui.status, state, String(error?.message || error), true)
+      }
+    }
+
+    if (action === "like") {
+      if (state.section !== "search" || (item.type !== "article" && item.type !== "note")) {
+        updateStatus(ui.status, state, "Article/Note 검색 결과만 좋아요할 수 있습니다.", true)
+        return
+      }
+      try {
+        await requestAdminAction(options.baseUrl, signConfig, "search.object.react", null, {
+          targetId: item.objectId,
+          reaction: "❤️",
+        })
+        updateStatus(ui.status, state, `${formatSearchType(item)} 좋아요 전송 완료`)
+      } catch (error) {
+        updateStatus(ui.status, state, String(error?.message || error), true)
+      }
+      return
+    }
+
+    if (action === "react") {
+      if (state.section !== "search" || (item.type !== "article" && item.type !== "note")) {
+        updateStatus(ui.status, state, "Article/Note 검색 결과만 이모지 반응할 수 있습니다.", true)
+        return
+      }
+      const reaction = await openLinePrompt(ui.screen, "이모지", "❤️")
+      if (!reaction) {
+        updateStatus(ui.status, state, "이모지 반응이 취소되었습니다.")
+        return
+      }
+      try {
+        await requestAdminAction(options.baseUrl, signConfig, "search.object.react", null, {
+          targetId: item.objectId,
+          reaction,
+        })
+        updateStatus(ui.status, state, `${formatSearchType(item)} ${reaction} 반응 전송 완료`)
       } catch (error) {
         updateStatus(ui.status, state, String(error?.message || error), true)
       }
@@ -1156,7 +1357,7 @@ async function bootstrap() {
       SECTION_TAB_GAP,
     )
     if (section) {
-      switchSection(section)
+      selectSection(section)
     }
   })
 
@@ -1169,13 +1370,14 @@ async function bootstrap() {
       1,
     )
     if (section) {
-      switchSection(section)
+      selectSection(section)
     }
   })
 
-  ui.screen.key(["1"], () => switchSection(SECTION_ORDER[0]))
-  ui.screen.key(["2"], () => switchSection(SECTION_ORDER[1]))
-  ui.screen.key(["3"], () => switchSection(SECTION_ORDER[2]))
+  ui.screen.key(["1"], () => selectSection(SECTION_ORDER[0]))
+  ui.screen.key(["2"], () => selectSection(SECTION_ORDER[1]))
+  ui.screen.key(["3"], () => selectSection(SECTION_ORDER[2]))
+  ui.screen.key(["4", "s", "S"], () => selectSection("search"))
   ui.screen.key(["r"], () => {
     void handleAction("reply")
   })
@@ -1187,6 +1389,12 @@ async function bootstrap() {
   })
   ui.screen.key(["u", "U"], () => {
     void handleAction("unfollow")
+  })
+  ui.screen.key(["l", "L"], () => {
+    void handleAction("like")
+  })
+  ui.screen.key(["e", "E"], () => {
+    void handleAction("react")
   })
   ui.screen.key(["tab", "space", "R", "C-r"], () => {
     void refresh()
