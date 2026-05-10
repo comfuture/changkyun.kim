@@ -655,6 +655,22 @@ export async function reactActivityPubCommentById(
 const SEARCH_URL_PROTOCOLS = new Set(["acct:", "http:", "https:"])
 const REMOTE_URL_PROTOCOLS = new Set(["http:", "https:"])
 const URL_SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*:/i
+const BLOCKED_IPV4_CIDRS: Array<[[number, number, number, number], number]> = [
+  [[0, 0, 0, 0], 8],
+  [[10, 0, 0, 0], 8],
+  [[100, 64, 0, 0], 10],
+  [[127, 0, 0, 0], 8],
+  [[169, 254, 0, 0], 16],
+  [[172, 16, 0, 0], 12],
+  [[192, 0, 0, 0], 24],
+  [[192, 0, 2, 0], 24],
+  [[192, 88, 99, 0], 24],
+  [[192, 168, 0, 0], 16],
+  [[198, 18, 0, 0], 15],
+  [[198, 51, 100, 0], 24],
+  [[203, 0, 113, 0], 24],
+  [[224, 0, 0, 0], 4],
+]
 
 function hasUrlScheme(value: string): boolean {
   return URL_SCHEME_PATTERN.test(value)
@@ -664,6 +680,10 @@ function stripIpv6Brackets(hostname: string): string {
   return hostname.startsWith("[") && hostname.endsWith("]")
     ? hostname.slice(1, -1)
     : hostname
+}
+
+function normalizeLookupHost(hostname: string): string {
+  return stripIpv6Brackets(hostname).replace(/\.$/, "").toLowerCase()
 }
 
 function parseIpv4Address(hostname: string): [number, number, number, number] | null {
@@ -684,45 +704,115 @@ function parseIpv4Address(hostname: string): [number, number, number, number] | 
     : null
 }
 
+function ipv4ToNumber(address: [number, number, number, number]): number {
+  return ((address[0] * 256 + address[1]) * 256 + address[2]) * 256 + address[3]
+}
+
+function isIpv4InCidr(
+  address: [number, number, number, number],
+  base: [number, number, number, number],
+  prefixLength: number,
+): boolean {
+  const size = 2 ** (32 - prefixLength)
+  const value = ipv4ToNumber(address)
+  const baseValue = ipv4ToNumber(base)
+  return value >= baseValue && value < baseValue + size
+}
+
 function isBlockedIpv4(hostname: string): boolean {
   const address = parseIpv4Address(hostname)
   if (!address) {
     return false
   }
+  return BLOCKED_IPV4_CIDRS.some(([base, prefixLength]) => isIpv4InCidr(address, base, prefixLength))
+}
 
-  const [first, second] = address
-  return first === 0
-    || first === 10
-    || first === 127
-    || (first === 100 && second >= 64 && second <= 127)
-    || (first === 169 && second === 254)
-    || (first === 172 && second >= 16 && second <= 31)
-    || (first === 192 && second === 168)
-    || (first === 198 && (second === 18 || second === 19))
-    || first >= 224
+function parseIpv6Address(hostname: string): number[] | null {
+  const host = normalizeLookupHost(hostname)
+  if (!host.includes(":")) {
+    return null
+  }
+
+  const ipv4Tail = host.match(/(?:^|:)(\d+\.\d+\.\d+\.\d+)$/)?.[1]
+  let normalized = host
+  if (ipv4Tail) {
+    const ipv4 = parseIpv4Address(ipv4Tail)
+    if (!ipv4) {
+      return null
+    }
+    const high = (ipv4[0] << 8) + ipv4[1]
+    const low = (ipv4[2] << 8) + ipv4[3]
+    normalized = `${host.slice(0, -ipv4Tail.length)}${high.toString(16)}:${low.toString(16)}`
+  }
+
+  const compressedParts = normalized.split("::")
+  if (compressedParts.length > 2) {
+    return null
+  }
+
+  const left = compressedParts[0] ? compressedParts[0].split(":") : []
+  const right = compressedParts[1] ? compressedParts[1].split(":") : []
+  if (left.includes("") || right.includes("")) {
+    return null
+  }
+
+  const missing = 8 - left.length - right.length
+  if ((compressedParts.length === 1 && missing !== 0) || (compressedParts.length === 2 && missing < 1)) {
+    return null
+  }
+
+  const groups = [
+    ...left,
+    ...Array.from({ length: compressedParts.length === 2 ? missing : 0 }, () => "0"),
+    ...right,
+  ]
+  if (groups.length !== 8) {
+    return null
+  }
+
+  const parsed = groups.map((group) => /^[0-9a-f]{1,4}$/.test(group) ? Number.parseInt(group, 16) : Number.NaN)
+  return parsed.every(Number.isInteger) ? parsed : null
+}
+
+function ipv4FromIpv6Groups(groups: number[]): [number, number, number, number] {
+  const high = groups[6] ?? 0
+  const low = groups[7] ?? 0
+  return [high >> 8, high & 0xff, low >> 8, low & 0xff]
+}
+
+function isZeroPrefix(groups: number[], length: number): boolean {
+  return groups.slice(0, length).every((group) => group === 0)
 }
 
 function isBlockedIpv6(hostname: string): boolean {
-  const host = stripIpv6Brackets(hostname).toLowerCase()
-  if (host === "::" || host === "::1" || host === "0:0:0:0:0:0:0:0" || host === "0:0:0:0:0:0:0:1") {
-    return true
-  }
-
-  if (host.startsWith("::ffff:")) {
-    return isBlockedIpv4(host.slice("::ffff:".length))
-  }
-
-  const firstSegment = Number.parseInt(host.split(":")[0] ?? "", 16)
-  if (!Number.isInteger(firstSegment)) {
+  const groups = parseIpv6Address(hostname)
+  if (!groups) {
     return false
   }
 
+  if (groups.every((group) => group === 0) || (isZeroPrefix(groups, 7) && groups[7] === 1)) {
+    return true
+  }
+  if (isZeroPrefix(groups, 5) && groups[5] === 0xffff) {
+    return isBlockedIpv4(ipv4FromIpv6Groups(groups).join("."))
+  }
+  if (isZeroPrefix(groups, 6) && isBlockedIpv4(ipv4FromIpv6Groups(groups).join("."))) {
+    return true
+  }
+
+  const firstSegment = groups[0] ?? 0
   return (firstSegment & 0xfe00) === 0xfc00
     || (firstSegment & 0xffc0) === 0xfe80
+    || (firstSegment & 0xff00) === 0xff00
+    || (firstSegment === 0x2001 && groups[1] === 0x0db8)
+    || (firstSegment === 0x2001 && groups[1] === 0x0002)
+    || (firstSegment === 0x2001 && groups[1] === 0x0000)
+    || (firstSegment === 0x0064 && groups[1] === 0xff9b && groups[2] === 0x0001)
+    || firstSegment === 0x0100
 }
 
-function isBlockedLookupHost(hostname: string): boolean {
-  const host = stripIpv6Brackets(hostname).replace(/\.$/, "").toLowerCase()
+function isBlockedLookupHostLiteral(hostname: string): boolean {
+  const host = normalizeLookupHost(hostname)
   return host === "localhost"
     || host.endsWith(".localhost")
     || host === "local"
@@ -731,11 +821,12 @@ function isBlockedLookupHost(hostname: string): boolean {
     || isBlockedIpv6(host)
 }
 
-function assertSafeLookupUrl(url: URL): void {
+function assertLookupUrlInput(url: URL): void {
   if (url.username || url.password) {
     throw new Error("Lookup URL credentials are not allowed")
   }
-  if (isBlockedLookupHost(url.hostname)) {
+  // Fedify handles DNS-level public address validation; keep URL-literal gaps out before lookup.
+  if (isBlockedLookupHostLiteral(url.hostname)) {
     throw new Error("Lookup URL host is not allowed")
   }
 }
@@ -755,7 +846,7 @@ function normalizeRemoteUrl(value: string, label: string): URL {
   if (!REMOTE_URL_PROTOCOLS.has(url.protocol)) {
     throw new Error(`${label} must be an http(s) URL`)
   }
-  assertSafeLookupUrl(url)
+  assertLookupUrlInput(url)
   return url
 }
 
@@ -772,7 +863,7 @@ function normalizeSearchTarget(value: string): string | URL {
       throw new Error("Search query supports actor handles, acct:, http:, or https: URLs")
     }
     if (REMOTE_URL_PROTOCOLS.has(url.protocol)) {
-      assertSafeLookupUrl(url)
+      assertLookupUrlInput(url)
       return url
     }
     return query
