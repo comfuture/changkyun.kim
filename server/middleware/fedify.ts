@@ -193,6 +193,12 @@ function resolveContentSyncTarget(pathname: string): { collection: "blog" | "app
   if (normalized === FEDIFY_BLOG_COLLECTION_PREFIX || normalized.startsWith(`${FEDIFY_BLOG_COLLECTION_PREFIX}/tag`)) {
     return { collection: "blog" }
   }
+  if (normalized === "/api/blog/articles" || normalized === "/api/blog/article" || normalized === "/api/blog/tags") {
+    return { collection: "blog" }
+  }
+  if (normalized === "/api/app/content") {
+    return { collection: "app" }
+  }
   if (normalized === "/__nuxt_content/blog/query") {
     return { collection: "blog" }
   }

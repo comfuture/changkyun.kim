@@ -13,11 +13,9 @@ useSiteOgImageMeta({
 })
 
 const { data: recent } = await useAsyncData('recentArticles', () =>
-  queryCollection('blog')
-    .select('id', 'path', 'title', 'description', 'createdAt', 'coverImage')
-    .order('createdAt', 'DESC')
-    .limit(9)
-    .all()
+  $fetch('/api/blog/articles', {
+    query: { limit: 9 },
+  })
 )
 const featuredArticle = computed(() => recent.value?.[0])
 const remainingArticles = computed(() => recent.value?.slice(1) || [])
