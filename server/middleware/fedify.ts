@@ -628,6 +628,6 @@ export default defineEventHandler(async (event) => {
 
   const federation = await createFedify(getCloudflareEnv(event))
   return await federation.fetch(request, {
-    contextData: { env: getCloudflareEnv(event) },
+    contextData: { env: getCloudflareEnv(event), event },
   })
 })

@@ -29,6 +29,8 @@ import {
   Update,
   type Actor,
 } from "@fedify/vocab"
+import { queryCollection } from "@nuxt/content/server"
+import type { H3Event } from "h3"
 import {
   ACTOR_IDENTIFIER,
   collectCreateActivities,
@@ -59,6 +61,7 @@ type CloudflareEnv = {
 
 export type FedifyContextData = {
   env?: CloudflareEnv
+  event?: H3Event
 }
 
 const ACTOR_PATH = `/@${ACTOR_IDENTIFIER}`
@@ -200,6 +203,14 @@ async function countLocalPosts(): Promise<number> {
     console.warn("Failed to count ActivityPub local posts from outbox; using 0.")
     return 0
   }
+}
+
+async function countLocalPostsFromNuxtContent(event: H3Event): Promise<number> {
+  const [blogCount, appCount] = await Promise.all([
+    queryCollection(event, "blog").count(),
+    queryCollection(event, "app").count(),
+  ])
+  return blogCount + appCount
 }
 
 export async function getActivityPubNodeInfoJson() {
@@ -468,8 +479,8 @@ async function buildActor(ctx: { getActorUri(identifier: string): URL; getInboxU
 
   return new Person({
     id: actorUri,
-    preferredUsername: ACTOR_IDENTIFIER,
-    names: ["Changkyun Kim", "김창균", "金昌均"],
+    preferredUsername: "Changkyun Kim",
+    name: "김창균",
     summary: "Principled person who values integrity. A slow but persistent learner with deep understanding. Problem solver using data, experience, and intuition.",
     url: new URL("/about", SITE_ORIGIN),
     icon: new Image({
@@ -580,9 +591,15 @@ builder
       nextCursor: nextOffset < totalItems ? String(nextOffset) : null,
     }
   })
-  .setCounter(async () => {
-    const { totalItems } = await collectCreateActivitiesSafe({ limit: null })
-    return totalItems
+  .setCounter(async (ctx) => {
+    if (ctx.data.event) {
+      try {
+        return await countLocalPostsFromNuxtContent(ctx.data.event)
+      } catch {
+        console.warn("Failed to count ActivityPub outbox content through Nuxt Content; falling back to database count.")
+      }
+    }
+    return await countLocalPosts()
   })
   .setFirstCursor(async () => "0")
 

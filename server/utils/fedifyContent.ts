@@ -482,12 +482,17 @@ export async function collectCreateActivities(options: {
     fetchFedifyContentEntries("app", { order: "DESC" }),
   ])
 
-  const entries = [...(blogEntries ?? []), ...(appEntries ?? [])]
+  const sortedEntries = [...(blogEntries ?? []), ...(appEntries ?? [])]
     .sort((a, b) => {
       const aDate = a?.createdAt ? new Date(a.createdAt).getTime() : 0
       const bDate = b?.createdAt ? new Date(b.createdAt).getTime() : 0
       return bDate - aDate
     })
+
+  const totalItems = sortedEntries.length
+  const end = typeof limit === "number" ? Math.min(totalItems, offset + limit) : totalItems
+  const entries = sortedEntries
+    .slice(offset, end)
 
   const activities: Create[] = []
   for (const entry of entries) {
@@ -497,12 +502,8 @@ export async function collectCreateActivities(options: {
     }
   }
 
-  const totalItems = activities.length
-  const start = Math.min(offset, totalItems)
-  const end = typeof limit === "number" ? Math.min(totalItems, start + limit) : totalItems
-
   return {
     totalItems,
-    items: activities.slice(start, end),
+    items: activities,
   }
 }
