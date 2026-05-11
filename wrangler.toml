@@ -4,6 +4,9 @@ compatibility_date = "2025-02-28"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
+[placement]
+mode = "smart"
+
 routes = [
   { pattern = "changkyun.kim/*", zone_name = "changkyun.kim" }
 ]
