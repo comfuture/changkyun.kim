@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { siteIdentity, siteKeywords } from '~/utils/siteIdentity'
+import { siteKeywords } from '~/utils/siteIdentity'
 
 const contactDescription = '김창균(Changkyun Kim), 대한민국 서울의 개발자에게 연락하는 방법입니다. Email, Bluesky, ActivityPub, Kakao channels for a Seoul-based developer.'
 
@@ -123,9 +123,8 @@ const openContactMethod = (method: ContactMethod, event: MouseEvent) => {
           <div class="mx-auto max-w-3xl">
             <h1 class="text-2xl font-semibold tracking-tight text-gray-950 dark:text-white">Contact</h1>
             <p class="mt-3 max-w-2xl text-[15px] leading-7 text-gray-600 dark:text-gray-300">
-              {{ siteIdentity.koreanName }} / {{ siteIdentity.legalName }}에게 연락할 수 있는 방법입니다.
-              대한민국 서울에 거주하는 개발자에게 보낼 메일, 소셜 프로필, Fediverse actor, 메신저를 구분해 두었습니다.
-              Contact Changkyun Kim, a developer based in Seoul, South Korea.
+              아래 방법으로 연락할 수 있습니다. 메일, 소셜 프로필, Fediverse actor, 메신저를 구분해 두었으니
+              상황에 맞는 채널을 선택해 주세요.
             </p>
 
             <div class="mt-8 grid gap-4 sm:grid-cols-2">

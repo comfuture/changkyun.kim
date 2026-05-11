@@ -1,8 +1,5 @@
 ---
 title: AI가 생성한 "AI로 특허 생성하기" 특허
-description: AI와 ChatGPT, GPT-4가 특허 생성과 발명 서술에 어떤 가능성과 한계를 갖는지 살펴본 글입니다.
-author: 김창균 Changkyun Kim
-lang: ko-KR
 createdAt: 2023-03-30
 tags:
   - AI

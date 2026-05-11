@@ -25,7 +25,7 @@ useSiteOgImageMeta({
         <section class="px-6 sm:px-8">
           <h2 class="text-xl font-semibold">{{ tag }}에 대한 글들</h2>
           <p class="mt-2 text-sm text-gray-500">
-            {{ tag }} 관련 글을 모았습니다.
+            {{ tag }} ...
           </p>
         </section>
       </main>

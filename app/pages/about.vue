@@ -58,17 +58,13 @@ useHead({
       <section class="mt-20 sm:mt-24 md:mt-28">
         <div class="container mx-auto px-6 text-center sm:px-8">
           <h1 class="text-2xl font-semibold">김창균</h1>
-          <p class="mt-2 text-sm text-gray-500">Changkyun Kim · Developer · 대한민국 서울 / Seoul, South Korea</p>
+          <p class="mt-2 text-sm text-gray-500">Seoul, KOREA</p>
           <div class="mt-3 flex flex-wrap justify-center gap-2 text-xs">
             <UBadge variant="subtle" color="neutral">한국어</UBadge>
             <UBadge variant="subtle" color="neutral">日本語</UBadge>
             <UBadge variant="subtle" color="neutral">English</UBadge>
             <UBadge variant="subtle" color="neutral">Español</UBadge>
           </div>
-          <p class="mx-auto mt-5 max-w-2xl text-[15px] leading-7 text-gray-600 dark:text-gray-300">
-            김창균은 대한민국 서울에 거주하는 개발자입니다. Changkyun Kim is a developer based in Seoul,
-            South Korea, writing about programming, identity, language, preferences, principles, learning, and problem solving.
-          </p>
         </div>
       </section>
 
@@ -79,20 +75,10 @@ useHead({
           >
             <h3>의로운 원칙주의자</h3>
             <p>원리와 원칙을 중요시 여기며 말과 행동이 악의 편에 서지 않게 하기 위해 노력합니다.</p>
-            <p>In English: I value principled integrity and try to keep my words and actions away from the side of malice.</p>
             <h3>슬로우 러너</h3>
             <p>빠르게 배우지 못하지만 꾸준히 익히며 깊이있게 이해하고 적절히 사용합니다.</p>
-            <p>I learn slowly, persistently, and deeply enough to use what I learn with care.</p>
             <h3>해결사</h3>
             <p>데이터와 경험과 직관을 이용하여 문제를 해결하는 것을 좋아하고 잘 합니다.</p>
-            <p>I like solving problems with data, experience, intuition, and practical software development.</p>
-            <h3>정체성</h3>
-            <p>
-              이름은 김창균, 영어 이름은 Changkyun Kim입니다. 대한민국 서울에 살며 한국어와 영어로 생각과 작업을 기록합니다.
-            </p>
-            <p>
-              I am 김창균 / Changkyun Kim, a Seoul-based Korean developer. This site is my personal identity surface and writing archive.
-            </p>
             <h3>관심있는 것</h3>
             <ul>
               <li>육아</li>

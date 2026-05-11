@@ -1,8 +1,5 @@
 ---
 title: ChatGPT로 보는 타로점
-description: ChatGPT와 타로 카드 데이터를 조합해 타로 해석 프롬프트를 구성해 본 실험입니다.
-author: 김창균 Changkyun Kim
-lang: ko-KR
 createdAt: 2023-03-31
 coverImage: /image/cover2.jpg
 tags:

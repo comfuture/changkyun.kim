@@ -1,8 +1,5 @@
 ---
 title: 양자컴퓨팅의 이해와 전망
-description: 양자컴퓨팅의 기본 개념, 기존 컴퓨팅과의 차이, 활용 가능성과 개발 인터페이스 전망을 정리한 글입니다.
-author: 김창균 Changkyun Kim
-lang: ko-KR
 createdAt: 2025-03-21
 tags:
   - AI
@@ -130,3 +127,4 @@ tags:
 요약하면, **양자컴퓨팅**은 기존 컴퓨팅과 개념적으로 다른 세계를 열어주지만, 개발자가 다가갈 수 있는 방식은 점점 친숙해지고 있습니다. 큐비트의 중첩과 얽힘이라는 개념을 통해 양자컴퓨터는 특정 문제에서 막대한 병렬성을 제공하며, 이는 머신러닝, 최적화, 시뮬레이션, 날씨 예측 등 다양한 분야에 잠재적 혁신을 줄 수 있습니다. 아직 연구 단계인 기술이지만, 10년 남짓한 시간 안에 많은 발전이 기대되고 있으며, 파이썬 개발자를 비롯한 일반 개발자들도 머지않아 클라우드에서 **저렴하게 양자컴퓨팅 자원**을 활용할 수 있게 될 것으로 보입니다 ([Quantum computing: What leaders need to know now | MIT Sloan](https://mitsloan.mit.edu/ideas-made-to-matter/quantum-computing-what-leaders-need-to-know-now#:~:text=targeting%20a%20million%20qubits%20by,1)). 다만 양자컴퓨터가 **모든 것을 대체**하지는 않을 것이고, GPU와 협업하는 강력한 도구로 자리매김할 것입니다. 상용화되는 시점에는 현재의 개발 언어와 큰 차이 없이, 혹은 더 추상화된 편리한 형태로 양자컴퓨팅을 사용할 수 있을 것으로 전망됩니다. 
 
 미래의 어느 날, 개발자가 "*이번 연산은 양자 가속이 필요하니 양자클라우드 함수로 보내자*"라고 자연스럽게 이야기하는 순간이 올 것입니다. 그 날이 오기까지, 양자컴퓨팅은 **토끼와 거북이의 경주**에서 거북이처럼 느리게 출발했지만, 더 효율적인 경로로 목적지에 다가서고 있습니다 ([Quantum computing: What leaders need to know now | MIT Sloan](https://mitsloan.mit.edu/ideas-made-to-matter/quantum-computing-what-leaders-need-to-know-now#:~:text=The%20crux%20of%20the%20framework,point%20A%20to%20point%20B)). 지금은 한계도 뚜렷하지만, 그 **가능성의 지평**은 우리 시대에 점차 현실이 될 것이며, 개발자라면 그 변화의 물결을 지켜보면서 대비할 가치가 충분할 것입니다.
+

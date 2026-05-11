@@ -1,8 +1,5 @@
 ---
 title: microk8s 에서 letsencrypt 인증서 사용하기
-description: microk8s 환경에서 cert-manager를 사용해 Let's Encrypt 인증서를 구성한 과정입니다.
-author: 김창균 Changkyun Kim
-lang: ko-KR
 createdAt: 2022-07-07
 tags:
   - oracle cloud
