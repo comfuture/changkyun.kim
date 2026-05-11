@@ -328,7 +328,6 @@ export async function listActivityPubReactions(articlePath: string): Promise<Act
     return []
   }
 
-  await ensureActivityPubSchema()
   const db = getDatabase()
   const { rows: countRows } = await db.sql`SELECT
       reaction,

@@ -879,7 +879,6 @@ export async function listActivityPubComments(articlePath: string): Promise<Acti
     return []
   }
 
-  await ensureActivityPubSchema()
   const db = getDatabase()
   const { rows } = await db.sql`SELECT
       id,
