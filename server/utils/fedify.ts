@@ -479,7 +479,7 @@ async function buildActor(ctx: { getActorUri(identifier: string): URL; getInboxU
 
   return new Person({
     id: actorUri,
-    preferredUsername: "Changkyun Kim",
+    preferredUsername: ACTOR_IDENTIFIER,
     name: "김창균",
     summary: "Principled person who values integrity. A slow but persistent learner with deep understanding. Problem solver using data, experience, and intuition.",
     url: new URL("/about", SITE_ORIGIN),
