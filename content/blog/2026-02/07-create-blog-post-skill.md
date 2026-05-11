@@ -1,5 +1,8 @@
 ---
 title: 블로그 글쓰기 스킬을 추가하며 정리한 작성 원칙
+description: 김창균(Changkyun Kim)이 Nuxt Content 블로그 글쓰기 스킬과 Markdown 작성 원칙을 정리한 개발 기록입니다.
+author: 김창균 Changkyun Kim
+lang: ko-KR
 createdAt: 2026-02-07
 coverImage: /blog/2026-02/create-blog-post-skill/cover.png
 tags:

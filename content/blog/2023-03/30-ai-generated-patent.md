@@ -1,5 +1,8 @@
 ---
 title: AI가 생성한 "AI로 특허 생성하기" 특허
+description: 김창균(Changkyun Kim)이 개발자 관점에서 AI, ChatGPT, GPT-4, 특허 생성 가능성을 살펴본 글입니다.
+author: 김창균 Changkyun Kim
+lang: ko-KR
 createdAt: 2023-03-30
 tags:
   - AI

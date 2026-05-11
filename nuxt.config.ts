@@ -11,7 +11,8 @@ const emptyContentDumps: Record<ContentCollection, string> = {
 }
 
 const siteName = 'Changkyun Kim'
-const siteDescription = 'Changkyun Kim, 김창균, 金昌均'
+const siteDescription = '김창균(Changkyun Kim)은 대한민국 서울에 거주하는 개발자입니다. Developer based in Seoul, South Korea. Programming, principles, identity, languages, learning, and problem solving.'
+const siteKeywords = '김창균, Changkyun Kim, 김창균 개발자, Changkyun Kim developer, 대한민국 서울, Seoul South Korea, 서울 개발자, Seoul developer, software developer, programming, 한국어, English, principles, problem solver'
 const themeColor = '#ffffff'
 const oneDay = 60 * 60 * 24
 
@@ -113,19 +114,33 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'description', content: siteDescription },
+        { name: 'author', content: '김창균, Changkyun Kim' },
+        { name: 'creator', content: '김창균, Changkyun Kim' },
+        { name: 'publisher', content: '김창균, Changkyun Kim' },
+        { name: 'keywords', content: siteKeywords },
+        { name: 'application-name', content: siteName },
+        { name: 'robots', content: 'index, follow, max-image-preview:large' },
         { name: 'theme-color', content: themeColor },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-title', content: siteName },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:title', content: siteDescription },
+        { property: 'og:title', content: siteName },
+        { property: 'og:description', content: siteDescription },
         { property: 'og:site_name', content: siteName },
+        { property: 'og:locale', content: 'ko_KR' },
+        { property: 'og:locale:alternate', content: 'en_US' },
+        { name: 'twitter:site', content: '@changkyun.kim' },
+        { name: 'twitter:creator', content: '@changkyun.kim' },
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         { rel: 'shortcut icon', href: '/favicon.ico' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' },
+        { rel: 'author', href: '/about' },
+        { rel: 'me', href: 'https://bsky.app/profile/changkyun.kim' },
+        { rel: 'sitemap', type: 'application/xml', href: '/sitemap.xml' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200' }
       ]
     },
@@ -167,7 +182,7 @@ export default defineNuxtConfig({
     registerWebManifestInRouteRules: true,
     includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.png'],
     manifest: {
-      name: siteDescription,
+      name: '김창균 Changkyun Kim - Seoul Developer',
       short_name: siteName,
       description: siteDescription,
       lang: 'ko-KR',

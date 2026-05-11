@@ -1,8 +1,8 @@
 {
   "name": "changkyun.kim",
   "version": "2.0.0",
-  "description": "logs",
-  "author": "comfuture",
+  "description": "Personal site of 김창균 / Changkyun Kim, a developer based in Seoul, South Korea.",
+  "author": "김창균 <me@changkyun.kim>",
   "private": true,
   "engines": {
     "node": ">=22"

@@ -1,7 +1,7 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useHead, useRoute, useSeoMeta } from '#imports'
+import { resolveSiteUrl } from '~/utils/siteIdentity'
 
-const SITE_ORIGIN = 'https://changkyun.kim'
 const DEFAULT_IMAGE = '/image/article-cover.jpg'
 const OG_IMAGE_WIDTH = 1200
 const OG_IMAGE_HEIGHT = 630
@@ -9,10 +9,6 @@ const OG_IMAGE_HEIGHT = 630
 type SiteOgImageMetaOptions = {
   image?: MaybeRefOrGetter<string | null | undefined>
   alt?: MaybeRefOrGetter<string | null | undefined>
-}
-
-function resolveSiteUrl(path: string) {
-  return new URL(path || '/', SITE_ORIGIN).href
 }
 
 function resolveImageType(path: string) {
@@ -60,6 +56,25 @@ export function useSiteOgImageMeta(options: SiteOgImageMetaOptions = {}) {
 
   useHead(() => ({
     link: [
+      {
+        rel: 'canonical',
+        href: resolveSiteUrl(route.path),
+      },
+      {
+        rel: 'alternate',
+        hreflang: 'ko-KR',
+        href: resolveSiteUrl(route.path),
+      },
+      {
+        rel: 'alternate',
+        hreflang: 'en',
+        href: resolveSiteUrl(route.path),
+      },
+      {
+        rel: 'alternate',
+        hreflang: 'x-default',
+        href: resolveSiteUrl(route.path),
+      },
       {
         rel: 'image_src',
         href: imageUrl.value,

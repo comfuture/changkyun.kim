@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { normalizeRoutePath } from '~/composables/normalizeRoutePath'
+import { siteIdentity, siteKeywords } from '~/utils/siteIdentity'
 
 const route = useRoute()
 const contentPath = computed(() => normalizeRoutePath(route.path))
@@ -22,6 +23,7 @@ const resolvedPath = computed(() => normalizeRoutePath(data.value?.path || conte
 const coverImage = computed(() => data.value?.coverImage)
 const activityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}/activity` : null)
 const canonicalActivityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}` : '')
+const articleDescription = computed(() => data.value?.description || `${data.value?.title || 'Blog article'} by 김창균(Changkyun Kim), a developer based in Seoul, South Korea. Programming, principles, identity, learning, and problem solving.`)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
@@ -31,9 +33,11 @@ useSeoMeta({
   title: () => data.value?.title
     ? `${data.value.title} | Changkyun Kim`
     : isLoadingArticle.value ? 'Loading | Changkyun Kim' : 'Document Not Found | Changkyun Kim',
-  description: () => data.value?.description || 'blog | Changkyun Kim',
+  description: () => articleDescription.value,
+  author: `${siteIdentity.koreanName}, ${siteIdentity.legalName}`,
+  keywords: () => [...siteKeywords, ...(data.value?.tags || [])].join(', '),
   ogTitle: () => data.value?.title || 'Changkyun Kim Blog',
-  ogDescription: () => data.value?.description || 'blog | Changkyun Kim',
+  ogDescription: () => articleDescription.value,
   ogType: 'article',
   twitterCard: 'summary_large_image',
 })
@@ -49,6 +53,41 @@ useHead(() => ({
           rel: 'alternate',
           type: 'application/activity+json',
           href: activityUrl.value,
+        },
+      ]
+    : [],
+  meta: data.value
+    ? [
+        { property: 'article:author', content: '김창균 Changkyun Kim' },
+        { property: 'article:published_time', content: data.value.createdAt },
+        ...(data.value.tags || []).map(tag => ({ property: 'article:tag', content: tag })),
+      ]
+    : [],
+  script: data.value
+    ? [
+        {
+          key: 'blog-article-json-ld',
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: data.value.title,
+            description: articleDescription.value,
+            image: data.value.coverImage ? `https://changkyun.kim${data.value.coverImage}` : 'https://changkyun.kim/image/article-cover.jpg',
+            datePublished: data.value.createdAt,
+            author: {
+              '@type': 'Person',
+              '@id': 'https://changkyun.kim/#person',
+              name: siteIdentity.koreanName,
+              alternateName: siteIdentity.legalName,
+            },
+            publisher: {
+              '@id': 'https://changkyun.kim/#person',
+            },
+            mainEntityOfPage: canonicalActivityUrl.value,
+            inLanguage: 'ko-KR',
+            keywords: [...siteKeywords, ...(data.value.tags || [])],
+          }),
         },
       ]
     : [],
@@ -89,6 +128,9 @@ useHead(() => ({
               </h1>
               <p v-if="data.description" class="max-w-2xl text-base text-gray-600 dark:text-gray-300">
                 {{ data.description }}
+              </p>
+              <p v-else class="max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                김창균(Changkyun Kim), 대한민국 서울의 개발자가 쓴 글입니다.
               </p>
             </section>
             <section

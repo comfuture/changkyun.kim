@@ -17,8 +17,8 @@ const navItems = [
       }"
     >
       <template #left>
-        <ULink to="/" class="text-base font-semibold uppercase tracking-wide">
-          Changkyun Kim
+        <ULink to="/" class="text-base font-semibold tracking-wide">
+          김창균 Changkyun Kim
         </ULink>
       </template>
       <UNavigationMenu :items="navItems" class="w-full justify-end uppercase" />
@@ -37,7 +37,9 @@ const navItems = [
       }"
     >
       <template #left>
-        <p class="text-sm text-muted">Copyright © 2026 Changkyun Kim</p>
+        <p class="text-sm text-muted">
+          Copyright © 2026 김창균 Changkyun Kim · Developer in Seoul, South Korea
+        </p>
       </template>
     </UFooter>
   </div>

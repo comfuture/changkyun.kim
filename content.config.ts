@@ -6,6 +6,10 @@ export default defineContentConfig({
       type: 'page',
       source: 'blog/**/*.md',
       schema: z.object({
+        description: z.string().optional(),
+        author: z.string().optional(),
+        lang: z.string().optional(),
+        keywords: z.array(z.string()).optional(),
         coverImage: z.string().url(),
         tags: z.array(z.string()),
         createdAt: z.date(),
@@ -15,6 +19,10 @@ export default defineContentConfig({
       type: 'page',
       source: 'app/**/*.md',
       schema: z.object({
+        description: z.string().optional(),
+        author: z.string().optional(),
+        lang: z.string().optional(),
+        keywords: z.array(z.string()).optional(),
         coverImage: z.string().url(),
         tags: z.array(z.string()),
         createdAt: z.date(),

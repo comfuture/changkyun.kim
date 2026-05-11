@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { normalizeRoutePath } from '~/composables/normalizeRoutePath'
+import { siteIdentity, siteKeywords } from '~/utils/siteIdentity'
 
 const route = useRoute()
 const contentPath = computed(() => normalizeRoutePath(route.path))
@@ -12,6 +13,7 @@ const { data, error } = await useAsyncData(
 )
 
 const coverImage = computed(() => data.value?.coverImage)
+const appDescription = computed(() => data.value?.description || `${data.value?.title || 'App document'} by 김창균(Changkyun Kim), a Seoul, South Korea based developer.`)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
@@ -57,9 +59,11 @@ const tocLinks = computed(() => {
 
 useSeoMeta({
   title: () => data.value?.title ? `${data.value.title} | Changkyun Kim` : 'Document Not Found | Changkyun Kim',
-  description: () => data.value?.description || 'app | Changkyun Kim',
+  description: () => appDescription.value,
+  author: `${siteIdentity.koreanName}, ${siteIdentity.legalName}`,
+  keywords: siteKeywords.join(', '),
   ogTitle: () => data.value?.title || 'Changkyun Kim App',
-  ogDescription: () => data.value?.description || 'app | Changkyun Kim',
+  ogDescription: () => appDescription.value,
   ogType: 'article',
   twitterCard: 'summary_large_image',
 })
@@ -110,6 +114,9 @@ if (import.meta.server) {
                 </h1>
                 <p v-if="data.description" class="max-w-2xl text-base text-gray-600 dark:text-gray-300">
                   {{ data.description }}
+                </p>
+                <p v-else class="max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                  김창균(Changkyun Kim), 대한민국 서울의 개발자가 만든 앱 관련 문서입니다.
                 </p>
               </section>
               <section

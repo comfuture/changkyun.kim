@@ -1,3 +1,5 @@
-# Lorem ipsum dolor sit amet
+# 김창균 / Changkyun Kim
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse id est aliquam, tincidunt turpis at, accumsan nulla. Aliquam eu massa vehicula, porta diam sit amet, elementum orci. Mauris malesuada nec erat id ultrices. Donec sem lectus, fringilla quis ornare non, varius nec mi. Etiam viverra ornare sem, at auctor tellus.
+김창균(Changkyun Kim)은 대한민국 서울에 거주하는 개발자입니다.
+
+This site is the personal website of Changkyun Kim, a developer based in Seoul, South Korea. It records programming, identity, languages, preferences, principles, learning, and problem solving in Korean and English.

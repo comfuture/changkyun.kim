@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { siteDescription, siteIdentity, siteKeywords } from '~/utils/siteIdentity'
+
 useSeoMeta({
-  title: 'Home | Changkyun Kim',
-  description: 'home | Changkyun Kim',
-  ogTitle: 'Changkyun Kim',
-  ogDescription: 'home | Changkyun Kim',
+  title: '김창균 Changkyun Kim - Seoul Developer',
+  description: siteDescription,
+  keywords: siteKeywords.join(', '),
+  ogTitle: '김창균 Changkyun Kim - Seoul Developer',
+  ogDescription: siteDescription,
   ogType: 'website',
   twitterCard: 'summary_large_image',
 })
@@ -37,6 +40,18 @@ const { style: heroStyle, bind: heroBind } = useImageSrcSet('/image/cover2.jpg',
 
       <section class="mt-10">
         <div class="container mx-auto px-6 sm:px-8">
+          <section class="mx-auto max-w-3xl pb-4">
+            <p class="text-sm font-medium text-primary-600 dark:text-primary-400">
+              {{ siteIdentity.koreanName }} / {{ siteIdentity.legalName }} · {{ siteIdentity.locationKo }} · {{ siteIdentity.jobTitle }}
+            </p>
+            <h1 class="mt-3 text-2xl font-semibold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
+              대한민국 서울에 사는 개발자 김창균입니다.
+            </h1>
+            <p class="mt-4 text-[15px] leading-7 text-gray-600 dark:text-gray-300">
+              Changkyun Kim is a developer based in Seoul, South Korea. This site records programming,
+              identity, languages, preferences, principles, slow learning, and practical problem solving in Korean and English.
+            </p>
+          </section>
           <div v-if="featuredArticle" class="mt-5">
             <ArticleCard :article="featuredArticle" variant="featured" eager />
           </div>

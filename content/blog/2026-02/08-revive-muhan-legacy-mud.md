@@ -1,5 +1,8 @@
 ---
 title: 무한대전 레거시 코드를 44분 만에 되살린 기록
+description: 김창균(Changkyun Kim)이 오래된 MUD 레거시 코드를 복구하며 C, Rust, AI Agent를 활용한 문제 해결 과정을 기록한 글입니다.
+author: 김창균 Changkyun Kim
+lang: ko-KR
 createdAt: 2026-02-08
 tags:
   - Legacy

@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { siteKeywords } from '~/utils/siteIdentity'
+
+const tagsDescription = '김창균(Changkyun Kim)의 개발, 프로그래밍, 정체성, 원칙, 언어, 문제 해결 관련 글 태그입니다. Blog tags by a Seoul-based developer.'
+
 useSeoMeta({
-  title: 'Blog Tags | Changkyun Kim',
-  description: 'blog | Changkyun Kim',
-  ogTitle: 'Blog Tags | Changkyun Kim',
-  ogDescription: 'blog | Changkyun Kim',
+  title: 'Blog Tags - 김창균 Changkyun Kim',
+  description: tagsDescription,
+  keywords: siteKeywords.join(', '),
+  ogTitle: 'Blog Tags - 김창균 Changkyun Kim',
+  ogDescription: tagsDescription,
   ogType: 'website',
   twitterCard: 'summary',
 })

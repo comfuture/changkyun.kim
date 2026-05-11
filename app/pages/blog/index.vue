@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import { siteIdentity, siteKeywords } from '~/utils/siteIdentity'
+
 const route = useRoute()
 const pageSize = 10
+const blogDescription = '김창균(Changkyun Kim)이 대한민국 서울에서 개발자 관점으로 쓰는 글입니다. Programming, software development, identity, principles, languages, learning, and problem solving from Seoul, South Korea.'
 
 useSeoMeta({
-  title: 'Blog | Changkyun Kim',
-  description: 'blog | Changkyun Kim',
-  ogTitle: 'Blog | Changkyun Kim',
-  ogDescription: 'blog | Changkyun Kim',
+  title: 'Blog - 김창균 Changkyun Kim Developer Notes',
+  description: blogDescription,
+  keywords: siteKeywords.join(', '),
+  ogTitle: 'Blog - 김창균 Changkyun Kim Developer Notes',
+  ogDescription: blogDescription,
   ogType: 'website',
   twitterCard: 'summary_large_image',
 })
@@ -73,6 +77,10 @@ const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/article-co
       <section class="mt-10">
         <div class="container mx-auto px-6 sm:px-8">
           <h1 class="text-2xl font-semibold">Articles</h1>
+          <p class="mt-3 max-w-3xl text-[15px] leading-7 text-gray-600 dark:text-gray-300">
+            {{ siteIdentity.koreanName }} / {{ siteIdentity.legalName }}의 글입니다. 대한민국 서울의 개발자로서
+            프로그래밍, 소프트웨어 개발, 정체성, 원칙, 언어, 학습, 문제 해결을 한국어와 영어로 기록합니다.
+          </p>
           <div v-if="featuredArticle" class="mt-5">
             <ArticleCard :article="featuredArticle" variant="list-featured" eager />
           </div>

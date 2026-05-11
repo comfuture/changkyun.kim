@@ -1,5 +1,8 @@
 ---
 title: Codex 전용 `responses` API를 파고들며 찾은 제약과 우회 방법
+description: 김창균(Changkyun Kim)이 Codex와 Responses API를 개발자 관점에서 실험하며 제약과 우회 방법을 정리한 글입니다.
+author: 김창균 Changkyun Kim
+lang: ko-KR
 createdAt: 2026-03-07
 coverImage: /blog/2026-03/chatgpt-codex-responses-helpers/cover.png
 tags:
