@@ -23,7 +23,7 @@ const resolvedPath = computed(() => normalizeRoutePath(data.value?.path || conte
 const coverImage = computed(() => data.value?.coverImage)
 const activityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}/activity` : null)
 const canonicalActivityUrl = computed(() => data.value?.path ? `https://changkyun.kim${resolvedPath.value}` : '')
-const articleDescription = computed(() => data.value?.description || `${data.value?.title || 'Blog article'} by 김창균(Changkyun Kim), a developer based in Seoul, South Korea. Programming, principles, identity, learning, and problem solving.`)
+const articleDescription = computed(() => data.value?.description || `${data.value?.title || 'Blog article'}에 대한 기록입니다.`)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
@@ -128,9 +128,6 @@ useHead(() => ({
               </h1>
               <p v-if="data.description" class="max-w-2xl text-base text-gray-600 dark:text-gray-300">
                 {{ data.description }}
-              </p>
-              <p v-else class="max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-                김창균(Changkyun Kim), 대한민국 서울의 개발자가 쓴 글입니다.
               </p>
             </section>
             <section

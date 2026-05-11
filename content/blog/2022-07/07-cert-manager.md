@@ -1,6 +1,6 @@
 ---
 title: microk8s 에서 letsencrypt 인증서 사용하기
-description: 김창균(Changkyun Kim)이 microk8s와 cert-manager로 Let's Encrypt 인증서를 구성한 개발 기록입니다.
+description: microk8s 환경에서 cert-manager를 사용해 Let's Encrypt 인증서를 구성한 과정입니다.
 author: 김창균 Changkyun Kim
 lang: ko-KR
 createdAt: 2022-07-07

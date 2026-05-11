@@ -1,6 +1,6 @@
 ---
 title: 오라클 프리티어 클라우드에 무료 k8s 클러스터 만들기
-description: 김창균(Changkyun Kim)이 대한민국 서울의 개발자 관점에서 정리한 Oracle Cloud Free Tier 기반 Kubernetes 클러스터 구축 기록입니다.
+description: Oracle Cloud Free Tier 인스턴스에 microk8s 기반 Kubernetes 클러스터를 구성한 기록입니다.
 author: 김창균 Changkyun Kim
 lang: ko-KR
 createdAt: 2022-05-12

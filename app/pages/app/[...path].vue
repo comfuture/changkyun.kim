@@ -13,7 +13,7 @@ const { data, error } = await useAsyncData(
 )
 
 const coverImage = computed(() => data.value?.coverImage)
-const appDescription = computed(() => data.value?.description || `${data.value?.title || 'App document'} by 김창균(Changkyun Kim), a Seoul, South Korea based developer.`)
+const appDescription = computed(() => data.value?.description || `${data.value?.title || 'App document'} 관련 문서입니다.`)
 const { style: coverStyle, bind: coverBind } = useImageSrcSet(coverImage, {
   preset: 'cover',
   sizes: 'sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw',
@@ -114,9 +114,6 @@ if (import.meta.server) {
                 </h1>
                 <p v-if="data.description" class="max-w-2xl text-base text-gray-600 dark:text-gray-300">
                   {{ data.description }}
-                </p>
-                <p v-else class="max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-                  김창균(Changkyun Kim), 대한민국 서울의 개발자가 만든 앱 관련 문서입니다.
                 </p>
               </section>
               <section

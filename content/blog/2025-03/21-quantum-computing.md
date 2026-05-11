@@ -1,6 +1,6 @@
 ---
 title: 양자컴퓨팅의 이해와 전망
-description: 김창균(Changkyun Kim)이 개발자 관점에서 양자컴퓨팅의 개념, 가능성, 개발 인터페이스 전망을 정리한 글입니다.
+description: 양자컴퓨팅의 기본 개념, 기존 컴퓨팅과의 차이, 활용 가능성과 개발 인터페이스 전망을 정리한 글입니다.
 author: 김창균 Changkyun Kim
 lang: ko-KR
 createdAt: 2025-03-21
