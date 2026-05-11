@@ -61,10 +61,25 @@ tags:
 Then write the article body in Markdown that is compatible with Nuxt Content MDC.
 
 - Use standard headings, lists, tables, links, and fenced code blocks.
+- For fenced code blocks, always specify the source language when it is known.
+- When the code is tied to a file, include the filename in Nuxt MDC code-fence metadata.
+- Prefer explicit code-fence metadata over relying on automatic language detection.
 - Use MDC component syntax only when needed and keep syntax valid.
 - Keep frontmatter YAML valid and stable.
 - Follow style constraints in `references/writing-style.md`.
 - Follow humanization rules in `references/humanize-ai-writing.md`.
+
+Code fence examples:
+
+````md
+```python [hello.py]
+print("hello")
+```
+
+```ts [server/api/example.get.ts]
+export default defineEventHandler(() => ({ ok: true }))
+```
+````
 
 ## Apply Writing Style Rules
 
@@ -124,6 +139,7 @@ Only apply git actions when the user explicitly requests publication mode.
 - Verify the post uses Korean polite style unless the user explicitly requested another tone.
 - Verify all image links omit `/public`.
 - Verify Markdown links follow `references/writing-style.md`: natural inline links are allowed, but source dumps and citation-only links stay readable.
+- Verify fenced code blocks specify the language when known, and include filename metadata such as ` ```python [hello.py] ` when the code belongs to a file.
 - Verify article satisfies provided source materials and guide prompt.
 - Verify the opening and ending are specific to the topic, not reusable AI templates.
 - Verify vague praise, vague authority, and unsupported significance claims were removed or grounded in evidence.
