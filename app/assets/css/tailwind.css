@@ -5,15 +5,17 @@
   .content-body pre {
     margin-block: 1.5rem;
     overflow-x: auto;
-    border: 1px solid var(--ui-border);
+    border: 1px solid #374151 !important;
     border-radius: 0.5rem;
-    background: var(--ui-bg-elevated);
+    background: #111827 !important;
+    color: #e5e7eb !important;
     padding: 1rem;
   }
 
   .dark .content-body pre {
-    border-color: var(--ui-border-accented);
-    background: #0a0f1a;
+    border-color: #475569 !important;
+    background: #1f2937 !important;
+    color: #e5e7eb !important;
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
   }
 
@@ -21,7 +23,7 @@
     display: block;
     background: transparent;
     padding: 0;
-    color: var(--ui-text-highlighted);
+    color: #e5e7eb !important;
   }
 
   .dark .content-body pre code {
