@@ -43,7 +43,7 @@
     "@iconify-json/lucide": "^1.2.105",
     "@nuxt/eslint": "^1.15.2",
     "@types/negotiator": "^0.6.4",
-    "@types/node": "^25.6.2",
+    "@types/node": "^25.9.1",
     "eslint": "^10.3.0",
     "glob": "^13.0.6",
     "postcss": "^8.5.14",
