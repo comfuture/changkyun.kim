@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@fedify/cfworkers": "2.2.1",
-    "@fedify/fedify": "2.2.1",
+    "@fedify/fedify": "2.2.3",
     "@fedify/vocab": "2.2.1",
     "@js-temporal/polyfill": "0.5.1",
     "@nuxt/content": "3.13.0",
