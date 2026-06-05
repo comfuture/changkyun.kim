@@ -43,6 +43,7 @@ type ReactionActorRow = {
 }
 
 type ReactionActivity = Like | EmojiReact
+type ReactionValueContext = { documentLoader: any; contextLoader: any }
 
 const HEART_REACTION = "❤️"
 const SITE_HOST = new URL(SITE_ORIGIN).host.toLowerCase()
@@ -100,6 +101,61 @@ function normalizeReactionValue(value: string): string | null {
     return null
   }
   return reaction
+}
+
+function firstReactionText(...values: unknown[]): string | null {
+  for (const value of values) {
+    const reaction = normalizeReactionValue(stringifyLanguageValue(value))
+    if (reaction) {
+      return reaction
+    }
+  }
+  return null
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !(value instanceof URL)
+    ? value as Record<string, unknown>
+    : null
+}
+
+function firstJsonLdReactionValue(value: unknown): string | null {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const reaction = firstJsonLdReactionValue(item)
+      if (reaction) {
+        return reaction
+      }
+    }
+    return null
+  }
+
+  const record = asRecord(value)
+  if (!record) {
+    return firstReactionText(value)
+  }
+
+  const directReaction = firstReactionText(record.content, record.name)
+  if (directReaction) {
+    return directReaction
+  }
+
+  return firstJsonLdReactionValue(record.tag)
+}
+
+async function getReactionTagValue(ctx: ReactionValueContext, reaction: ReactionActivity): Promise<string | null> {
+  for await (const tag of reaction.getTags({
+    documentLoader: ctx.documentLoader,
+    contextLoader: ctx.contextLoader,
+    suppressError: true,
+  })) {
+    const tagRecord = asRecord(tag)
+    const tagReaction = firstReactionText(tagRecord?.content, tagRecord?.name)
+    if (tagReaction) {
+      return tagReaction
+    }
+  }
+  return null
 }
 
 function normalizeReactionTarget(target: URL): { articleId: string; articlePath: string; objectId: string } | null {
@@ -197,14 +253,18 @@ async function resolveReactionActor(ctx: { documentLoader: any; contextLoader: a
   return isActor(actor) ? await resolveActorProfile(ctx, actor) : null
 }
 
-function getReactionValue(reaction: ReactionActivity): string | null {
+async function getReactionValue(
+  ctx: ReactionValueContext,
+  reaction: ReactionActivity,
+  payloadJsonLd: unknown,
+): Promise<string | null> {
   if (reaction instanceof Like) {
     return HEART_REACTION
   }
-  return normalizeReactionValue(
-    stringifyLanguageValue(reaction.content)
-    || stringifyLanguageValue(reaction.name),
-  )
+
+  return firstReactionText(reaction.content, reaction.name)
+    ?? await getReactionTagValue(ctx, reaction)
+    ?? firstJsonLdReactionValue(payloadJsonLd)
 }
 
 export async function persistReactionFromActivity(
@@ -221,14 +281,15 @@ export async function persistReactionFromActivity(
   }
 
   const actor = await resolveReactionActor(ctx, reaction)
-  const reactionValue = getReactionValue(reaction)
+  const payloadJsonLd = await reaction.toJsonLd({ format: "compact" })
+  const reactionValue = await getReactionValue(ctx, reaction, payloadJsonLd)
   if (!actor || !reactionValue) {
     return false
   }
 
   await ensureActivityPubSchema()
   const db = getDatabase()
-  const payload = JSON.stringify(await reaction.toJsonLd({ format: "compact" }))
+  const payload = JSON.stringify(payloadJsonLd)
   const publishedAt = reaction.published?.toString() ?? new Date().toISOString()
   const activityId = reaction.id?.href ?? null
   const reactionType = reaction instanceof Like ? "Like" : "EmojiReact"
