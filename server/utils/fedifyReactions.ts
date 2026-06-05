@@ -114,7 +114,7 @@ function firstReactionText(...values: unknown[]): string | null {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !(value instanceof URL)
+  return value && typeof value === "object" && !Array.isArray(value) && !(value instanceof URL)
     ? value as Record<string, unknown>
     : null
 }
@@ -140,7 +140,7 @@ function firstJsonLdReactionValue(value: unknown): string | null {
     return directReaction
   }
 
-  return firstJsonLdReactionValue(record.tag)
+  return record.tag ? firstJsonLdReactionValue(record.tag) : null
 }
 
 async function getReactionTagValue(ctx: ReactionValueContext, reaction: ReactionActivity): Promise<string | null> {
