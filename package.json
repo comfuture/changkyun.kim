@@ -20,9 +20,9 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@fedify/cfworkers": "2.2.1",
-    "@fedify/fedify": "2.2.1",
-    "@fedify/vocab": "2.2.1",
+    "@fedify/cfworkers": "2.3.0",
+    "@fedify/fedify": "2.3.0",
+    "@fedify/vocab": "2.3.0",
     "@js-temporal/polyfill": "0.5.1",
     "@nuxt/content": "3.13.0",
     "@nuxt/image": "^2.0.0",
@@ -39,7 +39,8 @@
     "nuxt": "^4.4.7"
   },
   "devDependencies": {
-    "@fedify/testing": "2.2.1",
+    "@cloudflare/workers-types": "4.20260625.1",
+    "@fedify/testing": "2.3.0",
     "@iconify-json/lucide": "^1.2.105",
     "@nuxt/eslint": "^1.15.2",
     "@types/negotiator": "^0.6.4",

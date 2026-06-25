@@ -1,5 +1,5 @@
 import { Article, Create, EmojiReact, Follow, Image, isActor, Like, Link, Note, PUBLIC_COLLECTION, type Actor } from "@fedify/vocab"
-import { Temporal } from "@js-temporal/polyfill"
+import { Temporal as TemporalPolyfill } from "@js-temporal/polyfill"
 
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
 import { ACTOR_IDENTIFIER, SITE_ORIGIN } from "./fedifyContent"
@@ -109,6 +109,10 @@ type DbChangeResult = {
 
 function getDatabase() {
   return useDatabase()
+}
+
+function nowInstant(): Temporal.Instant {
+  return TemporalPolyfill.Now.instant() as unknown as Temporal.Instant
 }
 
 function normalizeRowsChanged(value: unknown): number {
@@ -546,7 +550,7 @@ export async function replyActivityPubCommentById(
     throw new Error("Comment actor not found")
   }
 
-  const publishedAt = Temporal.Now.instant()
+  const publishedAt = nowInstant()
   const { objectId: replyId, activityId: createId } = createLocalReplyPermalinks()
   const reply = new Note({
     id: replyId,
@@ -637,7 +641,7 @@ export async function reactActivityPubCommentById(
       object: target,
       to: targetActor,
       cc: PUBLIC_COLLECTION,
-      published: Temporal.Now.instant(),
+      published: nowInstant(),
     })
     : new EmojiReact({
       id: new URL(`#react-comment-${crypto.randomUUID()}`, actorUri),
@@ -646,7 +650,7 @@ export async function reactActivityPubCommentById(
       content: reaction,
       to: targetActor,
       cc: PUBLIC_COLLECTION,
-      published: Temporal.Now.instant(),
+      published: nowInstant(),
     })
 
   await context.sendActivity(
@@ -914,7 +918,7 @@ export async function replyRemoteActivityPubObject(
   const targetObjectUri = normalizeRemoteUrl(target.objectId, "Search target object id")
   const targetActorUri = normalizeRemoteUrl(target.actorId, "Search target actor id")
   const actorUri = new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN)
-  const publishedAt = Temporal.Now.instant()
+  const publishedAt = nowInstant()
   const { objectId: replyId, activityId: createId } = createLocalReplyPermalinks()
   const replyNote = new Note({
     id: replyId,
@@ -975,7 +979,7 @@ export async function reactRemoteActivityPubObject(
       object: targetObjectUri,
       to: targetActorUri,
       cc: PUBLIC_COLLECTION,
-      published: Temporal.Now.instant(),
+      published: nowInstant(),
     })
     : new EmojiReact({
       id: new URL(`#react-remote-${crypto.randomUUID()}`, actorUri),
@@ -984,7 +988,7 @@ export async function reactRemoteActivityPubObject(
       content: reaction,
       to: targetActorUri,
       cc: PUBLIC_COLLECTION,
-      published: Temporal.Now.instant(),
+      published: nowInstant(),
     })
 
   await target.context.sendActivity(

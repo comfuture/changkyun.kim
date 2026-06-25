@@ -7,7 +7,7 @@ import {
   Note,
   PUBLIC_COLLECTION,
 } from "@fedify/vocab"
-import { Temporal } from "@js-temporal/polyfill"
+import { Temporal as TemporalPolyfill } from "@js-temporal/polyfill"
 
 import {
   FEDIFY_BLOG_CANONICAL_HOSTNAMES,
@@ -131,7 +131,7 @@ function parseInstant(value?: string | null): Temporal.Instant | null {
     return null
   }
   try {
-    return Temporal.Instant.from(value)
+    return TemporalPolyfill.Instant.from(value) as unknown as Temporal.Instant
   } catch {
     return null
   }

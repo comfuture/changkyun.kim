@@ -15,7 +15,7 @@ routes = [
 crons = ["*/10 * * * *"]
 
 [build]
-command = "NODE_OPTIONS=--max-old-space-size=6144 pnpm build"
+command = "NODE_OPTIONS=--max-old-space-size=8192 pnpm build"
 
 [assets]
 directory = ".output/public"
