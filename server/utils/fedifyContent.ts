@@ -1,4 +1,4 @@
-import { Temporal } from "@js-temporal/polyfill"
+import { Temporal as TemporalPolyfill } from "@js-temporal/polyfill"
 import {
   Article,
   Create,
@@ -364,15 +364,16 @@ function resolveLegacyArticleUrls(entry: FedifyContentEntry, canonicalUrl: URL):
 }
 
 function normalizeDate(value?: string | Date | null): Temporal.Instant {
-  const fallback = Temporal.Instant.from(new Date().toISOString())
+  const instantFromIso = (iso: string): Temporal.Instant => TemporalPolyfill.Instant.from(iso) as unknown as Temporal.Instant
+  const fallback = instantFromIso(new Date().toISOString())
   if (!value) {
     return fallback
   }
   if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? fallback : Temporal.Instant.from(value.toISOString())
+    return Number.isNaN(value.getTime()) ? fallback : instantFromIso(value.toISOString())
   }
   const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? fallback : Temporal.Instant.from(parsed.toISOString())
+  return Number.isNaN(parsed.getTime()) ? fallback : instantFromIso(parsed.toISOString())
 }
 
 export function resolveFedifyActivityId(articleUrl: URL | string): URL {
