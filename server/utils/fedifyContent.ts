@@ -363,8 +363,9 @@ function resolveLegacyArticleUrls(entry: FedifyContentEntry, canonicalUrl: URL):
   return Array.from(legacy, (url) => new URL(url))
 }
 
+const instantFromIso = (iso: string): Temporal.Instant => TemporalPolyfill.Instant.from(iso) as unknown as Temporal.Instant
+
 function normalizeDate(value?: string | Date | null): Temporal.Instant {
-  const instantFromIso = (iso: string): Temporal.Instant => TemporalPolyfill.Instant.from(iso) as unknown as Temporal.Instant
   const fallback = instantFromIso(new Date().toISOString())
   if (!value) {
     return fallback
