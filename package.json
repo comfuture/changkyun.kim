@@ -47,7 +47,7 @@
     "@types/node": "^25.6.2",
     "eslint": "^10.3.0",
     "glob": "^13.0.6",
-    "postcss": "^8.5.14",
+    "postcss": "^8.5.16",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.2.4",
     "typescript": "5.9.3",
