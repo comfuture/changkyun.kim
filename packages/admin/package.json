@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "blessed": "^0.1.81",
-    "tsx": "^4.21.0"
+    "tsx": "^4.22.4"
   },
   "devDependencies": {
     "typescript": "5.9.3"
