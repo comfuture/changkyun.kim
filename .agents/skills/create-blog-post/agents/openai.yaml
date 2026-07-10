@@ -1,4 +1,4 @@
 interface:
   display_name: "Create Blog Post"
-  short_description: "Create Nuxt Content blog posts from source materials"
-  default_prompt: "Create a Nuxt Content blog post from the provided materials and references."
+  short_description: "Write natural Korean Nuxt Content blog posts"
+  default_prompt: "Use $create-blog-post to create or revise a Nuxt Content post in natural modern Korean without formulaic AI-writing patterns."

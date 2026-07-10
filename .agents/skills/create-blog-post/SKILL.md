@@ -1,6 +1,6 @@
 ---
 name: create-blog-post
-description: Create or update Nuxt Content blog posts from provided materials, reference URLs, and writing guidelines in this repository. Use when asked to write blog content under `content/` with Nuxt MDC-compatible Markdown frontmatter, Korean-by-default writing, image management under `public/`, and publish vs draft git workflows.
+description: Create or update Nuxt Content blog posts from provided materials, reference URLs, translations, and writing guidelines in this repository. Use when asked to write or revise content under `content/` with Nuxt MDC-compatible Markdown frontmatter, natural modern Korean by default, AI-pattern cleanup, image management under `public/`, and publish vs draft git workflows.
 ---
 
 # Create Blog Post
@@ -13,6 +13,7 @@ Create a high-quality blog post file in this repository using Nuxt Content Markd
 
 1. Confirm writing inputs:
    - source materials, reference URLs, prompt/guidelines, audience, tone
+   - a user-provided or local writing sample when one exists
    - publication intent: `publish`, `draft`, or content-only update
 2. Set language:
    - write in Korean by default
@@ -28,6 +29,9 @@ Create a high-quality blog post file in this repository using Nuxt Content Markd
 6. Run one mandatory humanization pass after drafting:
    - remove AI-sounding patterns, promotional filler, and vague authority claims
    - replace generic significance statements with concrete facts, tradeoffs, or sourced context
+   - separate supplied facts from supplied rhetoric; do not preserve an unsupported benefit claim merely because it appeared in the draft
+   - replace literal English calques, stale journalistic idioms, and ceremonial Korean with current everyday professional Korean
+   - preserve the source coverage and the author's recognizable voice instead of merely shortening the draft
    - make the opening and ending sound authored, not templated
 7. Add or create images when needed, then reference them with `/public` removed.
 8. Run quick checks, then apply git flow only when requested.
@@ -88,16 +92,21 @@ export default defineEventHandler(() => ({ ok: true }))
 - Use `references/humanize-ai-writing.md` for pattern-level cleanup based on the Wikipedia AI-writing signs and the Humanizer workflow, adapted to Korean blog writing.
 - Prefer natural, concrete Korean wording unless the user requests another tone.
 - Use polite Korean endings by default (`-습니다`, `-했습니다`, `-됩니다`, `-합니다`) without making the prose stiff.
+- Match a user-provided writing sample before applying the default voice. Calibrate sentence length, paragraph openings, word choice, punctuation, and transition habits without copying verbal tics mechanically.
+- Use current general-purpose Korean. Avoid dated newspaper, bureaucratic, or literary stock phrases unless the subject or supplied voice calls for them.
+- Do not imitate youthfulness with slang, memes, or conversational fillers that are absent from the author's voice.
 - Avoid stale AI writing patterns and over-formal boilerplate phrasing.
 - Do not stop at deleting bad phrases. Replace them with sourced specifics, real constraints, explicit tradeoffs, or a grounded author voice when the post format allows it.
 - Keep the intended voice and meaning intact. Humanizing means rewriting for clarity and credibility, not inventing personal anecdotes or unsourced opinions.
-- When no stronger tone is requested, use `content/blog/2026-05/08-activitypub-fediverse-site.md` as a local voice model: polite, plain, experience-led writing with ordinary sentence headings and only as much technical detail as the story needs.
+- Preserve sourced facts and material points, not promotional claims that the materials do not support. If evidence covers only one claimed benefit, state that boundary instead of extending it to team behavior or broader impact.
+- For personal build logs and retrospectives with no stronger tone request, use `content/blog/2026-05/08-activitypub-fediverse-site.md` as a local voice model: polite, plain, experience-led writing with ordinary sentence headings and only as much technical detail as the story needs. For other genres, borrow its directness and specificity without forcing a first-person build-log structure.
 
 ## Remove AI Writing Signals
 
 - Treat humanization as a required editing pass, not an optional polish step.
 - Cut sentences that only announce importance, summarize obvious takeaways, or praise the subject without evidence.
 - Prefer simple declarative Korean over translated abstractions such as "빠르게 변화하는 환경 속에서", "중요한 역할을 수행한다", "여정을 함께 살펴보자".
+- Rewrite stiff stock wording such as `~에 있어`, `~을 도모하다`, `귀추가 주목된다`, and `초석이 되다` with the concrete action or result meant in context.
 - Replace vague attributions like "업계에서는", "전문가들은", "많은 이들이" with named sources or verifiable facts.
 - Break formulaic patterns such as forced three-item lists, "단순히 A가 아니라 B" contrasts, and generic "과제와 전망" sections unless the material truly requires them.
 - When the draft feels clean but lifeless, use the guidance in `references/humanize-ai-writing.md` to add rhythm, specificity, and limited first-person judgment where appropriate for the blog voice.
@@ -143,4 +152,6 @@ Only apply git actions when the user explicitly requests publication mode.
 - Verify article satisfies provided source materials and guide prompt.
 - Verify the opening and ending are specific to the topic, not reusable AI templates.
 - Verify vague praise, vague authority, and unsupported significance claims were removed or grounded in evidence.
+- Verify measured results were not stretched into unmeasured claims about quality, culture, adoption, or future impact.
 - Verify the prose passes the humanization checklist in `references/humanize-ai-writing.md`.
+- Verify Korean wording sounds current and idiomatic when read aloud, without stale idioms, literal English syntax, or forced slang.
