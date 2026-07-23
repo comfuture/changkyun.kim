@@ -40,7 +40,7 @@
     "nuxt": "^4.5.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20260702.1",
+    "@cloudflare/workers-types": "5.20260723.1",
     "@fedify/testing": "2.3.3",
     "@iconify-json/lucide": "^1.2.118",
     "@nuxt/eslint": "^1.16.0",
