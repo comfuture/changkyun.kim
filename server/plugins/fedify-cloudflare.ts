@@ -13,14 +13,19 @@ export default defineNitroPlugin((nitroApp) => {
     }
   })
 
-  nitroApp.hooks.hook("cloudflare:scheduled", async () => {
+  nitroApp.hooks.hook("cloudflare:scheduled", async ({ env }) => {
+    const taskOptions = {
+      context: {
+        cloudflare: { env },
+      },
+    }
     try {
-      await runTask("ap:publishNewContent")
+      await runTask("ap:publishNewContent", taskOptions)
     } catch (error) {
       console.error("Failed publishing ActivityPub content on schedule", error)
     }
     try {
-      await runTask("ap:crawlFeed")
+      await runTask("ap:crawlFeed", taskOptions)
     } catch (error) {
       console.error("Failed crawling ActivityPub feed on schedule", error)
     }

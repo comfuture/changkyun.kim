@@ -11,5 +11,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return await runTask("ap:publishNewContent")
+  return await runTask("ap:publishNewContent", {
+    context: {
+      cloudflare: { env },
+    },
+  })
 })
