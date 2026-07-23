@@ -4,11 +4,15 @@ import { siteDescription, siteKeywords } from '~/utils/siteIdentity'
 useSeoMeta({
   title: '김창균 Changkyun Kim - Seoul Developer',
   description: siteDescription,
-  keywords: siteKeywords.join(', '),
   ogTitle: '김창균 Changkyun Kim - Seoul Developer',
   ogDescription: siteDescription,
   ogType: 'website',
   twitterCard: 'summary_large_image',
+})
+useHead({
+  meta: [
+    { name: 'keywords', content: siteKeywords.join(', ') },
+  ],
 })
 useSiteOgImageMeta({
   image: '/image/cover2.jpg',

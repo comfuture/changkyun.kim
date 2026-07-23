@@ -1,5 +1,4 @@
 import { Article, Create, EmojiReact, Follow, Image, isActor, Like, Link, Note, PUBLIC_COLLECTION, type Actor } from "@fedify/vocab"
-import { Temporal as TemporalPolyfill } from "@js-temporal/polyfill"
 
 import { createFedifyContext, getCloudflareEnv } from "./fedify"
 import { ACTOR_IDENTIFIER, SITE_ORIGIN } from "./fedifyContent"
@@ -11,8 +10,7 @@ import {
   persistLocalReplyActivity,
   persistLocalReplyComment,
 } from "./fedifyComments"
-
-type TemporalInstant = ReturnType<typeof TemporalPolyfill.Now.instant>
+import { temporalNowInstant, type TemporalInstant } from "./temporal.ts"
 
 export type AdminFollowItem = {
   id: number
@@ -114,7 +112,7 @@ function getDatabase() {
 }
 
 function nowInstant(): TemporalInstant {
-  return TemporalPolyfill.Now.instant()
+  return temporalNowInstant()
 }
 
 function normalizeRowsChanged(value: unknown): number {

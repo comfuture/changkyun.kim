@@ -8,11 +8,15 @@ const blogDescription = '프로그래밍, 소프트웨어 개발, 정체성, 원
 useSeoMeta({
   title: 'Blog - 김창균 Changkyun Kim Developer Notes',
   description: blogDescription,
-  keywords: siteKeywords.join(', '),
   ogTitle: 'Blog - 김창균 Changkyun Kim Developer Notes',
   ogDescription: blogDescription,
   ogType: 'website',
   twitterCard: 'summary_large_image',
+})
+useHead({
+  meta: [
+    { name: 'keywords', content: siteKeywords.join(', ') },
+  ],
 })
 useSiteOgImageMeta({
   image: '/image/article-cover.jpg',

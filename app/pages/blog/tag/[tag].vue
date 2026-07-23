@@ -7,11 +7,15 @@ const tagDescription = `${tag} 관련 글 목록입니다. Development, programm
 useSeoMeta({
   title: `Tag: ${tag} | Changkyun Kim`,
   description: tagDescription,
-  keywords: () => [...siteKeywords, String(tag)].join(', '),
   ogTitle: `Tag: ${tag} | Changkyun Kim`,
   ogDescription: tagDescription,
   ogType: 'website',
   twitterCard: 'summary',
+})
+useHead({
+  meta: [
+    { name: 'keywords', content: [...siteKeywords, String(tag)].join(', ') },
+  ],
 })
 useSiteOgImageMeta({
   image: '/image/article-cover.jpg',

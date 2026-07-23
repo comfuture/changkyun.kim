@@ -2,3 +2,22 @@ packages:
   - .
   - packages/*
 
+allowBuilds:
+  "@parcel/watcher": true
+  better-sqlite3: true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  vue-demi: true
+  workerd: true
+
+overrides:
+  "@tiptap/y-tiptap": "^3.0.7"
+  "nuxt-component-meta>oxc-parser": "0.141.0"
+  "nuxt-component-meta>unplugin": "3.3.0"
+  rdf-canonize-native: "npm:rdf-canonize"
+
+minimumReleaseAgeExclude:
+  - '@vue/language-core@3.3.8'
+  - postcss@8.5.22
+  - vue-tsc@3.3.8
