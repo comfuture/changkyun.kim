@@ -53,7 +53,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "6.0.3",
     "vue-tsc": "3.3.8",
-    "wrangler": "4.107.0"
+    "wrangler": "4.113.0"
   },
   "packageManager": "pnpm@11.16.0"
 }
