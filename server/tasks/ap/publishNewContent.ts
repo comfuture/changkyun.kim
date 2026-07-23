@@ -10,6 +10,15 @@ import {
 } from "../../utils/fedifyContent"
 import { createFedifyContext, getCloudflareEnv } from "../../utils/fedify"
 import { ensureActivityPubSchema } from "../../utils/activityPubSchema"
+import {
+  resolveBlueskyConfig,
+  shouldQueueBlueskyShare,
+  type BlueskyConfig,
+} from "../../utils/bluesky"
+import {
+  processPendingBlueskyShares,
+  queueBlueskyShare,
+} from "../../utils/blueskyShare"
 
 const COLLECTIONS = ["blog", "app"] as const
 
@@ -173,7 +182,11 @@ async function persistOutboxActivity(activity: Create): Promise<void> {
   )`
 }
 
-async function publishCollection(collection: typeof COLLECTIONS[number], env: ReturnType<typeof getCloudflareEnv>) {
+async function publishCollection(
+  collection: typeof COLLECTIONS[number],
+  env: ReturnType<typeof getCloudflareEnv>,
+  blueskyConfig: BlueskyConfig,
+) {
   const initialState = await getDeliveryState(collection)
   let initialLastPublishedTime: number | null = null
   if (initialState?.lastPublishedAt) {
@@ -194,6 +207,7 @@ async function publishCollection(collection: typeof COLLECTIONS[number], env: Re
   let lastDeliveredPath = initialState?.lastDocumentPath ?? null
   let lastDeliveredActivityId = initialState?.lastActivityId ?? null
   let published = 0
+  let blueskyQueued = 0
 
   for (const entry of entries) {
     const activity = await buildCreateFromEntry(entry)
@@ -224,19 +238,24 @@ async function publishCollection(collection: typeof COLLECTIONS[number], env: Re
       }
     }
 
-    if (await hasExistingOutboxActivity(activity, entry)) {
-      continue
+    const alreadyPublished = await hasExistingOutboxActivity(activity, entry)
+    if (!alreadyPublished) {
+      if (shouldQueueBlueskyShare(blueskyConfig.status, alreadyPublished)
+        && await queueBlueskyShare(activity.id.href, entry)) {
+        blueskyQueued += 1
+      }
+
+      await persistOutboxActivity(activity)
+
+      const ctx = await createFedifyContext(env)
+      await ctx.sendActivity(
+        { identifier: ACTOR_IDENTIFIER },
+        "followers",
+        activity,
+        { preferSharedInbox: true },
+      )
+      published += 1
     }
-
-    await persistOutboxActivity(activity)
-
-    const ctx = await createFedifyContext(env)
-    await ctx.sendActivity(
-      { identifier: ACTOR_IDENTIFIER },
-      "followers",
-      activity,
-      { preferSharedInbox: true },
-    )
 
     await updateDeliveryState({
       collection,
@@ -250,10 +269,9 @@ async function publishCollection(collection: typeof COLLECTIONS[number], env: Re
     lastDeliveredTime = publishedTime
     lastDeliveredPath = documentPath ?? lastDeliveredPath
     lastDeliveredActivityId = activity.id.href
-    published += 1
   }
 
-  return published
+  return { published, blueskyQueued }
 }
 
 export default defineTask({
@@ -264,10 +282,22 @@ export default defineTask({
   async run(event) {
     await ensureActivityPubSchema()
     const env = getCloudflareEnv(event)
+    const blueskyConfig = resolveBlueskyConfig(env)
     let published = 0
+    let blueskyQueued = 0
     for (const collection of COLLECTIONS) {
-      published += await publishCollection(collection, env)
+      const collectionResult = await publishCollection(collection, env, blueskyConfig)
+      published += collectionResult.published
+      blueskyQueued += collectionResult.blueskyQueued
     }
-    return { result: true, published }
+    const bluesky = await processPendingBlueskyShares(blueskyConfig)
+    return {
+      result: true,
+      published,
+      bluesky: {
+        ...bluesky,
+        queued: blueskyQueued,
+      },
+    }
   },
 })

@@ -19,6 +19,8 @@ import {
 } from "./fedifyContent"
 import { ensureActivityPubSchema } from "./activityPubSchema"
 
+type TemporalInstant = ReturnType<typeof TemporalPolyfill.Now.instant>
+
 export type ActivityPubComment = {
   id: number
   objectId: string
@@ -126,12 +128,12 @@ function parseUrl(value?: string | null): URL | null {
   }
 }
 
-function parseInstant(value?: string | null): Temporal.Instant | null {
+function parseInstant(value?: string | null): TemporalInstant | null {
   if (!value) {
     return null
   }
   try {
-    return TemporalPolyfill.Instant.from(value) as unknown as Temporal.Instant
+    return TemporalPolyfill.Instant.from(value)
   } catch {
     return null
   }

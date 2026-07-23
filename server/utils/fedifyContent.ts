@@ -10,6 +10,8 @@ import { toHtml } from "hast-util-to-html"
 import { toHast } from "minimark/hast"
 import { stringify as stringifyMinimark } from "minimark/stringify"
 
+type TemporalInstant = ReturnType<typeof TemporalPolyfill.Now.instant>
+
 export const ACTOR_IDENTIFIER = "me"
 export const SITE_ORIGIN = "https://changkyun.kim"
 export const FEDIFY_BLOG_COLLECTION_PREFIX = "/blog"
@@ -26,6 +28,7 @@ export type FedifyContentEntry = {
   title?: string | null
   stem?: string | null
   description?: string | null
+  coverImage?: string | null
   createdAt?: string | Date | null
   draft?: boolean | null
   tags?: string[] | null
@@ -64,6 +67,7 @@ function toFedifyContentEntry(row: ContentRow): FedifyContentEntry {
     title: row.title ?? null,
     stem: row.stem ?? null,
     description: row.description ?? null,
+    coverImage: row.coverImage ?? null,
     createdAt: row.createdAt ?? null,
     draft: Boolean(meta && typeof meta === "object" && meta.draft === true),
     tags: normalizeTags(row.tags),
@@ -321,7 +325,7 @@ export function resolveArticleUrl(entry: FedifyContentEntry): URL | null {
   return new URL(path, SITE_ORIGIN)
 }
 
-function resolvePublicArticleUrl(entry: FedifyContentEntry): URL | null {
+export function resolvePublicArticleUrl(entry: FedifyContentEntry): URL | null {
   const path = resolveEntryPath(entry)
   if (!path) {
     return null
@@ -363,9 +367,9 @@ function resolveLegacyArticleUrls(entry: FedifyContentEntry, canonicalUrl: URL):
   return Array.from(legacy, (url) => new URL(url))
 }
 
-const instantFromIso = (iso: string): Temporal.Instant => TemporalPolyfill.Instant.from(iso) as unknown as Temporal.Instant
+const instantFromIso = (iso: string): TemporalInstant => TemporalPolyfill.Instant.from(iso)
 
-function normalizeDate(value?: string | Date | null): Temporal.Instant {
+function normalizeDate(value?: string | Date | null): TemporalInstant {
   const fallback = instantFromIso(new Date().toISOString())
   if (!value) {
     return fallback
