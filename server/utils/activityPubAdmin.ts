@@ -12,6 +12,8 @@ import {
   persistLocalReplyComment,
 } from "./fedifyComments"
 
+type TemporalInstant = ReturnType<typeof TemporalPolyfill.Now.instant>
+
 export type AdminFollowItem = {
   id: number
   actorId: string
@@ -111,8 +113,8 @@ function getDatabase() {
   return useDatabase()
 }
 
-function nowInstant(): Temporal.Instant {
-  return TemporalPolyfill.Now.instant() as unknown as Temporal.Instant
+function nowInstant(): TemporalInstant {
+  return TemporalPolyfill.Now.instant()
 }
 
 function normalizeRowsChanged(value: unknown): number {

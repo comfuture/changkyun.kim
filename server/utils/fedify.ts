@@ -54,9 +54,11 @@ import {
 import { persistFeedPostFromCreate } from "./activityPubFeed"
 import { ensureActivityPubSchema } from "./activityPubSchema"
 
-type CloudflareEnv = {
+export type CloudflareEnv = {
   FEDIFY_KV?: any
   FEDIFY_QUEUE?: any
+  BSKY_USER?: string
+  BSKY_PASSWORD?: string
 }
 
 export type FedifyContextData = {
