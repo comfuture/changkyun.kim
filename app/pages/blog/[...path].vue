@@ -35,7 +35,6 @@ useSeoMeta({
     : isLoadingArticle.value ? 'Loading | Changkyun Kim' : 'Document Not Found | Changkyun Kim',
   description: () => articleDescription.value,
   author: `${siteIdentity.koreanName}, ${siteIdentity.legalName}`,
-  keywords: () => [...siteKeywords, ...(data.value?.tags || [])].join(', '),
   ogTitle: () => data.value?.title || 'Changkyun Kim Blog',
   ogDescription: () => articleDescription.value,
   ogType: 'article',
@@ -56,13 +55,19 @@ useHead(() => ({
         },
       ]
     : [],
-  meta: data.value
-    ? [
+  meta: [
+    {
+      name: 'keywords',
+      content: [...siteKeywords, ...(data.value?.tags || [])].join(', '),
+    },
+    ...(data.value
+      ? [
         { property: 'article:author', content: '김창균 Changkyun Kim' },
         { property: 'article:published_time', content: data.value.createdAt },
         ...(data.value.tags || []).map(tag => ({ property: 'article:tag', content: tag })),
       ]
-    : [],
+      : []),
+  ],
   script: data.value
     ? [
         {

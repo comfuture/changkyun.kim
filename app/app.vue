@@ -4,10 +4,15 @@ import { buildPersonJsonLd, buildWebsiteJsonLd, siteDescription, siteIdentity, s
 useSeoMeta({
   description: siteDescription,
   author: `${siteIdentity.koreanName}, ${siteIdentity.legalName}`,
-  keywords: siteKeywords.join(', '),
 })
 
 useHead({
+  meta: [
+    {
+      name: 'keywords',
+      content: siteKeywords.join(', '),
+    },
+  ],
   script: [
     {
       key: 'identity-person-json-ld',

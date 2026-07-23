@@ -75,10 +75,6 @@ export function useSiteOgImageMeta(options: SiteOgImageMetaOptions = {}) {
         hreflang: 'x-default',
         href: resolveSiteUrl(route.path),
       },
-      {
-        rel: 'image_src',
-        href: imageUrl.value,
-      },
     ],
     meta: [
       {

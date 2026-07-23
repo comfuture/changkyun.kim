@@ -7,7 +7,6 @@ import {
   Note,
   PUBLIC_COLLECTION,
 } from "@fedify/vocab"
-import { Temporal as TemporalPolyfill } from "@js-temporal/polyfill"
 
 import {
   FEDIFY_BLOG_CANONICAL_HOSTNAMES,
@@ -18,8 +17,7 @@ import {
   SITE_ORIGIN,
 } from "./fedifyContent"
 import { ensureActivityPubSchema } from "./activityPubSchema"
-
-type TemporalInstant = ReturnType<typeof TemporalPolyfill.Now.instant>
+import { temporalInstantFrom, type TemporalInstant } from "./temporal.ts"
 
 export type ActivityPubComment = {
   id: number
@@ -133,7 +131,7 @@ function parseInstant(value?: string | null): TemporalInstant | null {
     return null
   }
   try {
-    return TemporalPolyfill.Instant.from(value)
+    return temporalInstantFrom(value)
   } catch {
     return null
   }

@@ -1,4 +1,3 @@
-import { Temporal as TemporalPolyfill } from "@js-temporal/polyfill"
 import {
   Article,
   Create,
@@ -10,7 +9,7 @@ import { toHtml } from "hast-util-to-html"
 import { toHast } from "minimark/hast"
 import { stringify as stringifyMinimark } from "minimark/stringify"
 
-type TemporalInstant = ReturnType<typeof TemporalPolyfill.Now.instant>
+import { temporalInstantFrom, type TemporalInstant } from "./temporal.ts"
 
 export const ACTOR_IDENTIFIER = "me"
 export const SITE_ORIGIN = "https://changkyun.kim"
@@ -367,7 +366,7 @@ function resolveLegacyArticleUrls(entry: FedifyContentEntry, canonicalUrl: URL):
   return Array.from(legacy, (url) => new URL(url))
 }
 
-const instantFromIso = (iso: string): TemporalInstant => TemporalPolyfill.Instant.from(iso)
+const instantFromIso = (iso: string): TemporalInstant => temporalInstantFrom(iso)
 
 function normalizeDate(value?: string | Date | null): TemporalInstant {
   const fallback = instantFromIso(new Date().toISOString())

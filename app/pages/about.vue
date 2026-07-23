@@ -6,7 +6,6 @@ const aboutDescription = '김창균(Changkyun Kim)은 대한민국 서울에 거
 useSeoMeta({
   title: 'About 김창균 Changkyun Kim - Seoul Developer',
   description: aboutDescription,
-  keywords: siteKeywords.join(', '),
   ogTitle: 'About 김창균 Changkyun Kim - Seoul Developer',
   ogDescription: siteDescription,
   ogType: 'profile',
@@ -23,6 +22,7 @@ const { style: coverStyle, bind: coverBind } = useImageSrcSet('/image/cover.jpg'
 
 useHead({
   meta: [
+    { name: 'keywords', content: siteKeywords.join(', ') },
     { property: 'profile:first_name', content: 'Changkyun' },
     { property: 'profile:last_name', content: 'Kim' },
     { property: 'profile:username', content: 'changkyun.kim' },

@@ -6,11 +6,15 @@ const contactDescription = '김창균(Changkyun Kim), 대한민국 서울의 개
 useSeoMeta({
   title: 'Contact 김창균 Changkyun Kim - Seoul Developer',
   description: contactDescription,
-  keywords: siteKeywords.join(', '),
   ogTitle: 'Contact 김창균 Changkyun Kim - Seoul Developer',
   ogDescription: contactDescription,
   ogType: 'website',
   twitterCard: 'summary_large_image',
+})
+useHead({
+  meta: [
+    { name: 'keywords', content: siteKeywords.join(', ') },
+  ],
 })
 useSiteOgImageMeta({
   image: '/image/cover3.jpg',

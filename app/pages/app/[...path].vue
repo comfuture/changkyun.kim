@@ -61,11 +61,15 @@ useSeoMeta({
   title: () => data.value?.title ? `${data.value.title} | Changkyun Kim` : 'Document Not Found | Changkyun Kim',
   description: () => appDescription.value,
   author: `${siteIdentity.koreanName}, ${siteIdentity.legalName}`,
-  keywords: siteKeywords.join(', '),
   ogTitle: () => data.value?.title || 'Changkyun Kim App',
   ogDescription: () => appDescription.value,
   ogType: 'article',
   twitterCard: 'summary_large_image',
+})
+useHead({
+  meta: [
+    { name: 'keywords', content: siteKeywords.join(', ') },
+  ],
 })
 useSiteOgImageMeta({
   image: () => data.value?.coverImage,
