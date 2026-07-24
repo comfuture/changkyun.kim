@@ -33,7 +33,7 @@
     "@tiptap/y-tiptap": "^3.0.7",
     "@vite-pwa/nuxt": "^1.1.1",
     "@vueuse/core": "^14.3.0",
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "^13.0.1",
     "hast-util-to-html": "9.0.5",
     "minimark": "1.0.0",
     "negotiator": "^1.0.0",
