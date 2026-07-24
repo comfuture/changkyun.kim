@@ -10,7 +10,7 @@ import {
   type BlueskyPostRecord,
 } from "./bluesky"
 import {
-  resolvePublicArticleUrl,
+  resolveBlueskyShareUrl,
   SITE_ORIGIN,
   type FedifyContentEntry,
 } from "./fedifyContent"
@@ -173,7 +173,7 @@ export async function queueBlueskyShare(
   entry: FedifyContentEntry,
   now = new Date(),
 ): Promise<boolean> {
-  const publicUrl = resolvePublicArticleUrl(entry)
+  const publicUrl = resolveBlueskyShareUrl(entry)
   if (!publicUrl) {
     return false
   }

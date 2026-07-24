@@ -324,6 +324,10 @@ export function resolveArticleUrl(entry: FedifyContentEntry): URL | null {
   return new URL(path, SITE_ORIGIN)
 }
 
+export function resolveBlueskyShareUrl(entry: FedifyContentEntry): URL | null {
+  return resolveArticleUrl(entry)
+}
+
 export function resolvePublicArticleUrl(entry: FedifyContentEntry): URL | null {
   const path = resolveEntryPath(entry)
   if (!path) {

@@ -17,7 +17,10 @@ import {
   type BlueskyPostRecord,
   type BlueskySession,
 } from "../server/utils/bluesky.ts"
-import { resolvePublicArticleUrl } from "../server/utils/fedifyContent.ts"
+import {
+  resolveBlueskyShareUrl,
+  resolvePublicArticleUrl,
+} from "../server/utils/fedifyContent.ts"
 
 const session: BlueskySession = {
   accessJwt: "test-access-jwt",
@@ -32,7 +35,7 @@ const record: BlueskyPostRecord = {
   embed: {
     $type: "app.bsky.embed.external",
     external: {
-      uri: "https://changkyun.blog/example",
+      uri: "https://changkyun.kim/example",
       title: "Example",
       description: "간략한 요약",
     },
@@ -82,8 +85,8 @@ test("normalizes Markdown, HTML, whitespace, and minimark-like content", () => {
   )
 })
 
-test("builds a stable summary and external-card draft with the canonical URL", () => {
-  const publicUrl = new URL("https://changkyun.blog/2026/example")
+test("builds a stable summary and external-card draft with the requested public URL", () => {
+  const publicUrl = new URL("https://changkyun.kim/blog/2026/example")
   const draft = buildBlueskyShareDraft(
     {
       title: "새 글",
@@ -142,6 +145,21 @@ test("selects browser-facing canonical URLs for blog and app entries", () => {
   )
   assert.equal(
     resolvePublicArticleUrl({ path: "/app/cube-timer" })?.href,
+    "https://changkyun.kim/app/cube-timer",
+  )
+})
+
+test("uses changkyun.kim for Bluesky shares without changing ActivityPub canonicals", () => {
+  assert.equal(
+    resolvePublicArticleUrl({ path: "/blog/2026/example" })?.href,
+    "https://changkyun.blog/2026/example",
+  )
+  assert.equal(
+    resolveBlueskyShareUrl({ path: "/blog/2026/example" })?.href,
+    "https://changkyun.kim/blog/2026/example",
+  )
+  assert.equal(
+    resolveBlueskyShareUrl({ path: "/app/cube-timer" })?.href,
     "https://changkyun.kim/app/cube-timer",
   )
 })
