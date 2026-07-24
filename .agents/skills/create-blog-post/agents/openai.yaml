@@ -1,4 +1,4 @@
 interface:
   display_name: "Create Blog Post"
   short_description: "Write natural Korean Nuxt Content blog posts"
-  default_prompt: "Use $create-blog-post to create or revise a Nuxt Content post in natural modern Korean without formulaic AI-writing patterns."
+  default_prompt: "Use $create-blog-post to create or revise a Nuxt Content post in natural modern Korean, guide the target reader through a clear understanding path, and remove formulaic AI-writing patterns."

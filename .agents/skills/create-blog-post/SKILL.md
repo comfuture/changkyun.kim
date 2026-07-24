@@ -1,6 +1,6 @@
 ---
 name: create-blog-post
-description: Create or update Nuxt Content blog posts from provided materials, reference URLs, translations, and writing guidelines in this repository. Use when asked to write or revise content under `content/` with Nuxt MDC-compatible Markdown frontmatter, natural modern Korean by default, AI-pattern cleanup, image management under `public/`, and publish vs draft git workflows.
+description: Create or update Nuxt Content blog posts from provided materials, reference URLs, translations, and writing guidelines in this repository. Use when asked to write or revise content under `content/` with Nuxt MDC-compatible Markdown frontmatter, natural modern Korean by default, reader mental-model tracking, AI-pattern cleanup, image management under `public/`, and publish vs draft git workflows.
 ---
 
 # Create Blog Post
@@ -14,6 +14,7 @@ Create a high-quality blog post file in this repository using Nuxt Content Markd
 1. Confirm writing inputs:
    - source materials, reference URLs, prompt/guidelines, audience, tone
    - a user-provided or local writing sample when one exists
+   - what the target reader can already be expected to know and what the post should help them understand
    - publication intent: `publish`, `draft`, or content-only update
 2. Set language:
    - write in Korean by default
@@ -25,16 +26,17 @@ Create a high-quality blog post file in this repository using Nuxt Content Markd
 4. Load and apply writing rules from:
    - `references/writing-style.md` for Markdown, diction, and source handling
    - `references/humanize-ai-writing.md` for AI-pattern removal and Korean examples
-5. Write frontmatter and body in one `.md` file from the provided materials.
-6. Run one mandatory humanization pass after drafting:
+5. Map the target reader's mental progression, then write frontmatter and body in one `.md` file from the provided materials.
+6. Audit whether each major section gives the reader the visible evidence needed for its intended understanding or inference.
+7. Run one mandatory humanization pass after drafting:
    - remove AI-sounding patterns, promotional filler, and vague authority claims
    - replace generic significance statements with concrete facts, tradeoffs, or sourced context
    - separate supplied facts from supplied rhetoric; do not preserve an unsupported benefit claim merely because it appeared in the draft
    - replace literal English calques, stale journalistic idioms, and ceremonial Korean with current everyday professional Korean
    - preserve the source coverage and the author's recognizable voice instead of merely shortening the draft
    - make the opening and ending sound authored, not templated
-7. Add or create images when needed, then reference them with `/public` removed.
-8. Run quick checks, then apply git flow only when requested.
+8. Add or create images when needed, then reference them with `/public` removed.
+9. Run quick checks, then apply git flow only when requested.
 
 ## Apply Slug And File Rules
 
@@ -101,6 +103,59 @@ export default defineEventHandler(() => ({ ok: true }))
 - Preserve sourced facts and material points, not promotional claims that the materials do not support. If evidence covers only one claimed benefit, state that boundary instead of extending it to team behavior or broader impact.
 - For personal build logs and retrospectives with no stronger tone request, use `content/blog/2026-05/08-activitypub-fediverse-site.md` as a local voice model: polite, plain, experience-led writing with ordinary sentence headings and only as much technical detail as the story needs. For other genres, borrow its directness and specificity without forcing a first-person build-log structure.
 
+## Track The Reader's Mental Model
+
+Use this to control comprehension and the delivery of the post's subject through its explanatory or narrative sequence. Do not turn the post into fiction or manufacture conflict and suspense.
+
+Treat the reader model as an editorial hypothesis about a defined target reader, not as a claim about every reader. Before drafting, identify:
+
+- what the target reader probably knows, believes, or can recall;
+- which unfamiliar terms or assumptions need a familiar anchor;
+- the main understanding the post should make possible;
+- which questions the post must answer and which are honestly outside its scope.
+
+Before ordering the material, classify each important statement by its role:
+
+- **Author action or observation:** what the author did, saw, measured, or experienced.
+- **Explicit non-action or scope boundary:** what the author did not do, test, measure, or claim.
+- **Sourced fact:** what comes from a named source and requires attribution.
+- **Assumed shared knowledge:** what this target reader can reasonably be expected to know already; do not silently assume specialist knowledge.
+- **New finding or interpretation:** what the author learned or concluded from the work; keep its supporting evidence visible and distinguish observation from interpretation.
+
+Do not flatten statements with different roles into one equal-weight list, paragraph, or diagram label. Their relationships and evidence boundaries are part of the explanation.
+
+Keep the writer's available knowledge separate from the reader's state:
+
+- **Writer or source knowledge:** material available while writing; it is not reader knowledge unless the post exposes it.
+- **Reader-visible evidence:** facts, examples, definitions, comparisons, and causal links actually present in the post.
+- **Expected understanding or inference:** what the target reader can reasonably conclude from that evidence; treat this as a hypothesis to verify.
+
+For each major section, map:
+
+`entry understanding → familiar anchor → reader-visible evidence → intended update → remaining question`
+
+Apply these rules:
+
+- Establish a rough but coherent picture before adding fine detail. Attach each new fact to a concept, question, example, or distinction already available to the reader.
+- Give each section one primary conceptual update. It may contain several facts, but the reader should have one dominant change to integrate.
+- Move from a familiar anchor to a new fact or observation, then to its meaning, implication, or practical consequence.
+- Check adjacent sections with: `Because the reader has seen X, they can understand Y as Z; therefore the next section can address Q.`
+- If that sentence depends on a fact found only in source notes, add the necessary reader-visible evidence, reorder the sections, or narrow the intended conclusion.
+- Let the reader use a new concept in an example, comparison, decision, or interpretation before introducing another dense concept.
+- Arrange information so the reader can anticipate, test, refine, or revise the emerging picture. A justified reframe is useful; a surprise caused by omitted premises is not.
+- Treat unexplained terms and missing causal links as information debt. Split or sequence a section that asks readers to absorb several unrelated new concepts at once.
+- Preserve useful inference and intellectual payoff. Do not restate a connection the evidence already makes clear unless confirmation is necessary for accuracy.
+- Preserve the author's taste in sequence, emphasis, and pacing. Do not replace a deliberate progression with a generic inventory of facts or formulaic headings.
+
+After drafting, review only the post text and complete these checks for each major section:
+
+- The reader can now explain ...
+- The reader is likely to conclude ... because ...
+- The reader still needs to know ...
+- The next section follows from this understanding because ...
+
+Repair the smallest broken link. Prefer reordering, adding one concrete fact or example, attaching a new term to a familiar concept, splitting an overloaded section, or deleting noise over adding broad explanatory filler.
+
 ## Remove AI Writing Signals
 
 - Treat humanization as a required editing pass, not an optional polish step.
@@ -153,5 +208,7 @@ Only apply git actions when the user explicitly requests publication mode.
 - Verify the opening and ending are specific to the topic, not reusable AI templates.
 - Verify vague praise, vague authority, and unsupported significance claims were removed or grounded in evidence.
 - Verify measured results were not stretched into unmeasured claims about quality, culture, adoption, or future impact.
+- Verify every intended reader inference has reader-visible evidence in the post rather than only in source notes.
+- Verify each major section changes or deepens the reader's understanding without unsupported leaps, overload, inert repetition, or unnecessary over-explanation.
 - Verify the prose passes the humanization checklist in `references/humanize-ai-writing.md`.
 - Verify Korean wording sounds current and idiomatic when read aloud, without stale idioms, literal English syntax, or forced slang.
