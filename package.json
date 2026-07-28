@@ -34,10 +34,11 @@
     "@vite-pwa/nuxt": "^1.1.1",
     "@vueuse/core": "^14.3.0",
     "better-sqlite3": "^12.11.1",
+    "h3": "1.15.11",
     "hast-util-to-html": "9.0.5",
     "minimark": "1.0.0",
     "negotiator": "^1.0.0",
-    "nuxt": "^4.5.0"
+    "nuxt": "^4.5.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20260702.1",
