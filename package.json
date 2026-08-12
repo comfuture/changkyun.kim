@@ -49,7 +49,7 @@
     "@types/node": "^26.1.1",
     "eslint": "^10.7.0",
     "glob": "^13.0.6",
-    "postcss": "^8.5.22",
+    "postcss": "^8.5.23",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.3",
     "typescript": "6.0.3",
