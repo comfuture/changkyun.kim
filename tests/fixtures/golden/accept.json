@@ -1,0 +1,42 @@
+{
+  "@context": [
+    "https://w3id.org/identity/v1",
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/data-integrity/v1",
+    "https://gotosocial.org/ns"
+  ],
+  "id": "https://changkyun.kim/@me#accept-<uuid>",
+  "type": "Accept",
+  "actor": "https://changkyun.kim/@me",
+  "object": {
+    "id": "<follow-id>",
+    "type": "Follow",
+    "actor": {
+      "id": "https://remote.example/users/alice",
+      "type": "Person",
+      "inbox": "https://remote.example/users/alice/inbox",
+      "publicKey": {
+        "id": "https://remote.example/users/alice#main-key",
+        "type": "CryptographicKey",
+        "owner": "https://remote.example/users/alice",
+        "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuUhxAJZ0xiSQbzv8LN9s\n65PDK9TUs79TyNSu/QnLPITtEdEfAxnaDdYNHjB8U9W4O/gt1xFyHPDDmKFQaMoX\nB0P9mevt4V2ViAVRzjRfqOeaF4PVlKnjoqvV44Az/SCtBGpgMJBu0zVQnsL/U2QO\naQPuTBaBGY83I8PXvahbhIqkPHRyYHYTPmu1c4CU/boDoiwh8vzMGdDEwBkvsyyI\n7mWO4ZBX151Bd0EE9GqWND3+lzEBBHqc9NYMlxYgidnPKgrcACS5RAroPeOskRFI\n89QhHDrMm+kfazlZbupmgSjOSck8Wfse/PtNFs3E3lpER5opc6Xz3Bxe44RZXtaq\nKQIDAQAB\n-----END PUBLIC KEY-----\n"
+      },
+      "endpoints": {
+        "sharedInbox": "https://remote.example/inbox"
+      },
+      "followers": "https://remote.example/users/alice/followers",
+      "following": "https://remote.example/users/alice/following",
+      "icon": {
+        "type": "Image",
+        "mediaType": "image/png",
+        "url": "https://remote.example/avatars/alice.png"
+      },
+      "name": "Alice",
+      "outbox": "https://remote.example/users/alice/outbox",
+      "preferredUsername": "alice",
+      "url": "https://remote.example/@alice"
+    },
+    "object": "https://changkyun.kim/@me"
+  },
+  "to": "https://remote.example/users/alice"
+}

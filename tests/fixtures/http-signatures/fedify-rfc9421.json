@@ -1,0 +1,15 @@
+{
+  "_note": "Signed by @fedify/fedify 2.3.3 signRequest(spec: rfc9421) with tests/fixtures/keys/alice.private.pem at 2026-11-24T00:00:00Z.",
+  "method": "POST",
+  "url": "https://changkyun.kim/inbox",
+  "headers": {
+    "accept": "application/activity+json",
+    "content-digest": "sha-256=:gndFvzmZoZ3Kgc8ooAu8xjplLSezc9ygn/+idbLDzjs=:",
+    "content-type": "application/activity+json",
+    "date": "Tue, 24 Nov 2026 00:00:00 GMT",
+    "host": "changkyun.kim",
+    "signature": "sig1=:nDy1puAVaGk8b00N1mEfiVjv6/XN7qsFBmo3cvJLBiWDMBDAJfRuzhyizoYeDvGV9UOSGJu+8qdczX5rRQeeP+BB0GN/fN4Fwr/2l8JOD6Rf/Vy52nrj4WR+wOwkhwmP7q7n9g1JER4ZCk0YkQl5ESYmlkyMm/+ZqwS+jYHBHnQ9MLFpcOf63jY4MovP5rMT4nB94w+weamEZoQVe4AfvttoHGIlO2VHb/bUgf4nLp7yyTnRpe6mXCWLUDZWvSLmuvXx8nWFGabxAAPm2DmYdR69u3biINddoukLZzy4gUmcLbDX9f7JwG/gR+G5Sti4/qkci3DMopo8PmuOtul4uQ==:",
+    "signature-input": "sig1=(\"@method\" \"@target-uri\" \"@authority\" \"host\" \"date\" \"content-digest\");alg=\"rsa-v1_5-sha256\";keyid=\"https://remote.example/users/alice#main-key\";created=1795478400"
+  },
+  "body": "{\"@context\":\"https://www.w3.org/ns/activitystreams\",\"id\":\"https://remote.example/users/alice/activities/follow-fixture\",\"type\":\"Follow\",\"actor\":\"https://remote.example/users/alice\",\"object\":\"https://changkyun.kim/@me\"}"
+}

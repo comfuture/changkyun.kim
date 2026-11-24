@@ -1,0 +1,18 @@
+[
+  {
+    "id": "actor:https://remote.example/users/alice",
+    "type": "actor",
+    "objectId": "https://remote.example/users/alice",
+    "url": "https://remote.example/@alice",
+    "actorId": "https://remote.example/users/alice",
+    "actorName": "Alice",
+    "actorUrl": "https://remote.example/@alice",
+    "title": "Alice",
+    "summary": null,
+    "contentText": "https://remote.example/users/alice",
+    "publishedAt": null,
+    "actions": [
+      "follow"
+    ]
+  }
+]

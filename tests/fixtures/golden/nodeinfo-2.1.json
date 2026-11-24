@@ -1,0 +1,25 @@
+{
+  "$schema": "http://nodeinfo.diaspora.software/ns/schema/2.1#",
+  "version": "2.1",
+  "software": {
+    "name": "changkyun-kim",
+    "version": "2.0.0",
+    "homepage": "https://changkyun.kim/"
+  },
+  "protocols": [
+    "activitypub"
+  ],
+  "services": {
+    "inbound": [],
+    "outbound": []
+  },
+  "openRegistrations": false,
+  "usage": {
+    "users": {
+      "total": 1
+    },
+    "localPosts": 3,
+    "localComments": 2
+  },
+  "metadata": {}
+}
