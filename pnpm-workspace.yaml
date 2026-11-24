@@ -12,7 +12,7 @@ allowBuilds:
   workerd: true
 
 overrides:
-  "@tiptap/y-tiptap": "^3.0.7"
+  "@tiptap/y-tiptap": "^3.3.1"
   "nuxt-component-meta>oxc-parser": "0.141.0"
   "nuxt-component-meta>unplugin": "3.3.0"
   rdf-canonize-native: "npm:rdf-canonize"
