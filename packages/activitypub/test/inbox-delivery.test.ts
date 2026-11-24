@@ -81,6 +81,13 @@ describe("inbox pipeline", () => {
     assert.equal(unsigned.status, 401)
     // Signed by Bob's key but claiming Alice as the actor.
     assert.equal((await deliver(follow, bobKey)).status, 401)
+    // A key on another origin that merely claims Alice as its owner.
+    const forgedKeyId = "https://other.example/keys/forged"
+    network.json(forgedKeyId, { id: forgedKeyId, owner: ALICE, publicKeyPem: bobPair.publicKeyPem })
+    assert.equal((await deliver(follow, await signingKey(forgedKeyId, bobPair))).status, 401)
+    // An actor document whose embedded key claims Alice as its owner.
+    network.json(BOB, actorDocument(BOB, bobPair, { publicKey: { id: `${BOB}#main-key`, owner: ALICE, publicKeyPem: bobPair.publicKeyPem } }))
+    assert.equal((await deliver(follow, bobKey)).status, 401)
     // Key document unreachable.
     network.routes.delete(ALICE)
     assert.equal((await deliver(follow)).status, 401)
