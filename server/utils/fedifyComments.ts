@@ -1,14 +1,20 @@
 import {
-  Create,
-  Delete,
-  Image,
+  firstId,
+  firstUrl as firstJsonUrl,
+  hasType,
+  idOf,
+  imageUrl,
   isActor,
-  Link,
-  Note,
-  PUBLIC_COLLECTION,
-} from "@fedify/vocab"
+  isObject,
+  isPubliclyAddressed,
+  languageValue,
+  sameOrigin,
+  stringValue,
+  type JsonObject,
+} from "@changkyun/activitypub"
 
 import {
+  AS_PUBLIC,
   FEDIFY_BLOG_CANONICAL_HOSTNAMES,
   FEDIFY_BLOG_COLLECTION_PREFIX,
   ACTOR_IDENTIFIER,
@@ -17,7 +23,13 @@ import {
   SITE_ORIGIN,
 } from "./fedifyContent"
 import { ensureActivityPubSchema } from "./activityPubSchema"
-import { temporalInstantFrom, type TemporalInstant } from "./temporal.ts"
+import { instantFromOrNull } from "./temporal.ts"
+
+/** The parts of the federation context the comment handlers need. */
+type CommentContext = {
+  loadActor: (actorId: string) => Promise<JsonObject | null>
+  loader: { load: (id: string) => Promise<JsonObject> }
+}
 
 export type ActivityPubComment = {
   id: number
@@ -126,15 +138,8 @@ function parseUrl(value?: string | null): URL | null {
   }
 }
 
-function parseInstant(value?: string | null): TemporalInstant | null {
-  if (!value) {
-    return null
-  }
-  try {
-    return temporalInstantFrom(value)
-  } catch {
-    return null
-  }
+function parseInstant(value?: string | null): string | null {
+  return value ? instantFromOrNull(value) : null
 }
 
 function firstPayloadUrl(value: unknown): URL | null {
@@ -292,27 +297,6 @@ function htmlToText(value: string): string {
   )
 }
 
-function firstUrl(value: URL | Link | null): string | null {
-  if (!value) {
-    return null
-  }
-  if (value instanceof URL) {
-    return value.href
-  }
-  const link = value as Link
-  return link.href?.href ?? link.id?.href ?? null
-}
-
-function firstImageUrl(image: Image | URL | null): string | null {
-  if (!image) {
-    return null
-  }
-  if (image instanceof URL) {
-    return image.href
-  }
-  return firstUrl(image.url)
-}
-
 function normalizeCommentTarget(target: URL): { articleId: string; articlePath: string } | null {
   const url = new URL(target.href)
   url.hash = ""
@@ -367,66 +351,86 @@ async function resolveCommentTarget(target: URL): Promise<{ articleId: string; a
   }
 }
 
-function isPublic(note: Note, create: Create): boolean {
-  const publicHref = (PUBLIC_COLLECTION as URL).href
-  const noteAudience = [...note.toIds, ...note.ccIds].map((url) => url.href)
-  const createAudience = [...create.toIds, ...create.ccIds].map((url) => url.href)
-  return noteAudience.includes(publicHref) || createAudience.includes(publicHref)
+async function loadActorOrNull(ctx: CommentContext, actorId: string | null): Promise<JsonObject | null> {
+  if (!actorId) {
+    return null
+  }
+  try {
+    return await ctx.loadActor(actorId)
+  } catch {
+    return null
+  }
 }
 
-async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: any }, create: Create, note: Note): Promise<{
+/** Embedded objects from the actor's origin are trusted; others are dereferenced. */
+export async function resolveActivityObject(ctx: CommentContext, activity: JsonObject): Promise<JsonObject | null> {
+  const value = activity.object
+  const id = idOf(value)
+  if (isObject(value) && (!id || sameOrigin(id, firstId(activity.actor)))) {
+    return value
+  }
+  if (!id || sameOrigin(id, SITE_ORIGIN)) {
+    return null
+  }
+  try {
+    return await ctx.loader.load(id)
+  } catch {
+    return null
+  }
+}
+
+export function actorProfileFromDocument(actor: JsonObject): {
+  actorId: string
+  actorName: string
+  actorUrl: string
+  actorIconUrl: string | null
+} | null {
+  const actorId = idOf(actor)
+  if (!actorId) {
+    return null
+  }
+  return {
+    actorId,
+    actorName: stringifyLanguageValue(languageValue(actor, "name"))
+      || stringifyLanguageValue(stringValue(actor, "preferredUsername"))
+      || new URL(actorId).hostname,
+    actorUrl: firstJsonUrl(actor.url) ?? actorId,
+    actorIconUrl: imageUrl(actor.icon),
+  }
+}
+
+async function resolveActorProfile(ctx: CommentContext, create: JsonObject, note: JsonObject): Promise<{
   actorId: string
   actorName: string
   actorUrl: string
   actorIconUrl: string | null
 } | null> {
-  const actor = await create.getActor({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  if (!isActor(actor) || !actor.id) {
+  const actor = await loadActorOrNull(ctx, firstId(create.actor))
+  if (!isActor(actor)) {
     return null
   }
 
-  const noteActorId = note.attributionId?.href
-  if (noteActorId && noteActorId !== actor.id.href) {
+  const noteActorId = firstId(note.attributedTo)
+  if (noteActorId && noteActorId !== idOf(actor)) {
     return null
   }
 
-  const actorName = stringifyLanguageValue(actor.name)
-    || stringifyLanguageValue(actor.preferredUsername)
-    || actor.id.hostname
-  const actorUrl = firstUrl(actor.url) ?? actor.id.href
-  const icon = await actor.getIcon({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-
-  return {
-    actorId: actor.id.href,
-    actorName,
-    actorUrl,
-    actorIconUrl: firstImageUrl(icon),
-  }
+  return actorProfileFromDocument(actor)
 }
 
-export async function persistCommentFromCreate(ctx: { documentLoader: any; contextLoader: any }, create: Create): Promise<boolean> {
-  const object = await create.getObject({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  if (!(object instanceof Note) || !object.id) {
+export async function persistCommentFromCreate(ctx: CommentContext, create: JsonObject): Promise<boolean> {
+  const object = await resolveActivityObject(ctx, create)
+  const objectId = idOf(object)
+  if (!object || !hasType(object, "Note") || !objectId) {
     return false
   }
-  if (!isPublic(object, create)) {
+  if (!isPubliclyAddressed(object, create)) {
     return false
   }
 
-  const replyTargetId = object.replyTargetId?.href ?? null
-  const target = object.replyTargetId ? await resolveCommentTarget(object.replyTargetId) : null
+  const replyTargetId = firstId(object.inReplyTo)
+  const replyTargetUrl = replyTargetId ? parseUrl(replyTargetId) : null
+  const target = replyTargetUrl ? await resolveCommentTarget(replyTargetUrl) : null
   if (!target) {
     return false
   }
@@ -440,7 +444,7 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
     return false
   }
 
-  const contentHtml = stringifyLanguageValue(object.content)
+  const contentHtml = stringifyLanguageValue(languageValue(object, "content"))
   const contentText = htmlToText(contentHtml)
   if (!contentText) {
     return false
@@ -448,10 +452,13 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
 
   await ensureActivityPubSchema()
   const db = getDatabase()
-  const payload = JSON.stringify(await create.toJsonLd({ format: "compact" }))
-  const publishedAt = object.published?.toString() ?? create.published?.toString() ?? new Date().toISOString()
-  const commentUrl = firstUrl(object.url) ?? object.id.href
-  const activityId = create.id?.href ?? null
+  // Stored as received (Fedify stored its re-compacted JSON-LD).
+  const payload = JSON.stringify(create)
+  const publishedAt = parseInstant(stringValue(object, "published"))
+    ?? parseInstant(stringValue(create, "published"))
+    ?? new Date().toISOString()
+  const commentUrl = firstJsonUrl(object.url) ?? objectId
+  const activityId = idOf(create)
 
   await db.sql`INSERT INTO activitypub_comments (
     object_id,
@@ -470,7 +477,7 @@ export async function persistCommentFromCreate(ctx: { documentLoader: any; conte
     status,
     payload
   ) VALUES (
-    ${object.id.href},
+    ${objectId},
     ${activityId},
     ${target.articleId},
     ${target.articlePath},
@@ -581,16 +588,16 @@ export async function discardLocalReplyComment(objectId: string): Promise<void> 
       AND actor_id = ${ACTOR_URI.href}`
 }
 
-export async function persistLocalReplyActivity(create: Create): Promise<void> {
-  const activityId = create.id?.href
-  const objectId = create.objectId?.href
+export async function persistLocalReplyActivity(create: JsonObject): Promise<void> {
+  const activityId = idOf(create)
+  const objectId = firstId(create.object)
   if (!activityId || !objectId) {
     throw new Error("Cannot persist local reply activity without id and object id.")
   }
 
   await ensureActivityPubSchema()
   const db = getDatabase()
-  const payload = JSON.stringify(await create.toJsonLd({ format: "compact" }))
+  const payload = JSON.stringify(create)
 
   await db.sql`INSERT INTO activity (
     activity_id,
@@ -676,7 +683,43 @@ async function loadLocalReplyActivityRow(replyId: string): Promise<LocalReplyAct
   return row?.activity_id && row.payload ? row : null
 }
 
-function buildLocalReplyNote(row: LocalReplyObjectRow): Note | null {
+type LocalNote = JsonObject & { id: string; type: "Note" }
+type LocalCreate = JsonObject & { id: string; type: "Create" }
+
+function localNote(input: {
+  id: string
+  content: string
+  mediaType: string
+  inReplyTo: string
+  to?: string | null
+  published?: string | null
+}): LocalNote {
+  return {
+    id: input.id,
+    type: "Note",
+    attributedTo: ACTOR_URI.href,
+    cc: AS_PUBLIC,
+    content: input.content,
+    inReplyTo: input.inReplyTo,
+    mediaType: input.mediaType,
+    ...(input.published ? { published: input.published } : {}),
+    ...(input.to ? { to: input.to } : {}),
+  }
+}
+
+function localCreate(input: { id: string; note: LocalNote; to?: string | null; published?: string | null }): LocalCreate {
+  return {
+    id: input.id,
+    type: "Create",
+    actor: ACTOR_URI.href,
+    cc: AS_PUBLIC,
+    object: input.note,
+    ...(input.published ? { published: input.published } : {}),
+    ...(input.to ? { to: input.to } : {}),
+  }
+}
+
+function buildLocalReplyNote(row: LocalReplyObjectRow): LocalNote | null {
   const objectId = parseUrl(row.object_id)
   const replyTarget = parseUrl(row.reply_target_id)
   if (!objectId || !replyTarget) {
@@ -687,50 +730,70 @@ function buildLocalReplyNote(row: LocalReplyObjectRow): Note | null {
   const published = parseInstant(row.published_at)
   const content = row.content_html || row.content_text
 
-  return new Note({
-    id: objectId,
-    attribution: ACTOR_URI,
+  return localNote({
+    id: objectId.href,
     content,
     mediaType: row.content_html ? "text/html" : "text/plain",
-    replyTarget,
-    ...(targetActor ? { to: targetActor } : {}),
-    cc: PUBLIC_COLLECTION,
-    ...(published ? { published } : {}),
+    inReplyTo: replyTarget.href,
+    to: targetActor?.href ?? null,
+    published,
   })
 }
 
-async function parseLocalReplyCreateFromPayload(row: LocalReplyActivityPayloadRow): Promise<Create | null> {
-  const payload = parsePayloadObject(row.payload)
-  if (!payload) {
-    return null
+/** Normalizes the public collection to its compact form, as Fedify compaction did. */
+function compactPublic(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    const items = value.map(compactPublic)
+    return items.length === 1 ? items[0] : items
   }
-
-  try {
-    const create = await Create.fromJsonLd(payload)
-    const activityId = parseUrl(row.activity_id)
-    const objectId = parseUrl(row.object)
-    if (activityId && create.id?.href !== activityId.href) {
-      return null
-    }
-    if (objectId && create.objectId?.href !== objectId.href) {
-      return null
-    }
-    if (!create.actorIds.some((actorId) => actorId.href === ACTOR_URI.href)) {
-      return null
-    }
-    return create
-  } catch {
-    return null
-  }
+  return value === "https://www.w3.org/ns/activitystreams#Public" || value === "Public" ? AS_PUBLIC : value
 }
 
-async function buildLocalReplyNoteFromActivity(row: LocalReplyActivityPayloadRow): Promise<Note | null> {
-  const create = await parseLocalReplyCreateFromPayload(row)
-  if (create) {
-    const object = await create.getObject({ suppressError: true })
-    if (object instanceof Note) {
-      return object
+const LOCAL_NOTE_PROPERTIES = ["id", "type", "attributedTo", "cc", "content", "inReplyTo", "mediaType", "published", "to", "url"]
+const LOCAL_CREATE_PROPERTIES = ["id", "type", "actor", "cc", "object", "published", "to"]
+
+function pickProperties(source: JsonObject, keys: string[]): JsonObject {
+  const result: JsonObject = {}
+  for (const key of keys) {
+    if (source[key] !== undefined && source[key] !== null) {
+      result[key] = key === "to" || key === "cc" ? compactPublic(source[key]) : source[key]
     }
+  }
+  return result
+}
+
+/**
+ * Reads a stored local reply `Create` (Fedify's compacted JSON-LD for old
+ * rows, the emitted JSON for new rows) after checking ids and actor.
+ */
+function parseLocalReplyCreateFromPayload(row: LocalReplyActivityPayloadRow): LocalCreate | null {
+  const payload = parsePayloadObject(row.payload)
+  if (!payload || !hasType(payload, "Create") || !idOf(payload)) {
+    return null
+  }
+  const activityId = parseUrl(row.activity_id)
+  const objectId = parseUrl(row.object)
+  if (activityId && idOf(payload) !== activityId.href) {
+    return null
+  }
+  if (objectId && firstId(payload.object) !== objectId.href) {
+    return null
+  }
+  if (firstId(payload.actor) !== ACTOR_URI.href) {
+    return null
+  }
+  const create = pickProperties(payload, LOCAL_CREATE_PROPERTIES)
+  create.type = "Create"
+  if (isObject(payload.object)) {
+    create.object = pickProperties(payload.object, LOCAL_NOTE_PROPERTIES)
+  }
+  return create as LocalCreate
+}
+
+function buildLocalReplyNoteFromActivity(row: LocalReplyActivityPayloadRow): LocalNote | null {
+  const create = parseLocalReplyCreateFromPayload(row)
+  if (create && isObject(create.object) && hasType(create.object, "Note")) {
+    return create.object as LocalNote
   }
 
   const payload = parsePayloadObject(row.payload)
@@ -742,7 +805,7 @@ async function buildLocalReplyNoteFromActivity(row: LocalReplyActivityPayloadRow
   const note = object as Record<string, unknown>
   const objectId = firstPayloadUrl(note.id)
   const replyTarget = firstPayloadUrl(note.inReplyTo)
-  const content = stringifyLanguageValue(note.content)
+  const content = stringifyLanguageValue(languageValue(note, "content"))
   if (!objectId || !replyTarget || !content) {
     return null
   }
@@ -757,23 +820,21 @@ async function buildLocalReplyNoteFromActivity(row: LocalReplyActivityPayloadRow
   )
   const mediaType = typeof note.mediaType === "string" ? note.mediaType : "text/plain"
 
-  return new Note({
-    id: objectId,
-    attribution: ACTOR_URI,
+  return localNote({
+    id: objectId.href,
     content,
     mediaType,
-    replyTarget,
-    ...(targetActor ? { to: targetActor } : {}),
-    cc: PUBLIC_COLLECTION,
-    ...(published ? { published } : {}),
+    inReplyTo: replyTarget.href,
+    to: targetActor?.href ?? null,
+    published,
   })
 }
 
-export async function loadLocalReplyNote(replyId: string): Promise<Note | null> {
+export async function loadLocalReplyNote(replyId: string): Promise<LocalNote | null> {
   const row = await loadLocalReplyObjectRow(replyId)
   if (row) {
     if (row.payload) {
-      const note = await buildLocalReplyNoteFromActivity({
+      const note = buildLocalReplyNoteFromActivity({
         activity_id: row.activity_id ?? null,
         object: row.object_id,
         payload: row.payload,
@@ -785,14 +846,14 @@ export async function loadLocalReplyNote(replyId: string): Promise<Note | null> 
     return buildLocalReplyNote(row)
   }
   const activityRow = await loadLocalReplyActivityRow(replyId)
-  return activityRow ? await buildLocalReplyNoteFromActivity(activityRow) : null
+  return activityRow ? buildLocalReplyNoteFromActivity(activityRow) : null
 }
 
-export async function loadLocalReplyCreate(replyId: string): Promise<Create | null> {
+export async function loadLocalReplyCreate(replyId: string): Promise<LocalCreate | null> {
   const row = await loadLocalReplyObjectRow(replyId)
   if (row) {
     if (row.payload) {
-      const create = await parseLocalReplyCreateFromPayload({
+      const create = parseLocalReplyCreateFromPayload({
         activity_id: row.activity_id ?? null,
         object: row.object_id,
         payload: row.payload,
@@ -810,26 +871,19 @@ export async function loadLocalReplyCreate(replyId: string): Promise<Create | nu
 
     const targetActor = parseUrl(row.target_actor_id)
     const published = parseInstant(row.published_at)
-    return new Create({
-      id: activityId,
-      actor: ACTOR_URI,
-      object: note,
-      ...(targetActor ? { to: targetActor } : {}),
-      cc: PUBLIC_COLLECTION,
-      ...(published ? { published } : {}),
-    })
+    return localCreate({ id: activityId.href, note, to: targetActor?.href ?? null, published })
   }
 
   const activityRow = await loadLocalReplyActivityRow(replyId)
   if (!activityRow) {
     return null
   }
-  const create = await parseLocalReplyCreateFromPayload(activityRow)
+  const create = parseLocalReplyCreateFromPayload(activityRow)
   if (create) {
     return create
   }
 
-  const note = await buildLocalReplyNoteFromActivity(activityRow)
+  const note = buildLocalReplyNoteFromActivity(activityRow)
   const payload = parsePayloadObject(activityRow.payload)
   const activityId = parseUrl(activityRow.activity_id)
   if (!note || !payload || !activityId) {
@@ -837,39 +891,33 @@ export async function loadLocalReplyCreate(replyId: string): Promise<Create | nu
   }
   const targetActor = firstPayloadUrl(payload.to)
   const published = parseInstant(typeof payload.published === "string" ? payload.published : null)
-  return new Create({
-    id: activityId,
-    actor: ACTOR_URI,
-    object: note,
-    ...(targetActor ? { to: targetActor } : {}),
-    cc: PUBLIC_COLLECTION,
-    ...(published ? { published } : {}),
-  })
+  return localCreate({ id: activityId.href, note, to: targetActor?.href ?? null, published })
 }
 
-export async function markCommentDeletedFromDelete(ctx: { documentLoader: any; contextLoader: any }, del: Delete): Promise<boolean> {
-  const actor = await del.getActor({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  if (!isActor(actor) || !actor.id || !del.objectId) {
+/**
+ * Marks a comment deleted when its own (HTTP-signature verified) actor sends
+ * a `Delete` for it.
+ */
+export async function markCommentDeletedFromDelete(del: JsonObject): Promise<boolean> {
+  const actorId = firstId(del.actor)
+  const objectId = firstId(del.object)
+  if (!actorId || !objectId) {
     return false
   }
 
   await ensureActivityPubSchema()
   const db = getDatabase()
-  const { rows } = await db.sql`SELECT actor_id FROM activitypub_comments WHERE object_id = ${del.objectId.href} LIMIT 1`
+  const { rows } = await db.sql`SELECT actor_id FROM activitypub_comments WHERE object_id = ${objectId} LIMIT 1`
   const existing = rows?.[0] as { actor_id?: string | null } | undefined
-  if (!existing || existing.actor_id !== actor.id.href) {
+  if (!existing || existing.actor_id !== actorId) {
     return false
   }
 
   await db.sql`UPDATE activitypub_comments
     SET status = 'deleted',
         updated_at = CURRENT_TIMESTAMP
-    WHERE object_id = ${del.objectId.href}
-      AND actor_id = ${actor.id.href}`
+    WHERE object_id = ${objectId}
+      AND actor_id = ${actorId}`
   return true
 }
 

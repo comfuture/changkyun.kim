@@ -4,7 +4,8 @@ import { createError, getHeader, getRequestURL, readRawBody, setHeader, setRespo
 import type { H3Event } from "h3"
 import embeddedContentDumps from "#content-dump-generated"
 
-import { createFedify, getCloudflareEnv } from "../utils/fedify"
+import { getCloudflareEnv, handleFederationRequest } from "../utils/fedify"
+import { CREATE_CONTEXT, OBJECT_CONTEXT, withActivityPubContext } from "../utils/activityPubVocab"
 import {
   buildArticleFromEntry,
   buildCreateFromEntry,
@@ -583,7 +584,7 @@ async function maybeHandleContentObject(event: H3Event, url: URL): Promise<unkno
   if (event.method === "HEAD") {
     return null
   }
-  return await object.toJsonLd({ format: "compact" })
+  return withActivityPubContext(requestPath.wantsCreateActivity ? CREATE_CONTEXT : OBJECT_CONTEXT, object)
 }
 
 export default defineEventHandler(async (event) => {
@@ -626,8 +627,5 @@ export default defineEventHandler(async (event) => {
     body,
   })
 
-  const federation = await createFedify(getCloudflareEnv(event))
-  return await federation.fetch(request, {
-    contextData: { env: getCloudflareEnv(event), event },
-  })
+  return await handleFederationRequest(request, { env: getCloudflareEnv(event), event })
 })

@@ -9,6 +9,8 @@ import {
   PUBLIC,
   createTestApp,
   insertBlogPost,
+  normalizeDocument,
+  readFixture,
   resetDatabase,
   rows,
   sqlite,
@@ -77,8 +79,15 @@ describe("ap:publishNewContent", () => {
       },
     ])
 
-    // Fedify resolves "followers" to zero inboxes (latent bug, #528).
-    assert.deepEqual(fediverse.deliveries, [])
+    // One delivery per Create and distinct follower inbox (Alice and Carol share
+    // a shared inbox; the removed follower is skipped). Fedify resolved
+    // "followers" to zero inboxes, so nothing was delivered before #528.
+    const expected = outbox.flatMap((row) => [ALICE.sharedInbox, BOB.inbox].map((inbox) => `${row.activity_id} -> ${inbox}`))
+    assert.deepEqual(
+      fediverse.deliveries.map((delivery) => `${delivery.body.id} -> ${delivery.url}`).sort(),
+      expected.sort(),
+    )
+    assert.deepEqual(normalizeDocument(fediverse.deliveries.find((delivery) => delivery.body.id.endsWith("/2025-09/20-test/activity"))!.body), readFixture("golden/delivered-create-article.json"))
 
     fediverse.clear()
     const again = await runPublish()

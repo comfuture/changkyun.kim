@@ -1,12 +1,17 @@
 import {
-  EmojiReact,
-  Image,
+  asArray,
+  firstId,
+  hasType,
+  idOf,
   isActor,
-  Like,
-  Link,
-  type Actor,
-} from "@fedify/vocab"
+  isObject,
+  languageValue,
+  stringValue,
+  type JsonObject,
+} from "@changkyun/activitypub"
 
+import { actorProfileFromDocument } from "./fedifyComments"
+import { instantFromOrNull } from "./temporal.ts"
 import {
   FEDIFY_BLOG_CANONICAL_HOSTNAMES,
   FEDIFY_BLOG_COLLECTION_PREFIX,
@@ -42,8 +47,9 @@ type ReactionActorRow = {
   actor_icon_url?: string | null
 }
 
-type ReactionActivity = Like | EmojiReact
-type ReactionValueContext = { documentLoader: any; contextLoader: any }
+type ReactionContext = {
+  loadActor: (actorId: string) => Promise<JsonObject | null>
+}
 
 const HEART_REACTION = "❤️"
 const SITE_HOST = new URL(SITE_ORIGIN).host.toLowerCase()
@@ -143,14 +149,12 @@ function firstJsonLdReactionValue(value: unknown): string | null {
   return record.tag ? firstJsonLdReactionValue(record.tag) : null
 }
 
-async function getReactionTagValue(ctx: ReactionValueContext, reaction: ReactionActivity): Promise<string | null> {
-  for await (const tag of reaction.getTags({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })) {
-    const tagRecord = asRecord(tag)
-    const tagReaction = firstReactionText(tagRecord?.content, tagRecord?.name)
+function getReactionTagValue(reaction: JsonObject): string | null {
+  for (const tag of asArray(reaction.tag)) {
+    if (!isObject(tag)) {
+      continue
+    }
+    const tagReaction = firstReactionText(languageValue(tag, "content"), languageValue(tag, "name"))
     if (tagReaction) {
       return tagReaction
     }
@@ -190,88 +194,42 @@ function normalizeReactionTarget(target: URL): { articleId: string; articlePath:
   }
 }
 
-async function resolveReactionTarget(ctx: { documentLoader: any; contextLoader: any }, reaction: ReactionActivity) {
-  const targetId = reaction.objectId
-  if (targetId) {
-    return normalizeReactionTarget(targetId)
-  }
-
-  const object = await reaction.getObject({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  return object?.id ? normalizeReactionTarget(object.id) : null
-}
-
-function firstUrl(value: URL | Link | null): string | null {
-  if (!value) {
+function resolveReactionTarget(reaction: JsonObject) {
+  const targetId = firstId(reaction.object)
+  if (!targetId) {
     return null
   }
-  if (value instanceof URL) {
-    return value.href
-  }
-  const link = value as Link
-  return link.href?.href ?? link.id?.href ?? null
-}
-
-function firstImageUrl(image: Image | URL | null): string | null {
-  if (!image) {
+  try {
+    return normalizeReactionTarget(new URL(targetId))
+  } catch {
     return null
   }
-  if (image instanceof URL) {
-    return image.href
-  }
-  return firstUrl(image.url)
 }
 
-async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: any }, actor: Actor): Promise<ActivityPubReactionActor | null> {
-  if (!actor.id) {
+async function resolveReactionActor(ctx: ReactionContext, reaction: JsonObject): Promise<ActivityPubReactionActor | null> {
+  const actorId = firstId(reaction.actor)
+  if (!actorId) {
     return null
   }
-  const icon = await actor.getIcon({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  return {
-    actorId: actor.id.href,
-    actorName: stringifyLanguageValue(actor.name)
-      || stringifyLanguageValue(actor.preferredUsername)
-      || actor.id.hostname,
-    actorUrl: firstUrl(actor.url) ?? actor.id.href,
-    actorIconUrl: firstImageUrl(icon),
-  }
+  const actor = await ctx.loadActor(actorId).catch(() => null)
+  return isActor(actor) ? actorProfileFromDocument(actor) : null
 }
 
-async function resolveReactionActor(ctx: { documentLoader: any; contextLoader: any }, reaction: ReactionActivity): Promise<ActivityPubReactionActor | null> {
-  const actor = await reaction.getActor({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  return isActor(actor) ? await resolveActorProfile(ctx, actor) : null
-}
-
-async function getReactionValue(
-  ctx: ReactionValueContext,
-  reaction: ReactionActivity,
-  payloadJsonLd: unknown,
-): Promise<string | null> {
-  if (reaction instanceof Like) {
+function getReactionValue(reaction: JsonObject): string | null {
+  if (hasType(reaction, "Like")) {
     return HEART_REACTION
   }
 
-  return firstReactionText(reaction.content, reaction.name)
-    ?? await getReactionTagValue(ctx, reaction)
-    ?? firstJsonLdReactionValue(payloadJsonLd)
+  return firstReactionText(languageValue(reaction, "content"), languageValue(reaction, "name"))
+    ?? getReactionTagValue(reaction)
+    ?? firstJsonLdReactionValue(reaction)
 }
 
 export async function persistReactionFromActivity(
-  ctx: { documentLoader: any; contextLoader: any },
-  reaction: ReactionActivity,
+  ctx: ReactionContext,
+  reaction: JsonObject,
 ): Promise<boolean> {
-  const target = await resolveReactionTarget(ctx, reaction)
+  const target = resolveReactionTarget(reaction)
   if (!target) {
     return false
   }
@@ -281,18 +239,18 @@ export async function persistReactionFromActivity(
   }
 
   const actor = await resolveReactionActor(ctx, reaction)
-  const payloadJsonLd = await reaction.toJsonLd({ format: "compact" })
-  const reactionValue = await getReactionValue(ctx, reaction, payloadJsonLd)
+  const reactionValue = getReactionValue(reaction)
   if (!actor || !reactionValue) {
     return false
   }
 
   await ensureActivityPubSchema()
   const db = getDatabase()
-  const payload = JSON.stringify(payloadJsonLd)
-  const publishedAt = reaction.published?.toString() ?? new Date().toISOString()
-  const activityId = reaction.id?.href ?? null
-  const reactionType = reaction instanceof Like ? "Like" : "EmojiReact"
+  // Stored as received (Fedify stored its re-compacted JSON-LD).
+  const payload = JSON.stringify(reaction)
+  const publishedAt = instantFromOrNull(stringValue(reaction, "published")) ?? new Date().toISOString()
+  const activityId = idOf(reaction)
+  const reactionType = hasType(reaction, "Like") ? "Like" : "EmojiReact"
 
   await db.sql`INSERT INTO activitypub_reactions (
     activity_id,
@@ -338,33 +296,17 @@ export async function persistReactionFromActivity(
 }
 
 export async function handleReactionUndo(
-  ctx: { documentLoader: any; contextLoader: any },
-  undo: { objectId: URL | null; getActor: (options: any) => Promise<unknown>; getObject: (options: any) => Promise<unknown> },
-  options: { actorId?: string; object?: unknown } = {},
+  undo: JsonObject,
+  options: { actorId: string; object?: unknown },
 ): Promise<boolean> {
-  let actorId = options.actorId ?? null
-  if (!actorId) {
-    const actor = await undo.getActor({
-      documentLoader: ctx.documentLoader,
-      contextLoader: ctx.contextLoader,
-      suppressError: true,
-    })
-    if (!isActor(actor) || !actor.id) {
-      return false
-    }
-    actorId = actor.id.href
-  }
-
-  const object = options.object ?? await undo.getObject({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
+  const actorId = options.actorId
+  const object = options.object
+  const undoObjectId = firstId(undo.object)
 
   await ensureActivityPubSchema()
   const db = getDatabase()
-  if (object instanceof Like || object instanceof EmojiReact) {
-    const activityId = object.id?.href ?? undo.objectId?.href ?? null
+  if (hasType(object, "Like", "EmojiReact")) {
+    const activityId = idOf(object) ?? undoObjectId
     if (!activityId) {
       return true
     }
@@ -374,12 +316,12 @@ export async function handleReactionUndo(
     return true
   }
 
-  if (!undo.objectId) {
+  if (!undoObjectId) {
     return false
   }
   const result = await db.sql`DELETE FROM activitypub_reactions
     WHERE actor_id = ${actorId}
-      AND activity_id = ${undo.objectId.href}`
+      AND activity_id = ${undoObjectId}`
   return countValue((result as { changes?: unknown }).changes) > 0
 }
 
