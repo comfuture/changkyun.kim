@@ -1,0 +1,105 @@
+{
+  "@context": [
+    "https://w3id.org/identity/v1",
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/v1",
+    "https://w3id.org/security/data-integrity/v1",
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/multikey/v1",
+    "https://gotosocial.org/ns",
+    {
+      "alsoKnownAs": {
+        "@id": "as:alsoKnownAs",
+        "@type": "@id"
+      },
+      "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
+      "sensitive": "as:sensitive",
+      "movedTo": {
+        "@id": "as:movedTo",
+        "@type": "@id"
+      },
+      "quoteUrl": "as:quoteUrl",
+      "toot": "http://joinmastodon.org/ns#",
+      "featured": {
+        "@id": "toot:featured",
+        "@type": "@id"
+      },
+      "featuredTags": {
+        "@id": "toot:featuredTags",
+        "@type": "@id"
+      },
+      "discoverable": "toot:discoverable",
+      "suspended": "toot:suspended",
+      "memorial": "toot:memorial",
+      "indexable": "toot:indexable",
+      "votersCount": {
+        "@id": "toot:votersCount",
+        "@type": "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+      },
+      "Emoji": "toot:Emoji",
+      "Hashtag": "as:Hashtag",
+      "schema": "http://schema.org#",
+      "PropertyValue": "schema:PropertyValue",
+      "value": "schema:value",
+      "ChatMessage": "http://litepub.social/ns#ChatMessage",
+      "quote": {
+        "@id": "https://w3id.org/fep/044f#quote",
+        "@type": "@id"
+      },
+      "fedibird": "http://fedibird.com/ns#",
+      "quoteUri": "fedibird:quoteUri",
+      "QuoteAuthorization": "https://w3id.org/fep/044f#QuoteAuthorization",
+      "QuoteRequest": "https://w3id.org/fep/044f#QuoteRequest",
+      "quoteAuthorization": {
+        "@id": "https://w3id.org/fep/044f#quoteAuthorization",
+        "@type": "@id"
+      },
+      "misskey": "https://misskey-hub.net/ns#",
+      "_misskey_quote": "misskey:_misskey_quote",
+      "_misskey_followedMessage": "misskey:_misskey_followedMessage",
+      "isCat": "misskey:isCat",
+      "emojiReactions": {
+        "@id": "fedibird:emojiReactions",
+        "@type": "@id"
+      }
+    }
+  ],
+  "id": "https://changkyun.kim/@me#update-<uuid>",
+  "type": "Update",
+  "actor": "https://changkyun.kim/@me",
+  "cc": "https://changkyun.kim/@me/followers",
+  "object": {
+    "id": "https://changkyun.kim/@me",
+    "type": "Person",
+    "discoverable": true,
+    "indexable": true,
+    "inbox": "https://changkyun.kim/@me/inbox",
+    "publicKey": {
+      "id": "https://changkyun.kim/@me#main-key",
+      "type": "CryptographicKey",
+      "owner": "https://changkyun.kim/@me",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw9Q8D4umKrTaZe3z4S2v\nBazhz2+1fukbm+QrK2NQz4URcsnLOprR/vKhlcQCUyWtagi/jQrMOSZj0fmxMvr1\ntMYuV+Bd571igLQ1QVMLL56QTpjCYnRSWKk0+lInU3iN8ot4CclFsLsOX/qs8DGy\nbV9uIOXifwOg9LS06AigMKqMH6Csgpa/gtb0OlvrWeKfgOCMEuI+ygaF7Bzy8wXY\neTdYHURcuPtD6d46E9+1HoaslW8p2kPs1hYHIv2/LKyIy9vgOr+0VxXY7q6ybwBl\nDwbkmnsE7QRfthE0BBkTkuWtCAJiSA1dA4mchnJQ+2r3qNpD8Z1xSHbLFWyowfp/\nfwIDAQAB\n-----END PUBLIC KEY-----\n"
+    },
+    "endpoints": {
+      "sharedInbox": "https://changkyun.kim/inbox"
+    },
+    "followers": "https://changkyun.kim/@me/followers",
+    "following": "https://changkyun.kim/@me/following",
+    "icon": {
+      "type": "Image",
+      "mediaType": "image/jpeg",
+      "url": "https://changkyun.kim/image/avatar.jpg"
+    },
+    "image": {
+      "type": "Image",
+      "mediaType": "image/jpeg",
+      "url": "https://changkyun.kim/cdn-cgi/image/fit=crop,w=1280,h=400/image/cover.jpg"
+    },
+    "name": "김창균",
+    "outbox": "https://changkyun.kim/@me/outbox",
+    "preferredUsername": "me",
+    "summary": "Principled person who values integrity. A slow but persistent learner with deep understanding. Problem solver using data, experience, and intuition.",
+    "url": "https://changkyun.kim/about"
+  },
+  "to": "https://www.w3.org/ns/activitystreams#Public"
+}

@@ -15,7 +15,7 @@
     "generate": "GENERATE=1 nuxi generate",
     "prepare": "nuxi prepare",
     "preview": "nuxi preview",
-    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test": "node --experimental-strip-types --import ./tests/support/register.mjs --test tests/*.test.ts",
     "typecheck": "nuxi typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

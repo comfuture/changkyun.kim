@@ -1,0 +1,18 @@
+{
+  "id": "article:https://remote.example/users/alice/articles/7",
+  "type": "article",
+  "objectId": "https://remote.example/users/alice/articles/7",
+  "url": "https://remote.example/users/alice/articles/7",
+  "actorId": "https://remote.example/users/alice",
+  "actorName": "Alice",
+  "actorUrl": "https://remote.example/@alice",
+  "title": "A long read",
+  "summary": "Summary text",
+  "contentText": "Article body",
+  "publishedAt": "2026-03-05T00:00:00.250Z",
+  "actions": [
+    "reply",
+    "like",
+    "react"
+  ]
+}

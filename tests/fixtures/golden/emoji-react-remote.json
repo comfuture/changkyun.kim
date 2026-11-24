@@ -1,0 +1,22 @@
+{
+  "@context": [
+    "https://w3id.org/identity/v1",
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/data-integrity/v1",
+    "https://gotosocial.org/ns",
+    {
+      "litepub": "http://litepub.social/ns#",
+      "toot": "http://joinmastodon.org/ns#",
+      "EmojiReact": "litepub:EmojiReact",
+      "Emoji": "toot:Emoji"
+    }
+  ],
+  "id": "https://changkyun.kim/@me#react-remote-<uuid>",
+  "type": "EmojiReact",
+  "actor": "https://changkyun.kim/@me",
+  "cc": "https://www.w3.org/ns/activitystreams#Public",
+  "content": "🎉",
+  "object": "https://remote.example/users/alice/statuses/42",
+  "published": "<now>",
+  "to": "https://remote.example/users/alice"
+}

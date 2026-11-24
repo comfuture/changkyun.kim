@@ -1,0 +1,16 @@
+{
+  "@context": [
+    "https://w3id.org/identity/v1",
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/v1",
+    "https://w3id.org/security/data-integrity/v1",
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/multikey/v1",
+    "https://gotosocial.org/ns"
+  ],
+  "id": "https://changkyun.kim/@me/follow/9ef8625ccfc68ddb1cf698ebdfeb9c425ac832bebc443342599e55c0292e3fe3",
+  "type": "Follow",
+  "actor": "https://changkyun.kim/@me",
+  "object": "https://remote.example/users/alice",
+  "to": "https://remote.example/users/alice"
+}

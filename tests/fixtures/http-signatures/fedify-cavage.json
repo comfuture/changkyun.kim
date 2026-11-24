@@ -1,0 +1,14 @@
+{
+  "_note": "Signed by @fedify/fedify 2.3.3 signRequest(spec: draft-cavage-http-signatures-12) with tests/fixtures/keys/alice.private.pem at 2026-11-24T00:00:00Z.",
+  "method": "POST",
+  "url": "https://changkyun.kim/inbox",
+  "headers": {
+    "accept": "application/activity+json",
+    "content-type": "application/activity+json",
+    "date": "Tue, 24 Nov 2026 00:00:00 GMT",
+    "digest": "SHA-256=gndFvzmZoZ3Kgc8ooAu8xjplLSezc9ygn/+idbLDzjs=",
+    "host": "changkyun.kim",
+    "signature": "keyId=\"https://remote.example/users/alice#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) accept content-type date digest host\",signature=\"kPKpwRA+bvNXEB56Hm8l9w8z+iZeg9BMBA/ImvDc+zjoNNBcAAp1XwSzjPTPhogkiXE0pZaI0FyCqhPzM4Gi+FChybgJeJXPmbEKeMWYmtz9XSFBEw5UFL+n2MNoGs9LZ13mtijrR1Qxha2ziu/nkS/okWwbQqJr9PS9bl19i3nEVKoKmkEf/4ChyU0GfFsew8TBfhCl9WGtoH/+ygnAtKODuOxlG4y5OoRC5DH8qlnAaYuX/DKYfD1Ya4qnymTk20BpTZCYV0QMtg45v4qylEd8CuCy/y2TSUB+9+b7DLC1TisL8Aohntnifb1zuxYMHeoGd8o7yJ3lBhhN6FTDiw==\""
+  },
+  "body": "{\"@context\":\"https://www.w3.org/ns/activitystreams\",\"id\":\"https://remote.example/users/alice/activities/follow-fixture\",\"type\":\"Follow\",\"actor\":\"https://remote.example/users/alice\",\"object\":\"https://changkyun.kim/@me\"}"
+}
