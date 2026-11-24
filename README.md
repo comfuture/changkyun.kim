@@ -43,6 +43,16 @@ Stored posts are exposed at `/following/`; `/feed` redirects there. Individual i
 
 Only allow follows or relay-style actors from sources you trust, because they can increase inbound traffic and affect what appears in the following feed.
 
+### Implementation
+
+Federation runs on `packages/activitypub` (`@changkyun/activitypub`), a small in-repo library built on Web APIs only; it replaced Fedify. See `packages/activitypub/README.md` for the supported subset and non-goals. In short:
+
+- Inbound activities are authenticated by their HTTP Signature (draft-cavage or RFC 9421) and the signer must own the activity's actor. Linked Data signatures are neither verified nor attached, so relayed activities signed by another server are rejected.
+- Verified inbox activities and outgoing deliveries go through the `FEDIFY_QUEUE` Cloudflare Queue (one message per inbox, exponential backoff, `404`/`410` inboxes dropped, DLQ `changkyun-kim-fedify-dlq`). Without a queue binding (local development) they run inline.
+- Actor documents, public keys and the per-origin signature spec are cached in `FEDIFY_KV` under the `ap:v1:` prefix.
+
+Run the regression tests with `pnpm test`.
+
 ## Bluesky auto-sharing
 
 New `blog` and `app` entries published by `ap:publishNewContent` can also create one link-card post on a configured Bluesky account. The Bluesky post contains a short plain-text summary and an external card that links to the browser-facing canonical URL. A usable cover image is uploaded as the card thumbnail; missing, invalid, failed, or oversized images fall back to the same card without a thumbnail.

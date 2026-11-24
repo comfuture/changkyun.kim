@@ -1,6 +1,12 @@
 This project uses Nuxt(Vue3), @nuxt/content extension and tailwindcss for frontend.
 Please follow the instructions below to code assistants.
 
+## ActivityPub
+
+- Federation is implemented with the in-repo library `packages/activitypub` (`@changkyun/activitypub`, zero runtime dependencies, Web APIs only). Do not add Fedify or other ActivityPub frameworks.
+- Server integration lives in `server/utils/fedify.ts` (actor, collections, inbox listeners, delivery, queue consumer) and `server/middleware/fedify.ts` (request routing). Documents are plain JSON objects; per-type `@context` values are in `server/utils/activityPubVocab.ts`.
+- Keep emitted documents matching `tests/fixtures/golden` and run `pnpm test`.
+
 ## Code Style Guide
 
 ### Vue files
