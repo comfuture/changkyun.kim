@@ -51,9 +51,21 @@ export async function markActivityProcessed(kv: KvStore, activityId: string | nu
   await kv.put(idempotencyKey(await sha256Hex(activityId)), "1", { expirationTtl: IDEMPOTENCY_TTL_SECONDS }).catch(() => undefined)
 }
 
-/** Does the key belong to the actor (by `owner`, or listed in the actor's `publicKey`)? */
+function sameOrigin(a: string, b: string): boolean {
+  try {
+    return new URL(a).origin === new URL(b).origin
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Does the key belong to the actor? A key's own `owner` claim is only trusted
+ * when the key lives on the actor's origin; otherwise the actor document must
+ * list the key itself, so a key hosted elsewhere cannot claim another actor.
+ */
 export async function doesActorOwnKey(loader: DocumentLoader, actorId: string, key: PublicKeyInfo): Promise<boolean> {
-  if (key.ownerId === actorId) {
+  if (key.ownerId === actorId && sameOrigin(key.keyId, actorId)) {
     return true
   }
   try {
