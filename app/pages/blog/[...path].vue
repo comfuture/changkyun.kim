@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { normalizeRoutePath } from '~/composables/normalizeRoutePath'
 import { siteIdentity, siteKeywords } from '~/utils/siteIdentity'
+import type { getBlogArticle } from '~~/server/utils/blogContent'
+
+type BlogArticlePayload = Awaited<ReturnType<typeof getBlogArticle>>
 
 const route = useRoute()
 const contentPath = computed(() => normalizeRoutePath(route.path))
 
 const { data: payload, pending } = useAsyncData(
   () => `blog-entry:${contentPath.value}`,
-  () => $fetch('/api/blog/article', {
+  () => $fetch<BlogArticlePayload, '/api/blog/article'>('/api/blog/article', {
     query: { path: contentPath.value },
   }),
   {
