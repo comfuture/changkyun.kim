@@ -1,0 +1,14 @@
+{
+  "name": "@changkyun/activitypub",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Lightweight ActivityPub subset for a single-actor site on Cloudflare Workers",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "check": "tsc --noEmit -p tsconfig.json"
+  }
+}
