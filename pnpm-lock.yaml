@@ -14,6 +14,9 @@ importers:
 
   .:
     dependencies:
+      '@changkyun/activitypub':
+        specifier: workspace:*
+        version: link:packages/activitypub
       '@fedify/cfworkers':
         specifier: 2.3.3
         version: 2.3.3(@cloudflare/workers-types@5.20261119.1)(@fedify/fedify@2.3.3)
@@ -111,6 +114,8 @@ importers:
       wrangler:
         specifier: 4.166.0
         version: 4.166.0(@cloudflare/workers-types@5.20261119.1)(@types/node@26.6.6)
+
+  packages/activitypub: {}
 
   packages/admin:
     dependencies:
