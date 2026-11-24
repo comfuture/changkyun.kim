@@ -1,14 +1,13 @@
-import { Create } from "@fedify/vocab"
-
 import {
-  ACTOR_IDENTIFIER,
   buildCreateFromEntry,
   fetchFedifyContentEntries,
   resolveEntryPath,
   resolveFedifyLegacyActivityIds,
+  type ActivityPubCreate,
   type FedifyContentEntry,
 } from "../../utils/fedifyContent"
 import { createFedifyContext, getCloudflareEnv } from "../../utils/fedify"
+import { CREATE_CONTEXT, withActivityPubContext } from "../../utils/activityPubVocab"
 import { ensureActivityPubSchema } from "../../utils/activityPubSchema"
 import {
   resolveBlueskyConfig,
@@ -52,8 +51,8 @@ function compareEntries(a: FedifyContentEntry, b: FedifyContentEntry): number {
   return aTime - bTime
 }
 
-function resolvePublishedInfo(entry: FedifyContentEntry, activity: Create): { iso: string; timestamp: number } {
-  let iso = activity.published?.toString() ?? null
+function resolvePublishedInfo(entry: FedifyContentEntry, activity: ActivityPubCreate): { iso: string; timestamp: number } {
+  let iso: string | null = activity.published ?? null
   if (!iso && entry?.createdAt) {
     iso = entry.createdAt instanceof Date ? entry.createdAt.toISOString() : entry.createdAt
   }
@@ -130,9 +129,13 @@ async function updateDeliveryState(state: DeliveryState): Promise<void> {
   `
 }
 
-async function hasExistingOutboxActivity(activity: Create, entry: FedifyContentEntry): Promise<boolean> {
+function toPayload(activity: ActivityPubCreate): string {
+  return JSON.stringify(withActivityPubContext(CREATE_CONTEXT, activity))
+}
+
+async function hasExistingOutboxActivity(activity: ActivityPubCreate, entry: FedifyContentEntry): Promise<boolean> {
   const db = useDatabase()
-  const activityId = activity.id?.href
+  const activityId = activity.id
   if (!activityId) {
     return true
   }
@@ -142,7 +145,7 @@ async function hasExistingOutboxActivity(activity: Create, entry: FedifyContentE
     return true
   }
 
-  const articleId = activity.objectId?.href
+  const articleId = activity.object.id
   if (!articleId) {
     return false
   }
@@ -150,10 +153,10 @@ async function hasExistingOutboxActivity(activity: Create, entry: FedifyContentE
   for (const legacyId of resolveFedifyLegacyActivityIds(articleId, entry)) {
     const legacy = await db.sql`SELECT 1 FROM activity WHERE activity_id = ${legacyId} AND direction = 'outbox' LIMIT 1`
     if (legacy.rows?.length) {
-      const payload = JSON.stringify(await activity.toJsonLd({ format: "compact" }))
+      const payload = toPayload(activity)
       await db.sql`UPDATE activity
         SET activity_id = ${activityId},
-            actor_id = ${activity.actorIds[0]?.href ?? null},
+            actor_id = ${activity.actor},
             object = ${articleId},
             payload = ${payload},
             direction = 'outbox',
@@ -166,19 +169,19 @@ async function hasExistingOutboxActivity(activity: Create, entry: FedifyContentE
   return false
 }
 
-async function persistOutboxActivity(activity: Create): Promise<void> {
+async function persistOutboxActivity(activity: ActivityPubCreate): Promise<void> {
   const db = useDatabase()
-  const activityId = activity.id?.href
-  const articleId = activity.objectId?.href
+  const activityId = activity.id
+  const articleId = activity.object.id
   if (!activityId || !articleId) {
     throw new Error("Cannot persist Create activity without id and object id.")
   }
-  const payload = JSON.stringify(await activity.toJsonLd({ format: "compact" }))
+  const payload = toPayload(activity)
 
   await db.sql`INSERT INTO activity (
     activity_id, actor_id, type, object, payload, direction
   ) VALUES (
-    ${activityId}, ${activity.actorIds[0]?.href ?? null}, 'Create', ${articleId}, ${payload}, 'outbox'
+    ${activityId}, ${activity.actor}, 'Create', ${articleId}, ${payload}, 'outbox'
   )`
 }
 
@@ -215,10 +218,10 @@ async function publishCollection(
       continue
     }
 
-    if (initialState?.lastActivityId && activity.id.href === initialState.lastActivityId) {
+    if (initialState?.lastActivityId && activity.id === initialState.lastActivityId) {
       continue
     }
-    if (lastDeliveredActivityId && activity.id.href === lastDeliveredActivityId) {
+    if (lastDeliveredActivityId && activity.id === lastDeliveredActivityId) {
       continue
     }
 
@@ -241,19 +244,14 @@ async function publishCollection(
     const alreadyPublished = await hasExistingOutboxActivity(activity, entry)
     if (!alreadyPublished) {
       if (shouldQueueBlueskyShare(blueskyConfig.status, alreadyPublished)
-        && await queueBlueskyShare(activity.id.href, entry)) {
+        && await queueBlueskyShare(activity.id, entry)) {
         blueskyQueued += 1
       }
 
       await persistOutboxActivity(activity)
 
       const ctx = await createFedifyContext(env)
-      await ctx.sendActivity(
-        { identifier: ACTOR_IDENTIFIER },
-        "followers",
-        activity,
-        { preferSharedInbox: true },
-      )
+      await ctx.sendActivity("followers", withActivityPubContext(CREATE_CONTEXT, activity))
       published += 1
     }
 
@@ -261,14 +259,14 @@ async function publishCollection(
       collection,
       lastDocumentPath: documentPath,
       lastDocumentId: typeof entry._id === "string" ? entry._id : typeof entry.id === "string" ? entry.id : null,
-      lastArticleUrl: activity.objectId?.href ?? null,
-      lastActivityId: activity.id.href,
+      lastArticleUrl: activity.object.id ?? null,
+      lastActivityId: activity.id,
       lastPublishedAt: publishedAt,
     })
 
     lastDeliveredTime = publishedTime
     lastDeliveredPath = documentPath ?? lastDeliveredPath
-    lastDeliveredActivityId = activity.id.href
+    lastDeliveredActivityId = activity.id
   }
 
   return { published, blueskyQueued }
@@ -277,7 +275,7 @@ async function publishCollection(
 export default defineTask({
   meta: {
     name: "ap:publishNewContent",
-    description: "Publish new Nuxt Content entries through Fedify",
+    description: "Publish new Nuxt Content entries to ActivityPub followers",
   },
   async run(event) {
     await ensureActivityPubSchema()

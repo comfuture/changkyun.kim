@@ -1,15 +1,28 @@
 import {
-  Article,
-  Create,
-  Image,
+  firstId,
+  firstUrl as firstJsonUrl,
+  hasType,
+  idOf,
   isActor,
-  Link,
-  Note,
-  PUBLIC_COLLECTION,
-  type Actor,
-} from "@fedify/vocab"
+  isObject,
+  isPubliclyAddressed,
+  languageValue,
+  stringValue,
+  type JsonObject,
+} from "@changkyun/activitypub"
 
 import { ensureActivityPubSchema } from "./activityPubSchema"
+import { actorProfileFromDocument, resolveActivityObject } from "./fedifyComments"
+
+type FeedContext = {
+  loadActor: (actorId: string) => Promise<JsonObject | null>
+  loader: { load: (id: string) => Promise<JsonObject> }
+}
+
+type FeedCrawlContext = FeedContext & {
+  lookupObject: (identifier: string | URL) => Promise<JsonObject | null>
+  traverseCollection: (collection: JsonObject | string) => AsyncIterable<JsonObject>
+}
 
 export type ActivityPubFeedPost = {
   id: number
@@ -138,28 +151,8 @@ function htmlToText(value: string): string {
   )
 }
 
-function firstUrl(value: URL | Link | null): string | null {
-  if (!value) {
-    return null
-  }
-  if (value instanceof URL) {
-    return value.href
-  }
-  return value.href?.href ?? value.id?.href ?? null
-}
-
-function firstImageUrl(image: Image | URL | null): string | null {
-  if (!image) {
-    return null
-  }
-  if (image instanceof URL) {
-    return image.href
-  }
-  return firstUrl(image.url)
-}
-
 function toPublishedAt(value: unknown): string {
-  const text = value?.toString?.()
+  const text = typeof value === "string" ? value : undefined
   const parsed = text ? Date.parse(text) : Number.NaN
   return Number.isNaN(parsed) ? new Date().toISOString() : new Date(parsed).toISOString()
 }
@@ -205,38 +198,16 @@ function toFeedPost(row: FeedPostRow): ActivityPubFeedPost {
   }
 }
 
-function isSupportedFeedObject(object: unknown): object is Note | Article {
-  return object instanceof Note || object instanceof Article
+function isSupportedFeedObject(object: unknown): object is JsonObject {
+  return isObject(object) && hasType(object, "Note", "Article")
 }
 
-function hasPublicAudience(object: { toIds?: URL[]; ccIds?: URL[] }, activity?: { toIds?: URL[]; ccIds?: URL[] }): boolean {
-  const publicHref = (PUBLIC_COLLECTION as URL).href
-  const audience = [
-    ...(object.toIds ?? []),
-    ...(object.ccIds ?? []),
-    ...(activity?.toIds ?? []),
-    ...(activity?.ccIds ?? []),
-  ]
-  return audience.some((url) => url.href === publicHref)
+function hasPublicAudience(object: JsonObject, activity?: JsonObject): boolean {
+  return isPubliclyAddressed(object, activity)
 }
 
-async function resolveActorProfile(ctx: { documentLoader: any; contextLoader: any }, actor: Actor): Promise<ActorProfile | null> {
-  if (!actor.id) {
-    return null
-  }
-  const icon = await actor.getIcon({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  return {
-    actorId: actor.id.href,
-    actorName: stringifyLanguageValue(actor.name)
-      || stringifyLanguageValue(actor.preferredUsername)
-      || actor.id.hostname,
-    actorUrl: firstUrl(actor.url) ?? actor.id.href,
-    actorIconUrl: firstImageUrl(icon),
-  }
+function resolveActorProfile(actor: JsonObject): ActorProfile | null {
+  return actorProfileFromDocument(actor)
 }
 
 async function getActorRelation(actorId: string): Promise<ActorTarget["relation"] | null> {
@@ -313,41 +284,43 @@ async function markActorCrawled(actorId: string, relation: ActorTarget["relation
 }
 
 async function persistFeedObject(options: {
-  ctx: { documentLoader: any; contextLoader: any }
-  actor: Actor
-  object: Note | Article
-  activity?: Create | null
+  actor: JsonObject
+  object: JsonObject
+  activity?: JsonObject | null
   source: "crawl" | "inbox"
 }): Promise<boolean> {
-  if (!options.actor.id || !options.object.id) {
+  const actorId = idOf(options.actor)
+  const objectId = idOf(options.object)
+  if (!actorId || !objectId) {
     return false
   }
   if (!hasPublicAudience(options.object, options.activity ?? undefined)) {
     return false
   }
-  const attributionId = options.object.attributionId?.href
-  if (attributionId && attributionId !== options.actor.id.href) {
+  const attributionId = firstId(options.object.attributedTo)
+  if (attributionId && attributionId !== actorId) {
     return false
   }
 
-  const relation = await getActorRelation(options.actor.id.href)
+  const relation = await getActorRelation(actorId)
   if (!relation) {
     return false
   }
 
-  const profile = await resolveActorProfile(options.ctx, options.actor)
+  const profile = resolveActorProfile(options.actor)
   if (!profile) {
     return false
   }
-  await upsertFeedActor(profile, relation, options.object.id.href)
+  await upsertFeedActor(profile, relation, objectId)
 
-  const contentHtml = stringifyLanguageValue(options.object.content)
-  const summary = stringifyLanguageValue(options.object.summary)
-  const name = stringifyLanguageValue(options.object.name)
-  const contentText = htmlToText(contentHtml) || summary || name || firstUrl(options.object.url) || options.object.id.href
-  const publishedAt = toPublishedAt(options.object.published ?? options.activity?.published)
-  const objectUrl = firstUrl(options.object.url) ?? options.object.id.href
-  const payload = JSON.stringify(await (options.activity ?? options.object).toJsonLd({ format: "compact" }))
+  const contentHtml = stringifyLanguageValue(languageValue(options.object, "content"))
+  const summary = stringifyLanguageValue(languageValue(options.object, "summary"))
+  const name = stringifyLanguageValue(languageValue(options.object, "name"))
+  const objectUrl = firstJsonUrl(options.object.url)
+  const contentText = htmlToText(contentHtml) || summary || name || objectUrl || objectId
+  const publishedAt = toPublishedAt(stringValue(options.object, "published") ?? stringValue(options.activity, "published"))
+  // Stored as received (Fedify stored its re-compacted JSON-LD).
+  const payload = JSON.stringify(options.activity ?? options.object)
 
   await ensureActivityPubSchema()
   const db = getDatabase()
@@ -369,18 +342,18 @@ async function persistFeedObject(options: {
       visibility,
       payload
     ) VALUES (
-      ${options.object.id.href},
-      ${options.activity?.id?.href ?? null},
+      ${objectId},
+      ${idOf(options.activity) ?? null},
       ${profile.actorId},
       ${profile.actorName},
       ${profile.actorUrl},
       ${profile.actorIconUrl},
-      ${options.object instanceof Article ? "Article" : "Note"},
+      ${hasType(options.object, "Article") ? "Article" : "Note"},
       ${name || null},
       ${summary || null},
       ${contentText},
       ${contentHtml || null},
-      ${objectUrl},
+      ${objectUrl ?? objectId},
       ${publishedAt},
       ${options.source},
       'public',
@@ -410,27 +383,19 @@ async function persistFeedObject(options: {
   return true
 }
 
-export async function persistFeedPostFromCreate(ctx: { documentLoader: any; contextLoader: any }, create: Create): Promise<boolean> {
-  const actor = await create.getActor({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
-  if (!isActor(actor) || !actor.id) {
+export async function persistFeedPostFromCreate(ctx: FeedContext, create: JsonObject): Promise<boolean> {
+  const actorId = firstId(create.actor)
+  const actor = actorId ? await ctx.loadActor(actorId).catch(() => null) : null
+  if (!isActor(actor)) {
     return false
   }
 
-  const object = await create.getObject({
-    documentLoader: ctx.documentLoader,
-    contextLoader: ctx.contextLoader,
-    suppressError: true,
-  })
+  const object = await resolveActivityObject(ctx, create)
   if (!isSupportedFeedObject(object)) {
     return false
   }
 
   return await persistFeedObject({
-    ctx,
     actor,
     object,
     activity: create,
@@ -485,12 +450,7 @@ async function loadActorTargets(limit: number): Promise<ActorTarget[]> {
     .slice(0, limit)
 }
 
-export async function crawlActivityPubFeed(ctx: {
-  documentLoader: any
-  contextLoader: any
-  lookupObject: (identifier: string | URL) => Promise<unknown>
-  traverseCollection: (collection: any) => AsyncIterable<unknown>
-}, options: {
+export async function crawlActivityPubFeed(ctx: FeedCrawlContext, options: {
   actorLimit?: number
   itemsPerActor?: number
 } = {}): Promise<{ actors: number; posts: number }> {
@@ -502,23 +462,25 @@ export async function crawlActivityPubFeed(ctx: {
 
   for (const target of targets) {
     const actor = await ctx.lookupObject(target.actorId).catch(() => null)
-    if (!isActor(actor) || !actor.id) {
+    const actorId = isActor(actor) ? idOf(actor) : null
+    if (!actor || !actorId) {
       await markActorCrawled(target.actorId, target.relation)
       continue
     }
 
-    const profile = await resolveActorProfile(ctx, actor)
+    const profile = resolveActorProfile(actor)
     if (profile) {
       await upsertFeedActor(profile, target.relation)
     }
 
-    const outbox = await actor.getOutbox({
-      documentLoader: ctx.documentLoader,
-      contextLoader: ctx.contextLoader,
-      suppressError: true,
-    })
+    const outboxRef = actor.outbox
+    const outbox = isObject(outboxRef)
+      ? outboxRef
+      : typeof outboxRef === "string"
+        ? await ctx.loader.load(outboxRef).catch(() => null)
+        : null
     if (!outbox) {
-      await markActorCrawled(actor.id.href, target.relation)
+      await markActorCrawled(actorId, target.relation)
       continue
     }
 
@@ -530,18 +492,17 @@ export async function crawlActivityPubFeed(ctx: {
       }
       seen += 1
 
-      if (item instanceof Create) {
+      if (hasType(item, "Create")) {
         const stored = await persistFeedPostFromCreate(ctx, item)
         if (stored) {
           storedPosts += 1
-          lastSeenObjectId = item.objectId?.href ?? lastSeenObjectId
+          lastSeenObjectId = firstId(item.object) ?? lastSeenObjectId
         }
         continue
       }
 
       if (isSupportedFeedObject(item)) {
         const stored = await persistFeedObject({
-          ctx,
           actor,
           object: item,
           activity: null,
@@ -549,12 +510,12 @@ export async function crawlActivityPubFeed(ctx: {
         })
         if (stored) {
           storedPosts += 1
-          lastSeenObjectId = item.id?.href ?? lastSeenObjectId
+          lastSeenObjectId = idOf(item) ?? lastSeenObjectId
         }
       }
     }
 
-    await markActorCrawled(actor.id.href, target.relation, lastSeenObjectId)
+    await markActorCrawled(actorId, target.relation, lastSeenObjectId)
     crawledActors += 1
   }
 

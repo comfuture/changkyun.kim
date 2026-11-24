@@ -1,13 +1,17 @@
-import { processFedifyQueueMessage } from "../utils/fedify"
+import { processQueueMessage } from "../utils/fedify"
 
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook("cloudflare:queue", async ({ batch, env }) => {
     for (const message of batch.messages ?? []) {
       try {
-        await processFedifyQueueMessage(env, message.body)
-        message.ack()
+        const outcome = await processQueueMessage(env, message.body, { attempts: message.attempts })
+        if (outcome.action === "retry") {
+          message.retry({ delaySeconds: outcome.delaySeconds })
+        } else {
+          message.ack()
+        }
       } catch (error) {
-        console.error("Failed processing Fedify queue message", error)
+        console.error("Failed processing ActivityPub queue message", error)
         message.retry()
       }
     }

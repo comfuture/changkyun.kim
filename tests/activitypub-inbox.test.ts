@@ -13,6 +13,7 @@ import {
   createTestApp,
   deliveredTo,
   normalizeDocument,
+  readFixture,
   resetDatabase,
   rows,
   signedInboxRequest,
@@ -115,12 +116,13 @@ describe("Follow", () => {
     assert.match(following[0].activity_id, /^https:\/\/changkyun\.kim\/@me\/follow\/[0-9a-f]{64}$/)
 
     const types = fediverse.deliveries.map((delivery) => delivery.body.type)
-    // Accept, follow-back, 3 recent Create(Article) oldest-first. Update(Person)
-    // to "followers" is never delivered by Fedify (latent bug, see #528).
-    assert.deepEqual(types, ["Accept", "Follow", "Create", "Create", "Create"])
-    assert.deepEqual(deliveredTo(fediverse), Array(5).fill(ALICE.sharedInbox))
+    // Accept, follow-back, 3 recent Create(Article) oldest-first, then
+    // Update(Person) to the followers. (Fedify resolved "followers" to zero
+    // inboxes, so the Update was never delivered before #528.)
+    assert.deepEqual(types, ["Accept", "Follow", "Create", "Create", "Create", "Update"])
+    assert.deepEqual(deliveredTo(fediverse), Array(6).fill(ALICE.sharedInbox))
     assert.deepEqual(
-      fediverse.deliveries.slice(2).map((delivery) => delivery.body.id),
+      fediverse.deliveries.slice(2, 5).map((delivery) => delivery.body.id),
       [
         "https://changkyun.kim/app/cube-timer/activity",
         "https://changkyun.kim/blog/2025-09/20-test/activity",
@@ -129,42 +131,40 @@ describe("Follow", () => {
     )
 
     const [accept, followBack] = fediverse.deliveries
-    await assertGolden("accept", normalizeDocument({
-      ...accept.body,
-      object: { ...accept.body.object, id: "<follow-id>" },
-    }))
-    assert.equal(accept.body.object.id, activity.id)
+    // Intentional difference: the Accept embeds the Follow as received; Fedify
+    // embedded its re-compacted copy with the dereferenced actor document.
+    const { "@context": _context, ...receivedFollow } = { "@context": null, ...activity }
+    assert.deepEqual(accept.body.object, receivedFollow)
+    const golden = readFixture("golden/accept.json")
+    assert.deepEqual(
+      normalizeDocument({ ...accept.body, object: "<follow>" }),
+      normalizeDocument({ ...golden, object: "<follow>" }),
+    )
+    assert.equal(golden.object.object, accept.body.object.object)
+    assert.equal(golden.object.actor.id, accept.body.object.actor)
     await assertGolden("follow-back", followBack.body && normalizeDocument(followBack.body))
     await assertGolden("delivered-create-article", normalizeDocument(fediverse.deliveries[3].body))
     assert.equal(followBack.body.id, following[0].activity_id)
 
-    // Every delivery carries a draft-cavage HTTP signature.
+    // Every delivery carries a draft-cavage HTTP signature and no LD signature.
     for (const delivery of fediverse.deliveries) {
       assert.match(delivery.headers.signature ?? "", /keyId="https:\/\/changkyun\.kim\/@me#main-key"/)
       assert.ok(delivery.headers.digest)
       assert.equal(delivery.headers["content-type"], "application/activity+json")
+      assert.equal(delivery.body.signature, undefined)
     }
   })
 
-  test("Update(Person) wire format", async () => {
-    // Fedify never delivered Update(Person) to "followers" (zero inboxes, see
-    // #528), so its golden is derived by asking Fedify to send the same Update
-    // that sendFollowersUpdate() builds directly to one recipient.
-    const { Person, Update, PUBLIC_COLLECTION } = await import("@fedify/vocab")
-    const { createFedifyContext } = await import("../server/utils/fedify.ts")
-    const actorJson = await (await app("/@me")).json()
-    const person = await Person.fromJsonLd(actorJson)
-    const ctx = await createFedifyContext(undefined)
-    const recipient = await ctx.lookupObject(ALICE.id)
-    await ctx.sendActivity({ identifier: "me" }, recipient as any, new Update({
-      id: new URL(`#update-${randomUUID()}`, ACTOR_ID),
-      actor: new URL(ACTOR_ID),
-      object: person,
-      to: PUBLIC_COLLECTION,
-      cc: new URL("/@me/followers", "https://changkyun.kim"),
-    }), { preferSharedInbox: true })
-    assert.deepEqual(deliveredTo(fediverse), [ALICE.sharedInbox])
-    await assertGolden("update-person", normalizeDocument(fediverse.deliveries[0].body))
+  test("Update(Person) fans out to every distinct follower inbox", async () => {
+    // Golden derived from Fedify sending the same Update to one recipient.
+    sqlite.prepare("INSERT INTO followers (actor_id, activity_id, status) VALUES (?, ?, 'accepted')").run(BOB.id, `${BOB.id}#f`)
+    sqlite.prepare("INSERT INTO followers (actor_id, activity_id, status) VALUES (?, ?, 'accepted')").run(CAROL.id, `${CAROL.id}#f`)
+    await post(follow())
+    const updates = fediverse.deliveries.filter((delivery) => delivery.body.type === "Update")
+    assert.deepEqual(updates.map((delivery) => delivery.url).sort(), [BOB.inbox, ALICE.sharedInbox].sort())
+    for (const update of updates) {
+      await assertGolden("update-person", normalizeDocument(update.body))
+    }
   })
 
   test("repeated Follow re-accepts without a second follow-back", async () => {
@@ -185,7 +185,7 @@ describe("Follow", () => {
     // The failed follow-back may be retried with another signature spec (double knock).
     assert.deepEqual(
       fediverse.deliveries.map((delivery) => delivery.body.type).filter((type) => type !== "Follow"),
-      ["Accept", "Create", "Create", "Create"],
+      ["Accept", "Create", "Create", "Create", "Update"],
     )
     assert.equal(rows("SELECT status FROM followers")[0]?.status, "accepted")
   })
@@ -200,12 +200,13 @@ describe("Follow", () => {
   test("Undo(Follow) removes the follower", async () => {
     const original = follow()
     await post(original)
+    sqlite.prepare("INSERT INTO followers (actor_id, activity_id, status) VALUES (?, ?, 'accepted')").run(BOB.id, `${BOB.id}#f`)
     fediverse.clear()
     const response = await post({ id: activityId(ALICE, "undo"), type: "Undo", actor: ALICE.id, object: original })
     assert.equal(response.status, 202)
-    assert.deepEqual(rows("SELECT status, activity_id FROM followers"), [{ status: "removed", activity_id: original.id }])
-    // Update(Person) goes to "followers", which Fedify resolves to zero inboxes.
-    assert.equal(fediverse.deliveries.length, 0)
+    assert.deepEqual(rows("SELECT status, activity_id FROM followers WHERE actor_id = ?", ALICE.id), [{ status: "removed", activity_id: original.id }])
+    // Update(Person) goes to the remaining followers (Fedify sent it nowhere).
+    assert.deepEqual(fediverse.deliveries.map((delivery) => [delivery.url, delivery.body.type]), [[BOB.inbox, "Update"]])
   })
 
   test("Accept(Follow) of our follow marks following as accepted", async () => {
@@ -476,7 +477,7 @@ describe("inbox protocol", () => {
       keyName: "bob",
       keyId: `${goneActor}#main-key`,
     })
-    // Fedify 2.3.3 answers 401 (no unverified-activity handler is configured).
-    assert.equal(response.status, 401)
+    // Acknowledged and dropped (Fedify 2.3.3 answered 401).
+    assert.equal(response.status, 202)
   })
 })

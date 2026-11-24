@@ -1,15 +1,8 @@
-import {
-  Article,
-  Create,
-  Hashtag,
-  PUBLIC_COLLECTION,
-  Source,
-} from "@fedify/vocab"
 import { toHtml } from "hast-util-to-html"
 import { toHast } from "minimark/hast"
 import { stringify as stringifyMinimark } from "minimark/stringify"
 
-import { temporalInstantFrom, type TemporalInstant } from "./temporal.ts"
+import { instantFrom } from "./temporal.ts"
 
 export const ACTOR_IDENTIFIER = "me"
 export const SITE_ORIGIN = "https://changkyun.kim"
@@ -17,6 +10,23 @@ export const FEDIFY_BLOG_COLLECTION_PREFIX = "/blog"
 export const FEDIFY_BLOG_CANONICAL_HOSTNAMES = ["changkyun.blog", "www.changkyun.blog"] as const
 export const FEDIFY_BLOG_CANONICAL_ORIGIN = "https://changkyun.blog"
 export const FEDIFY_OUTBOX_PAGE_SIZE = 20
+
+// Compact form of the public collection, as emitted in served documents.
+export const AS_PUBLIC = "as:Public"
+
+export type ActivityPubArticle = Record<string, unknown> & {
+  id: string
+  type: "Article"
+  published: string
+}
+
+export type ActivityPubCreate = Record<string, unknown> & {
+  id: string
+  type: "Create"
+  actor: string
+  object: ActivityPubArticle
+  published: string
+}
 
 export type FedifyContentEntry = {
   id?: string | null
@@ -248,17 +258,18 @@ function normalizeTags(value: unknown): string[] {
   return Array.from(tags)
 }
 
-function buildHashtags(tags?: string[] | null): Hashtag[] {
+function buildHashtags(tags?: string[] | null): Record<string, unknown>[] {
   return (tags ?? []).flatMap((tag) => {
     const normalized = tag.trim().replace(/^#+/, "")
     if (!normalized) {
       return []
     }
     return [
-      new Hashtag({
+      {
+        type: "Hashtag",
+        href: new URL(`/blog/tag/${encodeURIComponent(normalized)}`, SITE_ORIGIN).href,
         name: `#${normalized}`,
-        href: new URL(`/blog/tag/${encodeURIComponent(normalized)}`, SITE_ORIGIN),
-      }),
+      },
     ]
   })
 }
@@ -370,9 +381,9 @@ function resolveLegacyArticleUrls(entry: FedifyContentEntry, canonicalUrl: URL):
   return Array.from(legacy, (url) => new URL(url))
 }
 
-const instantFromIso = (iso: string): TemporalInstant => temporalInstantFrom(iso)
+const instantFromIso = (iso: string): string => instantFrom(iso)
 
-function normalizeDate(value?: string | Date | null): TemporalInstant {
+function normalizeDate(value?: string | Date | null): string {
   const fallback = instantFromIso(new Date().toISOString())
   if (!value) {
     return fallback
@@ -413,7 +424,7 @@ export function resolveFedifyLegacyActivityIds(articleUrl: URL | string, entry?:
   return Array.from(candidates)
 }
 
-export async function buildArticleFromEntry(entry: FedifyContentEntry): Promise<Article | null> {
+export async function buildArticleFromEntry(entry: FedifyContentEntry): Promise<ActivityPubArticle | null> {
   const articleUrl = resolveArticleUrl(entry)
   if (!articleUrl) {
     return null
@@ -440,45 +451,47 @@ export async function buildArticleFromEntry(entry: FedifyContentEntry): Promise<
     }
   }
 
-  return new Article({
-    id: articleUrl,
-    attribution: new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN),
+  const mediaType = contentHtml ? "text/html" : markdown ? "text/markdown" : null
+  const summary = entry?.description || null
+  const tags = buildHashtags(entry?.tags)
+  const urls = Array.from(new Set(urlCandidates.map((url) => url.href)))
+
+  return {
+    id: articleUrl.href,
+    type: "Article",
+    attributedTo: new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN).href,
     content: contentHtml || markdown,
-    mediaType: contentHtml ? "text/html" : markdown ? "text/markdown" : null,
+    ...(mediaType ? { mediaType } : {}),
     name: entry?.title || entry?.stem || articleUrl.href,
     published: normalizeDate(entry?.createdAt),
-    summary: entry?.description || null,
-    tags: buildHashtags(entry?.tags),
-    urls: Array.from(new Map(urlCandidates.map((url) => [url.href, url])).values()),
-    to: PUBLIC_COLLECTION,
-    source: markdown
-      ? new Source({
-        content: markdown,
-        mediaType: "text/markdown",
-      })
-      : null,
-  })
+    ...(markdown ? { source: { content: markdown, mediaType: "text/markdown" } } : {}),
+    ...(summary ? { summary } : {}),
+    ...(tags.length > 0 ? { tag: tags } : {}),
+    to: AS_PUBLIC,
+    url: urls.length === 1 ? urls[0] : urls,
+  }
 }
 
-export async function buildCreateFromEntry(entry: FedifyContentEntry): Promise<Create | null> {
+export async function buildCreateFromEntry(entry: FedifyContentEntry): Promise<ActivityPubCreate | null> {
   const article = await buildArticleFromEntry(entry)
   if (!article?.id) {
     return null
   }
 
-  return new Create({
-    id: resolveFedifyActivityId(article.id),
-    actor: new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN),
+  return {
+    id: resolveFedifyActivityId(article.id).href,
+    type: "Create",
+    actor: new URL(`/@${ACTOR_IDENTIFIER}`, SITE_ORIGIN).href,
     object: article,
     published: article.published,
-    to: PUBLIC_COLLECTION,
-  })
+    to: AS_PUBLIC,
+  }
 }
 
 export async function collectCreateActivities(options: {
   limit?: number | null
   offset?: number
-} = {}): Promise<{ totalItems: number; items: Create[] }> {
+} = {}): Promise<{ totalItems: number; items: ActivityPubCreate[] }> {
   const limit = typeof options.limit === "number" && Number.isFinite(options.limit)
     ? Math.max(0, options.limit)
     : options.limit === null
@@ -503,7 +516,7 @@ export async function collectCreateActivities(options: {
   const entries = sortedEntries
     .slice(offset, end)
 
-  const activities: Create[] = []
+  const activities: ActivityPubCreate[] = []
   for (const entry of entries) {
     const activity = await buildCreateFromEntry(entry)
     if (activity) {

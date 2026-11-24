@@ -1,11 +1,18 @@
-import { Temporal as TemporalPolyfill } from "@js-temporal/polyfill"
+import { normalizeInstant, nowInstant, tryNormalizeInstant } from "@changkyun/activitypub"
 
-export type TemporalInstant = Temporal.Instant
-
-export function temporalInstantFrom(value: string): TemporalInstant {
-  return TemporalPolyfill.Instant.from(value) as unknown as TemporalInstant
+/**
+ * Instants are stored and emitted as `Temporal.Instant#toString()` strings
+ * (UTC, `Z`, trailing fractional zeros trimmed), as the Fedify-based
+ * implementation did.
+ */
+export function instantFrom(value: string): string {
+  return normalizeInstant(value)
 }
 
-export function temporalNowInstant(): TemporalInstant {
-  return TemporalPolyfill.Now.instant() as unknown as TemporalInstant
+export function instantFromOrNull(value: unknown): string | null {
+  return tryNormalizeInstant(value)
+}
+
+export function currentInstant(): string {
+  return nowInstant()
 }

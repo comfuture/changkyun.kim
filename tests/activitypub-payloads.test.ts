@@ -108,8 +108,8 @@ describe("Fedify-written payloads", () => {
 
 describe("timestamp normalization", () => {
   test("matches Temporal.Instant#toString()", async () => {
-    const { temporalInstantFrom } = await import("../server/utils/temporal.ts")
-    const normalize = (value: string) => temporalInstantFrom(value).toString()
+    const { instantFrom } = await import("../server/utils/temporal.ts")
+    const normalize = (value: string) => instantFrom(value)
     assert.equal(normalize("2026-01-02T03:04:05+09:00"), "2026-01-01T18:04:05Z")
     assert.equal(normalize("2026-01-02T03:04:05.120Z"), "2026-01-02T03:04:05.12Z")
     assert.equal(normalize("2026-01-02T03:04:05.000Z"), "2026-01-02T03:04:05Z")
