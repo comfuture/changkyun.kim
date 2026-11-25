@@ -5,7 +5,7 @@
   "author": "comfuture",
   "private": true,
   "engines": {
-    "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   },
   "scripts": {
     "dev": "DEV=1 nuxi dev",
@@ -35,7 +35,7 @@
     "hast-util-to-html": "9.0.7",
     "minimark": "1.0.0",
     "negotiator": "^1.1.0",
-    "nuxt": "^4.6.4"
+    "nuxt": "^4.7.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261119.1",
